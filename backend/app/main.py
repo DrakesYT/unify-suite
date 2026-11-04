@@ -9,6 +9,7 @@ from app.routers import (
     auth,
     finance,
     health,
+    hr,
     procurement,
     sales,
     workflows,
@@ -29,6 +30,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(auth.router)
     app.include_router(sales.router)
+    app.include_router(hr.router)
     app.include_router(procurement.router)
     app.include_router(finance.router)
     app.include_router(workflows.router)

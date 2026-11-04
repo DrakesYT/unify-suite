@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from sqlalchemy import CheckConstraint, ForeignKey, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
@@ -40,5 +40,6 @@ class CandidateScore(IdMixin, TimestampMixin, Base):
 
     candidate_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("candidates.id"), index=True)
     job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("jobs.id"), index=True)
-    score: Mapped[int]
+    score: Mapped[int]  # computed by code from verified evidence, not chosen by the model
     evidence: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list)
+    summary: Mapped[str] = mapped_column(Text, default="", server_default="")

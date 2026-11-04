@@ -41,6 +41,9 @@ flowchart LR
   steps with their stored inputs. Payments are created only for an approved request of that invoice.
 - Sales: the Lead Qualifier gets only company, email domain, status, priority, value and notes (no
   contact name or full email) and must return hot/warm/cold, a reason of 20+ words and the fields it cited.
+- HR: the Resume parser extracts skills, years and education at upload. The Resume Screener only returns
+  evidence (requirement + exact quote); code rejects any quote not found in the resume and computes the
+  score: 70 × (skills with evidence ÷ required skills) + 30 × min(years ÷ minimum years, 1).
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.

@@ -112,3 +112,33 @@ export interface Lead {
   created_at: string;
   updated_at: string;
 }
+
+export interface Job {
+  id: string;
+  title: string;
+  required_skills: string[];
+  min_years: number;
+  status: "open" | "closed";
+  created_at: string;
+}
+
+export interface Candidate {
+  id: string;
+  name: string;
+  email: string | null;
+  skills: string[];
+  years_experience: number | null;
+  education: string[];
+  file_id: string | null;
+  created_at: string;
+}
+
+export interface CandidateScore {
+  candidate: Candidate;
+  score: number;
+  matched_skills: string[];
+  missing_skills: string[];
+  evidence: { requirement: string; quote: string }[];
+  summary: string;
+  updated_at: string;
+}

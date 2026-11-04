@@ -9,6 +9,7 @@ export function Layout() {
   const links = [
     { to: "/sales", text: "Sales leads", show: canRead(user, "sales") },
     { to: "/payments", text: "Supplier payments", show: canRead(user, "finance") },
+    { to: "/hr", text: "Hiring", show: canRead(user, "hr") },
     { to: "/approvals", text: "Approval Center", show: true },
     { to: "/activity", text: "Agent activity", show: true },
   ].filter((l) => l.show);

@@ -5,10 +5,18 @@ import { canRead, useAuth } from "./session";
 import { Layout } from "./components/Layout";
 import { Activity } from "./pages/Activity";
 import { Approvals } from "./pages/Approvals";
+import { Hiring } from "./pages/Hiring";
 import { Login } from "./pages/Login";
 import { PaymentRun } from "./pages/PaymentRun";
 import { Payments } from "./pages/Payments";
 import { Sales } from "./pages/Sales";
+import type { Department } from "./types";
+
+const DEPARTMENT_HOME: Partial<Record<Department, string>> = {
+  sales: "/sales",
+  hr: "/hr",
+  finance: "/payments",
+};
 
 function RequireUser({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -16,10 +24,11 @@ function RequireUser({ children }: { children: ReactNode }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+/** Land people on their own department's page; everyone else on the Approval Center. */
 function Home() {
   const { user } = useAuth();
-  if (user && canRead(user, "sales") && user.department === "sales")
-    return <Navigate to="/sales" replace />;
+  const own = user && user.role !== "executive" ? DEPARTMENT_HOME[user.department] : undefined;
+  if (own) return <Navigate to={own} replace />;
   return <Navigate to={user && canRead(user, "finance") ? "/payments" : "/approvals"} replace />;
 }
 
@@ -40,6 +49,7 @@ export default function App() {
             <Route path="payments" element={<Payments />} />
             <Route path="payments/:id" element={<PaymentRun />} />
             <Route path="sales" element={<Sales />} />
+            <Route path="hr" element={<Hiring />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="activity" element={<Activity />} />
             <Route path="*" element={<Navigate to="/" replace />} />
