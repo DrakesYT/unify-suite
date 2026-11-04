@@ -203,5 +203,8 @@ def test_read_only_users_get_the_current_state(
     body = _chat(client, auth_header(executive), "how hot is the Acme lead?")
 
     assert body["outcome"] == "not_allowed"
-    assert body["summary"] == "Your role can view but not run this. Acme Corp is rated warm."
+    assert body["summary"] == (
+        "Acme Corp is rated warm. Someone in sales can run the Lead Qualifier to update this."
+    )
+    assert body["reply"].startswith("Your access is read-only")  # not the model's promise to act
     assert len(fake_llm.calls) == 1  # no agent was run

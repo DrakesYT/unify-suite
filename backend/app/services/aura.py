@@ -36,6 +36,14 @@ TARGETS = {
 }
 
 
+AGENT_NAMES = {
+    "lead_qualifier": "Lead Qualifier",
+    "resume_screener": "Resume Screener",
+    "ticket_investigator": "Ticket Investigator",
+    "vendor_comparator": "Vendor Comparator",
+}
+
+
 def _find(db: Session, model, column, target: str | None):  # type: ignore[no-untyped-def]
     stmt = select(model).order_by(model.created_at.desc()).limit(1)
     if target:
@@ -113,12 +121,17 @@ def chat(db: Session, llm: LLMClient, message: str, user: User) -> AuraReply:
     decision: AuraDecision = run_agent(db, router, AuraRequest(message=message), llm, ctx)
 
     def reply(
-        outcome: str, summary: str, link: str | None = None, agent: str | None = None
+        outcome: str,
+        summary: str,
+        link: str | None = None,
+        agent: str | None = None,
+        text: str
+        | None = None,  # replaces the model's line when it promised something we didn't do
     ) -> AuraReply:
         return AuraReply(
             route=decision.route,
             agent=agent,
-            reply=decision.reply,
+            reply=text or decision.reply,
             outcome=outcome,  # type: ignore[arg-type]
             summary=summary,
             link=link,
@@ -169,8 +182,15 @@ def chat(db: Session, llm: LLMClient, message: str, user: User) -> AuraReply:
             "not_found", f"I could not find a match for '{decision.target or 'that'}'.", link, agent
         )
     if not can_access(user, department, write=True):  # read-only: report, don't run
-        current = _current_state(db, decision.route, record)
-        return reply("not_allowed", f"Your role can view but not run this. {current}", link, agent)
+        who = AGENT_NAMES[agent]
+        return reply(
+            "not_allowed",
+            f"{_current_state(db, decision.route, record)} Someone in {department} can run "
+            f"the {who} to update this.",
+            link,
+            agent,
+            text=f"Your access is read-only, so I looked this up instead of running the {who}.",
+        )
     try:
         summary = _run(db, llm, decision.route, record, ctx)
     except (AgentFailed, ApiError) as exc:
