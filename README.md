@@ -21,11 +21,15 @@ See [docs/architecture.md](docs/architecture.md).
 Requires Docker Desktop. Node.js LTS and [uv](https://docs.astral.sh/uv/) are only needed for running tests/lint outside Docker.
 
 ```bash
-cp .env.example .env          # then put a letters-and-digits password in POSTGRES_PASSWORD
+cp .env.example .env          # then set POSTGRES_PASSWORD and JWT_SECRET (see comments inside)
 docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 ```
 
 - App: http://localhost:3000 — API docs: http://localhost:3000/api/docs
+- Database tables are created/updated automatically when the backend starts (`alembic upgrade head`).
+- Add a user (asks for the password):
+  `docker compose exec backend python -m app.cli create-user EMAIL "Full Name" ROLE DEPARTMENT`
+  — roles: `admin`, `manager`, `employee`, `executive`; departments: `sales`, `finance`, `hr`, `support`, `procurement`.
 - Frontend with hot reload: `cd frontend && npm install && npm run dev` (http://localhost:5173, forwards `/api` to the backend on port 8000)
 
 ### Tests and lint
@@ -45,6 +49,7 @@ attached to the `frontend` service (port 80); no other service is exposed.
 | Name | Used by | Notes |
 |---|---|---|
 | `POSTGRES_PASSWORD` | db, backend | Required. Letters and digits only. |
+| `JWT_SECRET` | backend | Required. At least 32 random characters; signs login tokens (valid 8 h). |
 | `LOG_LEVEL` | backend | Optional, default `INFO`. |
 
 Set them in `.env` locally and in Coolify's Environment Variables page in production. Never commit `.env`.

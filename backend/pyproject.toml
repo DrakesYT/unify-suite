@@ -4,9 +4,13 @@ version = "0.1.0"
 description = "UNIFY SUITE API — FastAPI backend"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "alembic>=1.20.1",
+    "bcrypt>=5.0.0",
+    "email-validator>=2.3.0",
     "fastapi>=0.162.0",
     "psycopg[binary]>=3.3.7",
     "pydantic-settings>=2.16.2",
+    "pyjwt>=2.15.1",
     "sqlalchemy>=2",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -29,3 +33,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+# backend/alembic/ (the migrations folder) would otherwise make ruff treat the package as local.
+known-third-party = ["alembic"]

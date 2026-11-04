@@ -1,27 +1,92 @@
 import os
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy import Engine, create_engine, event
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 # Must be set before the app is imported; tests override get_db so this DB is never contacted.
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://test:test@localhost:1/test")
+os.environ.setdefault("JWT_SECRET", "test-secret-test-secret-test-secret-0123")
 
+from app import security
 from app.db import get_db
 from app.main import app
+from app.models import Base, User
+from app.models.enums import Department, Role
+
+TEST_PASSWORD = "correct-horse-battery"
+
+
+@pytest.fixture(autouse=True)
+def _fast_bcrypt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Production uses 12 rounds; 4 keeps the suite fast and tests the same code path."""
+    monkeypatch.setattr(security, "BCRYPT_ROUNDS", 4)
 
 
 @pytest.fixture
-def client() -> Iterator[TestClient]:
-    engine = create_engine("sqlite://")
+def engine() -> Iterator[Engine]:
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
 
-    def _sqlite_db() -> Iterator[Session]:
-        with Session(engine) as session:
+    @event.listens_for(engine, "connect")
+    def _enforce_foreign_keys(dbapi_conn, _record) -> None:  # type: ignore[no-untyped-def]
+        dbapi_conn.execute("PRAGMA foreign_keys=ON")
+
+    Base.metadata.create_all(engine)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def db(engine: Engine) -> Iterator[Session]:
+    with sessionmaker(bind=engine, expire_on_commit=False)() as session:
+        yield session
+
+
+@pytest.fixture
+def client(engine: Engine) -> Iterator[TestClient]:
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+
+    def _test_db() -> Iterator[Session]:
+        with factory() as session:
             yield session
 
-    app.dependency_overrides[get_db] = _sqlite_db
+    app.dependency_overrides[get_db] = _test_db
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def make_user(db: Session) -> Callable[..., User]:
+    def _make(
+        role: Role = Role.employee,
+        department: Department = Department.sales,
+        email: str | None = None,
+        is_active: bool = True,
+    ) -> User:
+        user = User(
+            email=email or f"{role}.{department}@unify.example.com",
+            full_name=f"{role.title()} {department.title()}",
+            role=role,
+            department=department,
+            password_hash=security.hash_password(TEST_PASSWORD),
+            is_active=is_active,
+        )
+        db.add(user)
+        db.commit()
+        return user
+
+    return _make
+
+
+@pytest.fixture
+def auth_header() -> Callable[[User], dict[str, str]]:
+    def _header(user: User) -> dict[str, str]:
+        return {"Authorization": f"Bearer {security.create_access_token(user.id)}"}
+
+    return _header
