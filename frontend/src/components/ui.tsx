@@ -14,6 +14,11 @@ const TONES: Record<string, string> = {
   skipped: "bg-slate-500/10 text-slate-500",
   rejected: "bg-red-500/15 text-red-300",
   failed: "bg-red-500/15 text-red-300",
+  hot: "bg-rose-500/20 text-rose-300",
+  warm: "bg-amber-500/15 text-amber-300",
+  cold: "bg-sky-500/15 text-sky-300",
+  won: "bg-emerald-500/15 text-emerald-300",
+  lost: "bg-slate-500/15 text-slate-400",
 };
 
 export function Badge({ value }: { value: string }) {

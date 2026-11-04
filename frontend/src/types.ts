@@ -86,3 +86,29 @@ export interface AgentTask {
   error: string | null;
   created_at: string;
 }
+
+export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
+export type Priority = "low" | "medium" | "high";
+
+export interface Lead {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  status: LeadStatus;
+  priority: Priority;
+  value_minor: number;
+  currency: string;
+  notes: string;
+  rating: "hot" | "warm" | "cold" | null;
+  qualification: {
+    rating: string;
+    reason: string;
+    cited_fields: string[];
+    model: string;
+    qualified_at: string;
+  } | null;
+  owner_id: string | null;
+  created_at: string;
+  updated_at: string;
+}

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, IdMixin, JsonType, TimestampMixin, UtcDateTime, str_enum
@@ -24,6 +24,7 @@ class Lead(IdMixin, TimestampMixin, Base):
     )
     value_minor: Mapped[int] = mapped_column(BigInteger, default=0)
     currency: Mapped[str] = mapped_column(String(3), default="USD")
+    notes: Mapped[str] = mapped_column(Text, default="", server_default="")
     rating: Mapped[LeadRating | None] = mapped_column(
         str_enum(LeadRating, "lead_rating"), index=True
     )

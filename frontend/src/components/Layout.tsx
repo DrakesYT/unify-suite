@@ -7,6 +7,7 @@ export function Layout() {
   if (!user) return null;
 
   const links = [
+    { to: "/sales", text: "Sales leads", show: canRead(user, "sales") },
     { to: "/payments", text: "Supplier payments", show: canRead(user, "finance") },
     { to: "/approvals", text: "Approval Center", show: true },
     { to: "/activity", text: "Agent activity", show: true },

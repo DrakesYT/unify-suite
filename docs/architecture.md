@@ -39,6 +39,8 @@ flowchart LR
   (`waiting_approval`) until a finance manager approves or rejects in the Approval Center; nobody can
   decide their own request. A failed step pauses the run as `failed`; Retry re-runs only failed
   steps with their stored inputs. Payments are created only for an approved request of that invoice.
+- Sales: the Lead Qualifier gets only company, email domain, status, priority, value and notes (no
+  contact name or full email) and must return hot/warm/cold, a reason of 20+ words and the fields it cited.
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.

@@ -8,6 +8,7 @@ import { Approvals } from "./pages/Approvals";
 import { Login } from "./pages/Login";
 import { PaymentRun } from "./pages/PaymentRun";
 import { Payments } from "./pages/Payments";
+import { Sales } from "./pages/Sales";
 
 function RequireUser({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -17,6 +18,8 @@ function RequireUser({ children }: { children: ReactNode }) {
 
 function Home() {
   const { user } = useAuth();
+  if (user && canRead(user, "sales") && user.department === "sales")
+    return <Navigate to="/sales" replace />;
   return <Navigate to={user && canRead(user, "finance") ? "/payments" : "/approvals"} replace />;
 }
 
@@ -36,6 +39,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="payments" element={<Payments />} />
             <Route path="payments/:id" element={<PaymentRun />} />
+            <Route path="sales" element={<Sales />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="activity" element={<Activity />} />
             <Route path="*" element={<Navigate to="/" replace />} />
