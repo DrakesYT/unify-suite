@@ -6,14 +6,16 @@ export function Layout() {
   const { user, signOut } = useAuth();
   if (!user) return null;
 
+  const leader = user.role !== "employee";
   const links = [
+    { to: "/dashboard", text: "Dashboard", show: leader },
     { to: "/sales", text: "Sales leads", show: canRead(user, "sales") },
     { to: "/payments", text: "Supplier payments", show: canRead(user, "finance") },
     { to: "/hr", text: "Hiring", show: canRead(user, "hr") },
     { to: "/support", text: "Support tickets", show: canRead(user, "support") },
     { to: "/procurement", text: "Procurement", show: canRead(user, "procurement") },
     { to: "/approvals", text: "Approval Center", show: true },
-    { to: "/activity", text: "Agent activity", show: true },
+    { to: "/activity", text: "Command Center", show: true },
   ].filter((l) => l.show);
 
   return (

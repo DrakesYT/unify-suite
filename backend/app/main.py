@@ -5,8 +5,10 @@ from app.errors import register_error_handlers
 from app.observability import add_request_context, configure_logging
 from app.routers import (
     agents,
+    ai,
     approvals,
     auth,
+    dashboard,
     finance,
     health,
     hr,
@@ -38,6 +40,8 @@ def create_app() -> FastAPI:
     app.include_router(workflows.router)
     app.include_router(approvals.router)
     app.include_router(agents.router)
+    app.include_router(dashboard.router)
+    app.include_router(ai.router)
     return app
 
 

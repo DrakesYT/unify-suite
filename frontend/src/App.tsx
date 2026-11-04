@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider } from "./auth";
 import { canRead, useAuth } from "./session";
@@ -13,6 +13,9 @@ import { Payments } from "./pages/Payments";
 import { Sales } from "./pages/Sales";
 import { Support } from "./pages/Support";
 import type { Department } from "./types";
+
+// The dashboard brings the chart library; load it only when someone opens the dashboard.
+const Dashboard = lazy(() => import("./pages/Dashboard").then((m) => ({ default: m.Dashboard })));
 
 const DEPARTMENT_HOME: Partial<Record<Department, string>> = {
   sales: "/sales",
@@ -31,7 +34,8 @@ function RequireUser({ children }: { children: ReactNode }) {
 /** Land people on their own department's page; everyone else on the Approval Center. */
 function Home() {
   const { user } = useAuth();
-  const own = user && user.role !== "executive" ? DEPARTMENT_HOME[user.department] : undefined;
+  if (user && user.role !== "employee") return <Navigate to="/dashboard" replace />;
+  const own = user ? DEPARTMENT_HOME[user.department] : undefined;
   if (own) return <Navigate to={own} replace />;
   return <Navigate to={user && canRead(user, "finance") ? "/payments" : "/approvals"} replace />;
 }
@@ -50,6 +54,14 @@ export default function App() {
             }
           >
             <Route index element={<Home />} />
+            <Route
+              path="dashboard"
+              element={
+                <Suspense fallback={<p className="text-slate-500">Loading…</p>}>
+                  <Dashboard />
+                </Suspense>
+              }
+            />
             <Route path="payments" element={<Payments />} />
             <Route path="payments/:id" element={<PaymentRun />} />
             <Route path="sales" element={<Sales />} />

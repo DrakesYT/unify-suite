@@ -20,6 +20,8 @@ class Agent[In: BaseModel, Out: BaseModel](ABC):
     tools: ClassVar[frozenset[str]]
     max_llm_calls: ClassVar[int]
     timeout_s: ClassVar[float]
+    # Running the agent needs write access to its department (False for read-only helpers).
+    requires_write: ClassVar[bool] = True
 
     @abstractmethod
     def run(self, data: In, llm: LLMClient) -> Out: ...

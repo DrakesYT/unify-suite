@@ -245,3 +245,43 @@ export interface PurchaseOrder {
   status: "pending_approval" | "approved" | "rejected";
   created_at: string;
 }
+
+export interface Money {
+  amount_minor: number;
+  currency: string;
+}
+
+export interface Kpis {
+  sales_pipeline: Money[];
+  unpaid_invoices: Money[];
+  open_vacancies: number;
+  open_tickets: number;
+  pending_purchase_requests: number;
+  pending_approvals: number;
+}
+
+export interface Charts {
+  leads_by_rating: { label: string; value: number }[];
+  tickets_by_category: { label: string; value: number }[];
+  invoices_by_match: { label: string; value: number }[];
+  agent_calls_by_day: { day: string; succeeded: number; failed: number }[];
+}
+
+export interface ActivityItem {
+  id: string;
+  at: string;
+  actor_name: string | null;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  detail: Record<string, unknown>;
+}
+
+export interface AuraReply {
+  route: string;
+  agent: string | null;
+  reply: string;
+  outcome: "done" | "needs_input" | "not_found" | "not_allowed" | "failed" | "no_route";
+  summary: string;
+  link: string | null;
+}

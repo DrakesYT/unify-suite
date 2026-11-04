@@ -51,6 +51,10 @@ flowchart LR
   on-time rate, each relative to the best offer (ties: cheaper, then name). The Vendor Comparator only
   explains the result and must name the winner. A procurement manager approves the request; every PO
   (from a request or created directly) waits in the Approval Center as `pending_approval`.
+- Dashboard (managers, executives, admins): KPIs and charts are SQL aggregates; the feed is the latest 20
+  audit events. The Command Center lists every agent/tool call and retries failed workflow runs.
+- Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
+  checks the user's rights and runs the department agent, so Aura can never do more than the user can.
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.

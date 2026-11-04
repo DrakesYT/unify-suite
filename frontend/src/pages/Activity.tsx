@@ -1,22 +1,74 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { Badge, Card, Empty, ErrorNote, PageHeader } from "../components/ui";
+import { api } from "../api";
+import { Badge, Card, Empty, ErrorNote, PageHeader, ghostButton } from "../components/ui";
 import { when } from "../format";
 import type { AgentTask, Page } from "../types";
 import { usePoll } from "../usePoll";
 
+function Stat({ title, value }: { title: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-navy-800 bg-navy-900 p-4">
+      <p className="text-xs tracking-wide text-slate-400 uppercase">{title}</p>
+      <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+/** Command Center: every agent and tool call, with Retry for failed workflow steps. */
 export function Activity() {
-  const { data, error } = usePoll<Page<AgentTask>>("/agents/activity?limit=100");
+  const [onlyFailed, setOnlyFailed] = useState(false);
+  const { data, error, reload } = usePoll<Page<AgentTask>>(
+    `/agents/activity?limit=200${onlyFailed ? "&status=failed" : ""}`,
+  );
+  const [message, setMessage] = useState<string | null>(null);
+  const rows = data?.items ?? [];
+  const agentRows = rows.filter((t) => !t.tool);
+  const failed = rows.filter((t) => t.status === "failed").length;
+  const timed = agentRows.filter((t) => t.duration_ms !== null);
+  const avg = timed.length
+    ? Math.round(timed.reduce((sum, t) => sum + (t.duration_ms ?? 0), 0) / timed.length)
+    : 0;
+
+  const retry = async (executionId: string) => {
+    setMessage(null);
+    try {
+      await api(`/workflows/${executionId}/retry`, { method: "POST" });
+      setMessage("Retry started; the run continues in the background.");
+      await reload();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Retry failed");
+    }
+  };
 
   return (
     <>
       <PageHeader
-        title="Agent activity"
-        subtitle="Every agent call and tool call, with its input hash, outcome and duration. Refreshes every 5 s."
+        title="Command Center"
+        subtitle="Every agent call and tool call with its input hash, outcome and duration. Refreshes every 5 s."
       />
-      <Card>
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Stat title="Calls shown" value={rows.length} />
+        <Stat title="Agent calls" value={agentRows.length} />
+        <Stat title="Failed" value={failed} />
+        <Stat title="Avg agent time" value={`${avg} ms`} />
+      </div>
+      <Card
+        actions={
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={onlyFailed}
+              onChange={(e) => setOnlyFailed(e.target.checked)}
+            />
+            Only failures
+          </label>
+        }
+      >
         <ErrorNote message={error} />
-        {data?.items.length === 0 && <Empty>No agent activity yet.</Empty>}
-        {data && data.items.length > 0 && (
+        {message && <p className="mb-3 text-sm text-amber-200">{message}</p>}
+        {data && rows.length === 0 && <Empty>No agent activity yet.</Empty>}
+        {rows.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-slate-500 uppercase">
@@ -31,7 +83,7 @@ export function Activity() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy-800">
-                {data.items.map((t) => (
+                {rows.map((t) => (
                   <tr key={t.id}>
                     <td className="py-2 pr-4 whitespace-nowrap text-slate-400">
                       {when(t.created_at)}
@@ -51,14 +103,24 @@ export function Activity() {
                     <td className="py-2 pr-4 font-mono text-xs text-slate-500">
                       {t.input_hash.slice(0, 12)}
                     </td>
-                    <td className="py-2 text-xs">
+                    <td className="py-2 text-xs whitespace-nowrap">
                       {t.execution_id ? (
-                        <Link
-                          to={`/payments/${t.execution_id}`}
-                          className="text-accent-cyan hover:underline"
-                        >
-                          open
-                        </Link>
+                        <span className="flex items-center gap-2">
+                          <Link
+                            to={`/payments/${t.execution_id}`}
+                            className="text-accent-cyan hover:underline"
+                          >
+                            open
+                          </Link>
+                          {t.status === "failed" && (
+                            <button
+                              onClick={() => void retry(t.execution_id!)}
+                              className={`${ghostButton} px-2 py-0.5 text-xs`}
+                            >
+                              Retry
+                            </button>
+                          )}
+                        </span>
                       ) : (
                         <span className="text-slate-600">—</span>
                       )}

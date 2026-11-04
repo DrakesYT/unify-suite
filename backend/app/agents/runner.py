@@ -62,7 +62,8 @@ def input_hash(data: Any) -> str:
 
 
 def _check_permission(ctx: TaskContext, agent: ToolOwner) -> None:
-    if not can_access(ctx.actor, agent.department, write=True):
+    write = getattr(agent, "requires_write", True)
+    if not can_access(ctx.actor, agent.department, write=write):
         raise ApiError(403, "forbidden", f"Your role cannot run {agent.name}")
 
 
