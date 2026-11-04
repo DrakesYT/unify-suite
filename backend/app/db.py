@@ -34,3 +34,11 @@ def get_db() -> Iterator[Session]:
 
 
 DbSession = Annotated[Session, Depends(get_db)]
+
+
+def get_session_factory() -> sessionmaker[Session]:
+    """For background work that outlives the request (tests point it at their own database)."""
+    return session_factory()
+
+
+SessionFactory = Annotated[sessionmaker[Session], Depends(get_session_factory)]

@@ -7,6 +7,7 @@ from sqlalchemy import Connection, create_engine
 
 from app.config import get_settings
 from app.models import Base
+from app.models.base import UtcDateTime
 
 config = context.config
 if config.config_file_name is not None and config.attributes.get("configure_logger", True):
@@ -15,11 +16,19 @@ if config.config_file_name is not None and config.attributes.get("configure_logg
 target_metadata = Base.metadata
 
 
+def _render_item(type_: str, obj: object, autogen_context: object) -> str | bool:
+    """Write UtcDateTime as a plain TIMESTAMPTZ so migrations never import app code."""
+    if type_ == "type" and isinstance(obj, UtcDateTime):
+        return "sa.DateTime(timezone=True)"
+    return False
+
+
 def _run(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
         compare_type=True,
+        render_item=_render_item,
         render_as_batch=connection.dialect.name == "sqlite",
     )
     with context.begin_transaction():

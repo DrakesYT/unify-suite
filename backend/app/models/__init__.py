@@ -2,7 +2,7 @@
 
 from app.models.audit import AuditLog
 from app.models.base import Base
-from app.models.finance import Invoice, InvoiceAnomaly, Transaction
+from app.models.finance import Invoice, InvoiceAnomaly, Payment, Transaction
 from app.models.hr import Candidate, CandidateScore, Job
 from app.models.procurement import PurchaseOrder, PurchaseRequest, Vendor
 from app.models.sales import Customer, Lead, Order
@@ -30,6 +30,7 @@ __all__ = [
     "Job",
     "Lead",
     "Order",
+    "Payment",
     "PurchaseOrder",
     "PurchaseRequest",
     "Ticket",

@@ -8,7 +8,7 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol
 
 from pydantic import BaseModel
 from pydantic_core import to_jsonable_python
@@ -19,11 +19,26 @@ from app.config import AGENT_RETRY_DELAYS_S
 from app.errors import ApiError
 from app.llm import LLMClient, LLMError
 from app.models import AgentTask, User
-from app.models.enums import TaskStatus
+from app.models.enums import Department, TaskStatus
 from app.services import audit
 from app.services.authz import can_access
 
 ERROR_MAX_CHARS = 500
+
+
+class ToolOwner(Protocol):
+    """Anything that calls tools: an agent, or the orchestrator itself."""
+
+    name: str
+    department: Department
+    tools: frozenset[str]
+
+
+@dataclass(frozen=True)
+class ToolUser:
+    name: str
+    department: Department
+    tools: frozenset[str]
 
 
 class AgentFailed(ApiError):
@@ -46,13 +61,13 @@ def input_hash(data: Any) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-def _check_permission(ctx: TaskContext, agent: Agent[Any, Any]) -> None:
+def _check_permission(ctx: TaskContext, agent: ToolOwner) -> None:
     if not can_access(ctx.actor, agent.department, write=True):
         raise ApiError(403, "forbidden", f"Your role cannot run {agent.name}")
 
 
 def _start_task(
-    db: Session, ctx: TaskContext, agent: Agent[Any, Any], tool: str | None, data: Any, attempt: int
+    db: Session, ctx: TaskContext, agent: ToolOwner, tool: str | None, data: Any, attempt: int
 ) -> AgentTask:
     task = AgentTask(
         agent=agent.name,
@@ -117,7 +132,7 @@ def run_agent[Out: BaseModel](
 
 def call_tool[R](
     db: Session,
-    agent: Agent[Any, Any],
+    agent: ToolOwner,
     tool: str,
     args: dict[str, Any],
     fn: Callable[[], R],

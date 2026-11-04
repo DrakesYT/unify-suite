@@ -9,6 +9,7 @@ from app.deps import CurrentUser, require_department
 from app.models.enums import Department, PurchaseRequestStatus
 from app.schemas.common import Page
 from app.schemas.procurement import (
+    PurchaseOrderCreate,
     PurchaseOrderOut,
     PurchaseRequestCreate,
     PurchaseRequestOut,
@@ -88,6 +89,12 @@ def list_orders(
 ) -> Page[PurchaseOrderOut]:
     rows, next_cursor = procurement.list_orders(db, limit, cursor)
     return Page(items=[PurchaseOrderOut.model_validate(r) for r in rows], next_cursor=next_cursor)
+
+
+@router.post("/orders", status_code=201)
+def create_order(data: PurchaseOrderCreate, db: DbSession, user: CurrentUser) -> PurchaseOrderOut:
+    """New purchase orders start as pending_approval."""
+    return PurchaseOrderOut.model_validate(procurement.create_order(db, data, user))
 
 
 @router.get("/orders/{po_number}")

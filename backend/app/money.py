@@ -17,3 +17,10 @@ def to_minor(amount: Decimal, currency: str) -> int:
     if scaled != scaled.to_integral_value():
         raise ValueError(f"{currency} amounts have at most {exponent} decimals")
     return int(scaled)
+
+
+def format_minor(amount_minor: int, currency: str) -> str:
+    """425000, "USD" → "4,250.00 USD" (for reports people read)."""
+    exponent = minor_unit_exponent(currency)
+    value = Decimal(amount_minor).scaleb(-exponent)
+    return f"{value:,.{exponent}f} {currency}"

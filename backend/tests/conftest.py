@@ -16,7 +16,7 @@ os.environ.pop("LLM_API_KEY", None)  # tests never call the real model unless th
 
 from app import security
 from app.agents import runner
-from app.db import get_db
+from app.db import get_db, get_session_factory
 from app.llm import get_llm
 from app.llm.fake import FakeLLMClient
 from app.main import app
@@ -68,6 +68,7 @@ def client(engine: Engine) -> Iterator[TestClient]:
             yield session
 
     app.dependency_overrides[get_db] = _test_db
+    app.dependency_overrides[get_session_factory] = lambda: factory
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

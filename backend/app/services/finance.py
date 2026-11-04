@@ -3,14 +3,17 @@
 Each step is its own function so Workflow B can run them as separate steps.
 """
 
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.agents.invoice_processor import InvoiceProcessor
 from app.agents.runner import TaskContext, call_tool, run_agent
+from app.errors import ApiError
 from app.llm import LLMClient
-from app.models import Invoice, InvoiceAnomaly, Upload, Vendor
-from app.models.enums import AnomalyKind, InvoiceStatus, MatchStatus
+from app.models import ApprovalRequest, Invoice, InvoiceAnomaly, Payment, Upload, Vendor
+from app.models.enums import AnomalyKind, ApprovalStatus, InvoiceStatus, MatchStatus
 from app.schemas.finance import (
     AnomalyOut,
     FieldDifference,
@@ -223,3 +226,50 @@ def list_anomalies(
     if kind:
         stmt = stmt.where(InvoiceAnomaly.kind == kind)
     return paginate(db, stmt, InvoiceAnomaly, limit, cursor)
+
+
+def set_invoice_status(
+    db: Session, invoice_id: uuid.UUID, status: InvoiceStatus, actor_id: uuid.UUID
+) -> Invoice:
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None:
+        raise ApiError(404, "not_found", "Invoice not found")
+    invoice.status = status
+    audit.record(
+        db, action=f"invoice.{status}", entity="invoice", entity_id=invoice.id, actor_id=actor_id
+    )
+    return invoice
+
+
+def submit_payment(
+    db: Session,
+    invoice_id: uuid.UUID,
+    approval_id: uuid.UUID,
+    actor_id: uuid.UUID,
+    execution_id: uuid.UUID | None = None,
+) -> Payment:
+    """Create the payment record. Refuses unless this exact invoice has an approved request."""
+    invoice = db.get(Invoice, invoice_id)
+    approval = db.get(ApprovalRequest, approval_id)
+    if invoice is None or approval is None:
+        raise ApiError(404, "not_found", "Invoice or approval not found")
+    if approval.status != ApprovalStatus.approved or approval.payload.get("invoice_id") != str(
+        invoice.id
+    ):
+        raise ApiError(409, "not_approved", "Payment needs an approved request for this invoice")
+    if db.scalar(select(Payment.id).where(Payment.invoice_id == invoice.id)) is not None:
+        raise ApiError(409, "already_paid", "A payment for this invoice already exists")
+    payment = Payment(
+        invoice_id=invoice.id,
+        approval_id=approval.id,
+        execution_id=execution_id,
+        amount_minor=invoice.amount_minor,
+        currency=invoice.currency,
+    )
+    db.add(payment)
+    db.flush()
+    set_invoice_status(db, invoice.id, InvoiceStatus.payment_submitted, actor_id)
+    audit.record(
+        db, action="payment.submitted", entity="payment", entity_id=payment.id, actor_id=actor_id
+    )
+    return payment

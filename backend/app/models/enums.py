@@ -68,6 +68,10 @@ class AnomalyKind(StrEnum):
     no_po = "no_po"
 
 
+class PaymentStatus(StrEnum):
+    submitted = "submitted"
+
+
 class PurchaseRequestStatus(StrEnum):
     pending = "pending"
     approved = "approved"

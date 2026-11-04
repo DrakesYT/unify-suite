@@ -6,7 +6,7 @@ from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String, UniqueCo
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
-from app.models.enums import AnomalyKind, InvoiceStatus, MatchStatus
+from app.models.enums import AnomalyKind, InvoiceStatus, MatchStatus, PaymentStatus
 
 
 class Invoice(IdMixin, TimestampMixin, Base):
@@ -58,3 +58,21 @@ class InvoiceAnomaly(IdMixin, TimestampMixin, Base):
     )
     upload_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("uploads.id"), index=True)
     detail: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)
+
+
+class Payment(IdMixin, TimestampMixin, Base):
+    """A payment submitted for an invoice. Only created after a manager approved it."""
+
+    __tablename__ = "payments"
+    __table_args__ = (CheckConstraint("amount_minor >= 0", name="amount_non_negative"),)
+
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"), unique=True)
+    approval_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("approval_requests.id"), index=True)
+    execution_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("workflow_executions.id"), index=True
+    )
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
+    status: Mapped[PaymentStatus] = mapped_column(
+        str_enum(PaymentStatus, "payment_status"), default=PaymentStatus.submitted, index=True
+    )
