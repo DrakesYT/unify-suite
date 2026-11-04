@@ -186,3 +186,22 @@ def test_live_five_sample_commands_route_correctly(message: str, route: str) -> 
     )
 
     assert AuraRouter(Department.sales).run(AuraRequest(message=message), llm).route == route
+
+
+def test_read_only_users_get_the_current_state(
+    client: TestClient,
+    db: Session,
+    fake_llm: FakeLLMClient,
+    make_user: Callable[..., User],
+    auth_header: AuthHeader,
+) -> None:
+    db.add(Lead(name="A", company="Acme Corp", email="a@acme.example.com", rating="warm"))
+    db.commit()
+    executive = make_user(Role.executive, Department.finance)
+    fake_llm.replies.append(_route("sales.qualify_lead", "Acme"))
+
+    body = _chat(client, auth_header(executive), "how hot is the Acme lead?")
+
+    assert body["outcome"] == "not_allowed"
+    assert body["summary"] == "Your role can view but not run this. Acme Corp is rated warm."
+    assert len(fake_llm.calls) == 1  # no agent was run

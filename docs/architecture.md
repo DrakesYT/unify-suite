@@ -55,6 +55,10 @@ flowchart LR
   audit events. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
+- Demo data: `python -m app.seed` creates the demo company idempotently (natural keys: email, vendor name, PO
+  number, …). AI results are not pre-filled; they come from running the agents.
+- The frontend container serves `index.html` with `Cache-Control: no-cache` and hashed `/assets/*` as immutable, so a
+  new release is picked up on the next page load.
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.

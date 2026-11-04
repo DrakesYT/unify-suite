@@ -47,7 +47,7 @@ function Kpi({
       className="rounded-xl border border-navy-800 bg-navy-900 p-4 transition hover:border-accent-purple/50"
     >
       <p className="text-xs tracking-wide text-slate-400 uppercase">{title}</p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-2 text-xl font-semibold text-white sm:text-2xl">{value}</p>
       <p className="mt-1 text-xs text-slate-500">{hint}</p>
     </Link>
   );
@@ -100,7 +100,7 @@ export function Dashboard() {
       <ErrorNote message={kpis.error} />
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="min-w-0 space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
             <Kpi
               title="Sales pipeline"
               value={k ? moneyList(k.sales_pipeline) : "…"}

@@ -56,7 +56,7 @@ export function AuraPanel() {
   };
 
   return (
-    <aside className="flex flex-col rounded-xl border border-accent-purple/30 bg-gradient-to-b from-navy-900 to-navy-950 p-5">
+    <aside className="flex flex-col self-start rounded-xl xl:sticky xl:top-6 border border-accent-purple/30 bg-gradient-to-b from-navy-900 to-navy-950 p-5">
       <div className="mb-3 flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full bg-accent-cyan shadow-[0_0_10px] shadow-accent-cyan" />
         <h2 className="font-semibold text-white">Aura</h2>

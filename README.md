@@ -18,6 +18,34 @@ See [docs/architecture.md](docs/architecture.md).
   (default model `glm-5.3-flash`). Agents only read, classify and draft; every reply is validated against a
   schema, and matching, ranking and approvals are plain code.
 
+## Demo
+
+Load the demo company (safe to run again; it only adds what is missing). It asks for one password that every
+demo user gets:
+
+```bash
+docker compose exec backend python -m app.seed
+```
+
+| Sign in as | Role | Try this |
+|---|---|---|
+| `ceo@demo.example.com` | executive | Dashboard, Aura chat, Approval Center (read-only) |
+| `finance.clerk@demo.example.com` | finance employee | Supplier payments: upload an invoice for `PO-1007` |
+| `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment |
+| `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI |
+| `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates |
+| `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
+| `support.manager@demo.example.com` | support manager | Approve the refund escalation |
+| `buyer@demo.example.com` | procurement employee | Procurement → Compare vendors, Create purchase order |
+| `procurement.manager@demo.example.com` | procurement manager | Approve the request and the purchase order |
+
+The demo password for the live site is given in the lablab.ai submission.
+
+**Workflow B in two minutes:** as the finance clerk, upload an invoice that references `PO-1007` (ACME, USD 4,250.00).
+The AI reads it, code matches it to the PO, and the run pauses at *Manager approval*. Sign in as the finance
+manager and approve → the payment is created and the verification step confirms every record is linked. Upload an
+invoice for a different amount to see the discrepancy report, and reject it to see the run end with no payment.
+
 ## Local setup
 
 Requires Docker Desktop. Node.js LTS and [uv](https://docs.astral.sh/uv/) are only needed for running tests/lint outside Docker.

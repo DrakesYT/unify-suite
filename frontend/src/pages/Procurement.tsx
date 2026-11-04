@@ -410,7 +410,7 @@ export function Procurement() {
         subtitle="Vendors are ranked by code on price, lead time and on-time record; every purchase order waits for a manager."
       />
       <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {editable && (
             <Card title="New request">
               <NewRequest onCreated={(r) => (setPicked(r.id), void requests.reload())} />
@@ -452,7 +452,7 @@ export function Procurement() {
             {editable && <NewVendor onCreated={() => void vendors.reload()} />}
           </Card>
         </div>
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {request ? (
             <RequestDetail
               key={request.id}

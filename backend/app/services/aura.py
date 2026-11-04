@@ -84,6 +84,28 @@ def _compare_summary(result) -> str:  # type: ignore[no-untyped-def]
     return f"{top.vendor_name} ranks first ({top.score}/100) of {len(result.ranking)} vendors."
 
 
+def _current_state(db: Session, route: str, record) -> str:  # type: ignore[no-untyped-def]
+    """What is already known about the record, for users who may look but not act."""
+    if route == "sales.qualify_lead":
+        return (
+            f"{record.company} is {'rated ' + record.rating if record.rating else 'not rated yet'}."
+        )
+    if route == "hr.screen_candidates":
+        scores = hr.ranked_scores(db, record.id)
+        if not scores:
+            return f"No one has been screened for {record.title} yet."
+        return (
+            f"Top candidate for {record.title}: {scores[0].candidate.name} ({scores[0].score}/100)."
+        )
+    if route == "support.investigate_ticket":
+        causes = (record.investigation or {}).get("likely_causes")
+        return f"Likely cause: {causes[0]['cause']}" if causes else "Not investigated yet."
+    ranking = (record.comparison or {}).get("ranking")
+    if not ranking:
+        return f"Vendors for {record.item} have not been compared yet."
+    return f"{ranking[0]['vendor_name']} ranked first for {record.item}."
+
+
 def chat(db: Session, llm: LLMClient, message: str, user: User) -> AuraReply:
     router = AuraRouter(user.department)
     ctx = TaskContext(actor=user)
@@ -132,8 +154,8 @@ def chat(db: Session, llm: LLMClient, message: str, user: User) -> AuraReply:
         )
 
     agent, department, model, column, link = TARGETS[decision.route]
-    if not can_access(user, department, write=True):
-        return reply("not_allowed", f"Your role cannot run the {department} agent.", link, agent)
+    if not can_access(user, department, write=False):
+        return reply("not_allowed", f"Your role cannot see {department} data.", link, agent)
     record = call_tool(
         db,
         router,
@@ -146,6 +168,9 @@ def chat(db: Session, llm: LLMClient, message: str, user: User) -> AuraReply:
         return reply(
             "not_found", f"I could not find a match for '{decision.target or 'that'}'.", link, agent
         )
+    if not can_access(user, department, write=True):  # read-only: report, don't run
+        current = _current_state(db, decision.route, record)
+        return reply("not_allowed", f"Your role can view but not run this. {current}", link, agent)
     try:
         summary = _run(db, llm, decision.route, record, ctx)
     except (AgentFailed, ApiError) as exc:
