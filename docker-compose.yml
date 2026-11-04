@@ -43,6 +43,8 @@ services:
   frontend:
     build: ./frontend
     restart: unless-stopped
+    expose:
+      - "80"
     depends_on:
       backend:
         condition: service_healthy
