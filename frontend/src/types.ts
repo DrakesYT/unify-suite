@@ -45,6 +45,12 @@ export interface Approval {
     currency?: string;
     match_status?: string;
     discrepancies?: string[];
+    title?: string;
+    category?: string;
+    urgency?: string;
+    customer_name?: string | null;
+    note?: string;
+    likely_cause?: string | null;
   };
   required_role: Role;
   department: Department;
@@ -141,4 +147,33 @@ export interface CandidateScore {
   evidence: { requirement: string; quote: string }[];
   summary: string;
   updated_at: string;
+}
+
+export type TicketCategory =
+  "billing" | "technical" | "shipping" | "refund" | "legal" | "account" | "other";
+
+export interface Ticket {
+  id: string;
+  title: string;
+  description: string;
+  category: TicketCategory | null;
+  urgency: "low" | "normal" | "high" | "critical" | null;
+  status: "open" | "investigating" | "escalated" | "resolved" | "closed";
+  customer_id: string | null;
+  investigation: {
+    likely_causes: { cause: string; order_numbers: string[] }[];
+    order_numbers_used: string[];
+    next_step: string;
+    draft_reply: string;
+    investigated_at: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  company: string | null;
+  email: string | null;
 }

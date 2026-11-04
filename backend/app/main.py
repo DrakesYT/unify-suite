@@ -12,6 +12,7 @@ from app.routers import (
     hr,
     procurement,
     sales,
+    support,
     workflows,
 )
 
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(sales.router)
     app.include_router(hr.router)
+    app.include_router(support.router)
     app.include_router(procurement.router)
     app.include_router(finance.router)
     app.include_router(workflows.router)

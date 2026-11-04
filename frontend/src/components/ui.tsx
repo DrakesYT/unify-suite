@@ -19,6 +19,12 @@ const TONES: Record<string, string> = {
   cold: "bg-sky-500/15 text-sky-300",
   won: "bg-emerald-500/15 text-emerald-300",
   lost: "bg-slate-500/15 text-slate-400",
+  critical: "bg-red-500/20 text-red-300",
+  high: "bg-amber-500/15 text-amber-300",
+  open: "bg-accent-cyan/15 text-accent-cyan",
+  investigating: "bg-accent-purple/20 text-violet-200",
+  escalated: "bg-amber-500/15 text-amber-300",
+  resolved: "bg-emerald-500/15 text-emerald-300",
 };
 
 export function Badge({ value }: { value: string }) {

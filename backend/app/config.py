@@ -20,7 +20,7 @@ UPLOAD_MAX_BYTES = 10 * 1024 * 1024
 PDF_MAX_PAGES = 50
 DOCUMENT_MAX_CHARS = 20_000  # text sent to the LLM is cut to this length
 
-LLM_MAX_TOKENS = 2_000  # includes the model's hidden reasoning tokens
+LLM_MAX_TOKENS = 4_000  # includes the model's hidden reasoning tokens
 AGENT_RETRY_DELAYS_S = (2, 8)  # two retries: wait 2 s, then 8 s
 
 

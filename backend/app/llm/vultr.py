@@ -7,7 +7,7 @@ import httpx2
 import openai
 
 from app.config import LLM_MAX_TOKENS
-from app.llm.base import LLMError, T, json_instructions, parse_json_output
+from app.llm.base import LLMError, LLMOutputError, T, json_instructions, parse_json_output
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +58,12 @@ class VultrLLMClient:
                 "prompt_tokens": response.usage.prompt_tokens,
                 "completion_tokens": response.usage.completion_tokens,
             }
+        choice = response.choices[0]
+        if choice.finish_reason == "length":
+            self._log(started, log, ok=False, error="cut_off")
+            raise LLMOutputError(f"reply was cut off at {LLM_MAX_TOKENS} tokens")
         try:
-            result = parse_json_output(schema, response.choices[0].message.content)
+            result = parse_json_output(schema, choice.message.content)
         except LLMError:
             self._log(started, log, ok=False, error="invalid_output")
             raise

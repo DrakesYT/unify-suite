@@ -29,6 +29,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const p = approval.payload;
+  const isPayment = approval.action === "pay_invoice";
 
   const decide = async (verb: "approve" | "reject") => {
     setBusy(true);
@@ -52,18 +53,45 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           <p className="text-xs text-slate-500 uppercase">
             {label(approval.action)} · {approval.department} {approval.required_role}
           </p>
-          <p className="mt-1 text-lg font-semibold text-white">
-            {money(p.amount_minor, p.currency)}
-          </p>
-          <p className="text-sm text-slate-300">
-            {p.vendor_name} · invoice {p.invoice_number} · {p.po_number}
-          </p>
+          {isPayment ? (
+            <>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {money(p.amount_minor, p.currency)}
+              </p>
+              <p className="text-sm text-slate-300">
+                {p.vendor_name} · invoice {p.invoice_number} · {p.po_number}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-lg font-semibold text-white">{p.title}</p>
+              <p className="text-sm text-slate-300">{p.customer_name ?? "No customer linked"}</p>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {p.match_status && <Badge value={p.match_status} />}
+          {p.category && <Badge value={p.category} />}
+          {p.urgency && <Badge value={p.urgency} />}
           <Badge value={approval.status} />
         </div>
       </div>
+      {!isPayment && (p.likely_cause || p.note) && (
+        <div className="mt-4 space-y-1 rounded-lg bg-navy-950/70 p-3 text-sm">
+          {p.likely_cause && (
+            <p className="text-slate-200">
+              <span className="text-slate-500">Likely cause: </span>
+              {p.likely_cause}
+            </p>
+          )}
+          {p.note && (
+            <p className="text-slate-300">
+              <span className="text-slate-500">Note: </span>
+              {p.note}
+            </p>
+          )}
+        </div>
+      )}
       {p.discrepancies && p.discrepancies.length > 0 && (
         <div className="mt-4 rounded-lg bg-amber-500/10 p-3">
           <p className="text-xs font-semibold text-amber-200 uppercase">Discrepancies</p>
@@ -102,7 +130,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           <ErrorNote message={error} />
           <div className="flex gap-2">
             <button disabled={busy} onClick={() => decide("approve")} className={primaryButton}>
-              Approve payment
+              {isPayment ? "Approve payment" : "Approve"}
             </button>
             <button
               disabled={busy || !comment.trim()}

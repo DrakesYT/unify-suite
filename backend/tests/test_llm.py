@@ -136,3 +136,16 @@ def test_to_minor(amount: str, currency: str, minor: int) -> None:
 def test_to_minor_refuses_extra_decimals() -> None:
     with pytest.raises(ValueError):
         to_minor(Decimal("1.005"), "USD")
+
+
+def test_cut_off_reply_is_reported_as_invalid_output() -> None:
+    def _cut(_r: httpx.Request) -> httpx.Response:
+        res = _chat('{"label": "ho')
+        body = res.json()
+        body["choices"][0]["finish_reason"] = "length"
+        return httpx.Response(200, json=body)
+
+    client, _ = _vultr(_cut)
+
+    with pytest.raises(LLMOutputError, match="cut off"):
+        client.complete_json(Answer, "s", "u", timeout_s=5)

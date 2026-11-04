@@ -10,12 +10,14 @@ import { Login } from "./pages/Login";
 import { PaymentRun } from "./pages/PaymentRun";
 import { Payments } from "./pages/Payments";
 import { Sales } from "./pages/Sales";
+import { Support } from "./pages/Support";
 import type { Department } from "./types";
 
 const DEPARTMENT_HOME: Partial<Record<Department, string>> = {
   sales: "/sales",
   hr: "/hr",
   finance: "/payments",
+  support: "/support",
 };
 
 function RequireUser({ children }: { children: ReactNode }) {
@@ -50,6 +52,7 @@ export default function App() {
             <Route path="payments/:id" element={<PaymentRun />} />
             <Route path="sales" element={<Sales />} />
             <Route path="hr" element={<Hiring />} />
+            <Route path="support" element={<Support />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="activity" element={<Activity />} />
             <Route path="*" element={<Navigate to="/" replace />} />

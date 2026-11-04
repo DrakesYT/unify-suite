@@ -44,6 +44,9 @@ flowchart LR
 - HR: the Resume parser extracts skills, years and education at upload. The Resume Screener only returns
   evidence (requirement + exact quote); code rejects any quote not found in the resume and computes the
   score: 70 × (skills with evidence ÷ required skills) + 30 × min(years ÷ minimum years, 1).
+- Support: new tickets are saved, then classified (category + urgency). Investigation sends the customer's
+  last 20 orders; code rejects any cited order number that is not theirs. Escalating a refund or legal ticket
+  creates an approval for a support manager; approved → resolved, rejected → reopened. Replies are drafts only.
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.
