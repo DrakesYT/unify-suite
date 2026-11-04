@@ -1,0 +1,6 @@
+# Store text files with LF so files built into Linux containers work the same on Windows and on the VM.
+* text=auto eol=lf
+*.jpeg binary
+*.jpg binary
+*.png binary
+*.pdf binary
