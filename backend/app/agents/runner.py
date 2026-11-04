@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from pydantic import BaseModel
-from pydantic_core import to_jsonable_python
+from pydantic_core import PydanticSerializationError, to_jsonable_python
 from sqlalchemy.orm import Session
 
 from app.agents.base import Agent
@@ -156,8 +156,18 @@ def call_tool[R](
 
 
 def _summary(result: Any) -> Any:
+    """What a tool returned, in a form that fits the activity log (never raw database rows)."""
     if isinstance(result, BaseModel):
         return result.model_dump(mode="json")
-    if result is None or isinstance(result, str | int | float | bool | dict | list):
-        return result if not isinstance(result, str) else {"chars": len(result)}
+    if isinstance(result, str):
+        return {"chars": len(result)}
+    if isinstance(result, list | tuple):
+        if all(isinstance(item, BaseModel) for item in result):
+            return [item.model_dump(mode="json") for item in result]
+        return {"count": len(result)}
+    if result is None or isinstance(result, int | float | bool | dict):
+        try:
+            return to_jsonable_python(result)
+        except PydanticSerializationError:
+            return {"type": type(result).__name__}
     return {"type": type(result).__name__}

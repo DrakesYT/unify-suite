@@ -25,6 +25,9 @@ const TONES: Record<string, string> = {
   investigating: "bg-accent-purple/20 text-violet-200",
   escalated: "bg-amber-500/15 text-amber-300",
   resolved: "bg-emerald-500/15 text-emerald-300",
+  ordered: "bg-emerald-500/15 text-emerald-300",
+  pending_approval: "bg-amber-500/15 text-amber-300",
+  over_budget: "bg-amber-500/15 text-amber-300",
 };
 
 export function Badge({ value }: { value: string }) {

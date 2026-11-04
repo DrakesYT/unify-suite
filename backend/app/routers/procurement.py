@@ -2,23 +2,36 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
+from app.agents.runner import TaskContext
 from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX
 from app.db import DbSession
 from app.deps import CurrentUser, require_department
+from app.llm import LLM
 from app.models.enums import Department, PurchaseRequestStatus
 from app.schemas.common import Page
 from app.schemas.procurement import (
+    OrderFromRequest,
+    OrderWithApproval,
     PurchaseOrderCreate,
     PurchaseOrderOut,
     PurchaseRequestCreate,
     PurchaseRequestOut,
     PurchaseRequestUpdate,
+    QuoteCreate,
+    QuoteOut,
+    VendorComparison,
     VendorCreate,
     VendorOut,
     VendorUpdate,
 )
 from app.services import procurement
+
+
+class CompareIn(BaseModel):
+    request_id: uuid.UUID
+
 
 router = APIRouter(
     prefix="/api/procurement",
@@ -92,9 +105,52 @@ def list_orders(
 
 
 @router.post("/orders", status_code=201)
-def create_order(data: PurchaseOrderCreate, db: DbSession, user: CurrentUser) -> PurchaseOrderOut:
-    """New purchase orders start as pending_approval."""
-    return PurchaseOrderOut.model_validate(procurement.create_order(db, data, user))
+def create_order(data: PurchaseOrderCreate, db: DbSession, user: CurrentUser) -> OrderWithApproval:
+    """New purchase orders stay pending_approval until a procurement manager approves them."""
+    order, approval = procurement.create_order_for_approval(db, data, user)
+    return OrderWithApproval(order=PurchaseOrderOut.model_validate(order), approval_id=approval.id)
+
+
+@router.get("/requests/{request_id}/quotes")
+def list_quotes(request_id: uuid.UUID, db: DbSession) -> list[QuoteOut]:
+    return [QuoteOut.model_validate(q) for q in procurement.list_quotes(db, request_id)]
+
+
+@router.post("/requests/{request_id}/quotes", status_code=201)
+def add_quote(
+    request_id: uuid.UUID, data: QuoteCreate, db: DbSession, user: CurrentUser
+) -> QuoteOut:
+    """Add or replace one vendor's unit price for this request."""
+    return QuoteOut.model_validate(procurement.add_quote(db, request_id, data, user))
+
+
+@router.post("/compare-vendors")
+def compare_vendors(
+    data: CompareIn, db: DbSession, user: CurrentUser, llm: LLM
+) -> VendorComparison:
+    """Ranking is computed by code (same data → same order); the comparator explains the winner."""
+    return procurement.compare_vendors(db, llm, data.request_id, TaskContext(actor=user))
+
+
+@router.post("/requests/{request_id}/approve")
+def approve_request(request_id: uuid.UUID, db: DbSession, user: CurrentUser) -> PurchaseRequestOut:
+    request = procurement.decide_request(db, request_id, user, approve=True)
+    return PurchaseRequestOut.model_validate(request)
+
+
+@router.post("/requests/{request_id}/reject")
+def reject_request(request_id: uuid.UUID, db: DbSession, user: CurrentUser) -> PurchaseRequestOut:
+    request = procurement.decide_request(db, request_id, user, approve=False)
+    return PurchaseRequestOut.model_validate(request)
+
+
+@router.post("/requests/{request_id}/order", status_code=201)
+def order_from_request(
+    request_id: uuid.UUID, data: OrderFromRequest, db: DbSession, user: CurrentUser
+) -> OrderWithApproval:
+    """FR-PRO-03: a PO from an approved request; it waits in the Approval Center."""
+    order, approval = procurement.order_from_request(db, request_id, data.vendor_id, user)
+    return OrderWithApproval(order=PurchaseOrderOut.model_validate(order), approval_id=approval.id)
 
 
 @router.get("/orders/{po_number}")

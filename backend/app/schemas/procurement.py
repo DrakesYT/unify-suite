@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -65,6 +65,7 @@ class PurchaseRequestOut(BaseModel):
     status: PurchaseRequestStatus
     chosen_vendor_id: uuid.UUID | None
     requested_by_id: uuid.UUID | None
+    comparison: dict[str, Any] | None
     created_at: datetime
 
 
@@ -87,3 +88,68 @@ class PurchaseOrderOut(BaseModel):
     currency: str
     status: PurchaseOrderStatus
     created_at: datetime
+
+
+class QuoteCreate(BaseModel):
+    vendor_id: uuid.UUID
+    unit_price_minor: MinorAmount
+
+
+class QuoteOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    request_id: uuid.UUID
+    vendor_id: uuid.UUID
+    unit_price_minor: int
+    currency: str
+    created_at: datetime
+
+
+class RankedVendor(BaseModel):
+    rank: int
+    vendor_id: uuid.UUID
+    vendor_name: str
+    total_minor: int
+    currency: str
+    lead_time_days: int
+    on_time_rate: Decimal
+    price_score: Decimal
+    lead_time_score: Decimal
+    delivery_score: Decimal
+    score: Decimal = Field(description="0-100, higher is better")
+    over_budget: bool
+
+
+class VendorComparison(BaseModel):
+    request_id: uuid.UUID
+    ranking: list[RankedVendor]
+    reason: str | None = Field(description="Why the top vendor wins (written by the comparator)")
+    reason_error: str | None = None
+    compared_at: datetime
+
+
+class OrderFromRequest(BaseModel):
+    vendor_id: uuid.UUID | None = Field(
+        default=None, description="Defaults to the chosen vendor, then the top-ranked one"
+    )
+
+
+class OrderWithApproval(BaseModel):
+    order: PurchaseOrderOut
+    approval_id: uuid.UUID
+
+
+class ComparisonFacts(BaseModel):
+    """Vendor Comparator input: the ranking code already computed, in plain terms."""
+
+    item: str
+    quantity: int
+    budget: str
+    ranking: list[dict[str, str | int | bool]]
+
+
+class ComparisonReason(BaseModel):
+    reason: Annotated[str, Field(min_length=20, max_length=900)] = Field(
+        description="Two or three sentences on why the top-ranked vendor is recommended"
+    )

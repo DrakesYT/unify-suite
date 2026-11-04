@@ -11,6 +11,7 @@ export function Layout() {
     { to: "/payments", text: "Supplier payments", show: canRead(user, "finance") },
     { to: "/hr", text: "Hiring", show: canRead(user, "hr") },
     { to: "/support", text: "Support tickets", show: canRead(user, "support") },
+    { to: "/procurement", text: "Procurement", show: canRead(user, "procurement") },
     { to: "/approvals", text: "Approval Center", show: true },
     { to: "/activity", text: "Agent activity", show: true },
   ].filter((l) => l.show);

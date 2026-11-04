@@ -47,6 +47,10 @@ flowchart LR
 - Support: new tickets are saved, then classified (category + urgency). Investigation sends the customer's
   last 20 orders; code rejects any cited order number that is not theirs. Escalating a refund or legal ticket
   creates an approval for a support manager; approved → resolved, rejected → reopened. Replies are drafts only.
+- Procurement: vendors quote a unit price per request. Code ranks them: 50% price + 25% lead time + 25%
+  on-time rate, each relative to the best offer (ties: cheaper, then name). The Vendor Comparator only
+  explains the result and must name the winner. A procurement manager approves the request; every PO
+  (from a request or created directly) waits in the Approval Center as `pending_approval`.
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.

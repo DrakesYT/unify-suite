@@ -4,7 +4,7 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.finance import Invoice, InvoiceAnomaly, Payment, Transaction
 from app.models.hr import Candidate, CandidateScore, Job
-from app.models.procurement import PurchaseOrder, PurchaseRequest, Vendor
+from app.models.procurement import PurchaseOrder, PurchaseRequest, Vendor, VendorQuote
 from app.models.sales import Customer, Lead, Order
 from app.models.support import Ticket
 from app.models.uploads import Upload
@@ -38,6 +38,7 @@ __all__ = [
     "Upload",
     "User",
     "Vendor",
+    "VendorQuote",
     "WorkflowDefinition",
     "WorkflowExecution",
     "WorkflowStep",

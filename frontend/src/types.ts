@@ -51,6 +51,10 @@ export interface Approval {
     customer_name?: string | null;
     note?: string;
     likely_cause?: string | null;
+    item?: string | null;
+    quantity?: number | null;
+    budget_minor?: number | null;
+    over_budget?: boolean;
   };
   required_role: Role;
   department: Department;
@@ -176,4 +180,68 @@ export interface Customer {
   name: string;
   company: string | null;
   email: string | null;
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  contact: string | null;
+  lead_time_days: number;
+  on_time_rate: string;
+  created_at: string;
+}
+
+export interface RankedVendor {
+  rank: number;
+  vendor_id: string;
+  vendor_name: string;
+  total_minor: number;
+  currency: string;
+  lead_time_days: number;
+  on_time_rate: string;
+  price_score: string;
+  lead_time_score: string;
+  delivery_score: string;
+  score: string;
+  over_budget: boolean;
+}
+
+export interface VendorComparison {
+  request_id: string;
+  ranking: RankedVendor[];
+  reason: string | null;
+  reason_error: string | null;
+  compared_at: string;
+}
+
+export interface PurchaseRequest {
+  id: string;
+  item: string;
+  quantity: number;
+  budget_minor: number;
+  currency: string;
+  status: "pending" | "approved" | "rejected" | "ordered";
+  chosen_vendor_id: string | null;
+  requested_by_id: string | null;
+  comparison: VendorComparison | null;
+  created_at: string;
+}
+
+export interface Quote {
+  id: string;
+  request_id: string;
+  vendor_id: string;
+  unit_price_minor: number;
+  currency: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  po_number: string;
+  vendor_id: string;
+  request_id: string | null;
+  amount_minor: number;
+  currency: string;
+  status: "pending_approval" | "approved" | "rejected";
+  created_at: string;
 }

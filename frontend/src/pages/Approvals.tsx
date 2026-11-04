@@ -30,6 +30,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
   const [busy, setBusy] = useState(false);
   const p = approval.payload;
   const isPayment = approval.action === "pay_invoice";
+  const isOrder = approval.action === "approve_po";
 
   const decide = async (verb: "approve" | "reject") => {
     setBusy(true);
@@ -62,6 +63,17 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
                 {p.vendor_name} · invoice {p.invoice_number} · {p.po_number}
               </p>
             </>
+          ) : isOrder ? (
+            <>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {money(p.amount_minor, p.currency)}
+              </p>
+              <p className="text-sm text-slate-300">
+                {p.po_number} · {p.vendor_name}
+                {p.item ? ` · ${p.quantity} × ${p.item}` : ""}
+                {p.budget_minor != null ? ` · budget ${money(p.budget_minor, p.currency)}` : ""}
+              </p>
+            </>
           ) : (
             <>
               <p className="mt-1 text-lg font-semibold text-white">{p.title}</p>
@@ -71,12 +83,13 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
         </div>
         <div className="flex items-center gap-2">
           {p.match_status && <Badge value={p.match_status} />}
+          {p.over_budget && <Badge value="over_budget" />}
           {p.category && <Badge value={p.category} />}
           {p.urgency && <Badge value={p.urgency} />}
           <Badge value={approval.status} />
         </div>
       </div>
-      {!isPayment && (p.likely_cause || p.note) && (
+      {!isPayment && !isOrder && (p.likely_cause || p.note) && (
         <div className="mt-4 space-y-1 rounded-lg bg-navy-950/70 p-3 text-sm">
           {p.likely_cause && (
             <p className="text-slate-200">
@@ -130,7 +143,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           <ErrorNote message={error} />
           <div className="flex gap-2">
             <button disabled={busy} onClick={() => decide("approve")} className={primaryButton}>
-              {isPayment ? "Approve payment" : "Approve"}
+              {isPayment ? "Approve payment" : isOrder ? "Approve order" : "Approve"}
             </button>
             <button
               disabled={busy || !comment.trim()}

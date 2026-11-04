@@ -1,10 +1,11 @@
 import uuid
 from decimal import Decimal
+from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Numeric, String
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, TimestampMixin, str_enum
+from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
 from app.models.enums import PurchaseOrderStatus, PurchaseRequestStatus
 
 
@@ -39,6 +40,22 @@ class PurchaseRequest(IdMixin, TimestampMixin, Base):
     )
     chosen_vendor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vendors.id"), index=True)
     requested_by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    comparison: Mapped[dict[str, Any] | None] = mapped_column(JsonType)  # last vendor ranking
+
+
+class VendorQuote(IdMixin, TimestampMixin, Base):
+    """A vendor's price for one purchase request (the price input to vendor comparison)."""
+
+    __tablename__ = "vendor_quotes"
+    __table_args__ = (
+        UniqueConstraint("request_id", "vendor_id"),
+        CheckConstraint("unit_price_minor >= 0", name="unit_price_non_negative"),
+    )
+
+    request_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("purchase_requests.id"), index=True)
+    vendor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vendors.id"), index=True)
+    unit_price_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
 
 
 class PurchaseOrder(IdMixin, TimestampMixin, Base):

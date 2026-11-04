@@ -8,6 +8,7 @@ import { Approvals } from "./pages/Approvals";
 import { Hiring } from "./pages/Hiring";
 import { Login } from "./pages/Login";
 import { PaymentRun } from "./pages/PaymentRun";
+import { Procurement } from "./pages/Procurement";
 import { Payments } from "./pages/Payments";
 import { Sales } from "./pages/Sales";
 import { Support } from "./pages/Support";
@@ -18,6 +19,7 @@ const DEPARTMENT_HOME: Partial<Record<Department, string>> = {
   hr: "/hr",
   finance: "/payments",
   support: "/support",
+  procurement: "/procurement",
 };
 
 function RequireUser({ children }: { children: ReactNode }) {
@@ -53,6 +55,7 @@ export default function App() {
             <Route path="sales" element={<Sales />} />
             <Route path="hr" element={<Hiring />} />
             <Route path="support" element={<Support />} />
+            <Route path="procurement" element={<Procurement />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="activity" element={<Activity />} />
             <Route path="*" element={<Navigate to="/" replace />} />
