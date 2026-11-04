@@ -2,10 +2,10 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, String
+from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
+from app.models.base import Base, IdMixin, JsonType, TimestampMixin, UtcDateTime, str_enum
 from app.models.enums import LeadRating, LeadStatus, OrderStatus, Priority
 
 
@@ -51,4 +51,4 @@ class Order(IdMixin, TimestampMixin, Base):
     amount_minor: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(3))
     status: Mapped[OrderStatus] = mapped_column(str_enum(OrderStatus, "order_status"), index=True)
-    ordered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ordered_at: Mapped[datetime] = mapped_column(UtcDateTime())

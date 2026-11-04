@@ -1,11 +1,12 @@
 import uuid
 from datetime import date
+from typing import Any
 
 from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, TimestampMixin, str_enum
-from app.models.enums import InvoiceStatus, MatchStatus
+from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
+from app.models.enums import AnomalyKind, InvoiceStatus, MatchStatus
 
 
 class Invoice(IdMixin, TimestampMixin, Base):
@@ -43,3 +44,17 @@ class Transaction(IdMixin, TimestampMixin, Base):
     matched_invoice_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("invoices.id"), index=True
     )
+
+
+class InvoiceAnomaly(IdMixin, TimestampMixin, Base):
+    """Something Finance should look at. Duplicates are recorded here instead of being inserted."""
+
+    __tablename__ = "invoice_anomalies"
+
+    kind: Mapped[AnomalyKind] = mapped_column(str_enum(AnomalyKind, "anomaly_kind"), index=True)
+    invoice_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("invoices.id"), index=True)
+    existing_invoice_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("invoices.id"), index=True
+    )
+    upload_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("uploads.id"), index=True)
+    detail: Mapped[dict[str, Any]] = mapped_column(JsonType, default=dict)

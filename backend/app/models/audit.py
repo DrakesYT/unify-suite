@@ -2,10 +2,10 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, JsonType
+from app.models.base import Base, IdMixin, JsonType, UtcDateTime
 
 
 class AuditLog(IdMixin, Base):
@@ -13,9 +13,7 @@ class AuditLog(IdMixin, Base):
 
     __tablename__ = "audit_logs"
 
-    at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), index=True
-    )
+    at: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now(), index=True)
     actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
     action: Mapped[str] = mapped_column(String(80), index=True)
     entity: Mapped[str] = mapped_column(String(60), index=True)

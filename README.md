@@ -14,7 +14,9 @@ See [docs/architecture.md](docs/architecture.md).
 
 - **Vultr Cloud Compute** — one VM runs the whole stack.
 - **Coolify** (Vultr Marketplace image) — builds `docker-compose.yml` from this repository and serves it over HTTPS.
-- **Vultr Serverless Inference** — the LLM behind the agents.
+- **Vultr Serverless Inference** — the LLM behind the agents, called through its OpenAI-compatible API
+  (default model `glm-5.3-flash`). Agents only read, classify and draft; every reply is validated against a
+  schema, and matching, ranking and approvals are plain code.
 
 ## Local setup
 
@@ -50,6 +52,8 @@ attached to the `frontend` service (port 80); no other service is exposed.
 |---|---|---|
 | `POSTGRES_PASSWORD` | db, backend | Required. Letters and digits only. |
 | `JWT_SECRET` | backend | Required. At least 32 random characters; signs login tokens (valid 8 h). |
+| `LLM_API_KEY` | backend | Vultr Serverless Inference key. Without it AI endpoints return 503. |
+| `LLM_MODEL` | backend | Optional, default `glm-5.3-flash`. |
 | `LOG_LEVEL` | backend | Optional, default `INFO`. |
 
 Set them in `.env` locally and in Coolify's Environment Variables page in production. Never commit `.env`.

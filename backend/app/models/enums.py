@@ -60,6 +60,14 @@ class MatchStatus(StrEnum):
     no_po = "no_po"
 
 
+class AnomalyKind(StrEnum):
+    duplicate = "duplicate"  # same vendor, number and amount as an existing invoice
+    number_conflict = "number_conflict"  # same vendor and number, different amount
+    unknown_vendor = "unknown_vendor"
+    po_mismatch = "po_mismatch"
+    no_po = "no_po"
+
+
 class PurchaseRequestStatus(StrEnum):
     pending = "pending"
     approved = "approved"

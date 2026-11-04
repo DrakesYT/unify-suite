@@ -1,10 +1,10 @@
 """Declarative base, shared column types and the common id/timestamp columns."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 
-from sqlalchemy import JSON, DateTime, Enum, MetaData, func
+from sqlalchemy import JSON, DateTime, Dialect, Enum, MetaData, TypeDecorator, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -19,6 +19,18 @@ NAMING_CONVENTION = {
 
 # JSONB on PostgreSQL, plain JSON elsewhere (SQLite in unit tests).
 JsonType = JSON().with_variant(JSONB(), "postgresql")
+
+
+class UtcDateTime(TypeDecorator[datetime]):
+    """TIMESTAMPTZ that always comes back timezone-aware (SQLite would return naive values)."""
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:
+        if value is not None and value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value
 
 
 def str_enum(enum_cls: type[StrEnum], name: str) -> Enum:
@@ -42,8 +54,16 @@ class IdMixin:
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
 
 
+def utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Set in Python (microsecond precision everywhere, so cursor pagination is stable);
+    # the server default covers rows inserted outside the app.
+    created_at: Mapped[datetime] = mapped_column(
+        UtcDateTime(), default=utcnow, server_default=func.now(), index=True
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        UtcDateTime(), default=utcnow, server_default=func.now(), onupdate=utcnow
     )

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from app.config import get_settings
 from app.errors import register_error_handlers
 from app.observability import add_request_context, configure_logging
-from app.routers import auth, health
+from app.routers import auth, finance, health, procurement
 
 
 def create_app() -> FastAPI:
@@ -19,6 +19,8 @@ def create_app() -> FastAPI:
     add_request_context(app)
     app.include_router(health.router)
     app.include_router(auth.router)
+    app.include_router(procurement.router)
+    app.include_router(finance.router)
     return app
 
 

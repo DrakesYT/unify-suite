@@ -18,7 +18,9 @@ COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app
 
-RUN useradd --create-home --uid 1000 appuser
+# /data/uploads is owned by appuser; the named volume mounted there inherits that on first use.
+RUN useradd --create-home --uid 1000 appuser \
+    && mkdir -p /data/uploads && chown appuser /data/uploads
 USER appuser
 
 EXPOSE 8000

@@ -2,10 +2,10 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import CHAR, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import CHAR, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
+from app.models.base import Base, IdMixin, JsonType, TimestampMixin, UtcDateTime, str_enum
 from app.models.enums import (
     ApprovalStatus,
     Department,
@@ -55,8 +55,8 @@ class WorkflowStep(IdMixin, TimestampMixin, Base):
     input: Mapped[dict[str, Any] | None] = mapped_column(JsonType)
     output: Mapped[dict[str, Any] | None] = mapped_column(JsonType)
     error: Mapped[str | None] = mapped_column(Text)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
+    finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
 
 
 class AgentTask(IdMixin, TimestampMixin, Base):
@@ -99,5 +99,5 @@ class ApprovalRequest(IdMixin, TimestampMixin, Base):
     step_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("workflow_steps.id"), index=True)
     requested_by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
     decided_by_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
-    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     comment: Mapped[str | None] = mapped_column(Text)
