@@ -13,6 +13,7 @@ import {
 import { label, money, when } from "../format";
 import type { AgentTask, Execution, Page, Step } from "../types";
 import { usePoll } from "../usePoll";
+import { WhyButton } from "../components/WhyDrawer";
 
 function StepDetail({ step }: { step: Step }) {
   const out = step.output ?? {};
@@ -78,6 +79,11 @@ export function PaymentRun() {
           data ? `PO ${data.input.po_number} · started ${when(data.created_at)}` : undefined
         }
       />
+      {data && (
+        <div className="-mt-3 mb-5">
+          <WhyButton path={`run/${data.id}`} />
+        </div>
+      )}
       <ErrorNote message={run.error} />
       {data && (
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">

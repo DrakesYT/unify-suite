@@ -14,6 +14,7 @@ import { when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Candidate, CandidateScore, Job, Page } from "../types";
 import { usePoll } from "../usePoll";
+import { WhyButton } from "../components/WhyDrawer";
 
 const INTERVIEW_MIN_SCORE = 50; // mirrors the backend rule; the backend enforces it
 
@@ -167,7 +168,10 @@ function ScoreCard({
           </span>
         ))}
       </div>
-      <p className="mt-3 text-sm text-slate-300">{s.summary}</p>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <p className="text-sm text-slate-300">{s.summary}</p>
+        <WhyButton path={`candidate/${jobId}/${s.candidate.id}`} />
+      </div>
       <button
         onClick={() => setOpen(!open)}
         className="mt-2 text-xs text-accent-cyan hover:underline"

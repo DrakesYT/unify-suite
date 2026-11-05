@@ -15,6 +15,7 @@ import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Lead, LeadStatus, Page, Priority } from "../types";
 import { usePoll } from "../usePoll";
+import { WhyButton } from "../components/WhyDrawer";
 
 const STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "won", "lost"];
 const PRIORITIES: Priority[] = ["low", "medium", "high"];
@@ -185,9 +186,12 @@ function LeadRow({
         <td className="py-3 pr-4 text-xs text-slate-400">{label(lead.priority)}</td>
         <td className="py-3 pr-4">
           {lead.rating ? (
-            <button onClick={() => setOpen(!open)} title="Show the reason">
-              <Badge value={lead.rating} />
-            </button>
+            <span className="flex flex-wrap items-center gap-1.5">
+              <button onClick={() => setOpen(!open)} title="Show the reason">
+                <Badge value={lead.rating} />
+              </button>
+              {lead.qualification && <WhyButton path={`lead/${lead.id}`} />}
+            </span>
           ) : (
             <span className="text-xs text-slate-600">not rated</span>
           )}

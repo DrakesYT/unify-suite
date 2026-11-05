@@ -59,6 +59,12 @@ moves money or makes a commitment. The rule throughout: **AI reads, code decides
 5. Every agent call and every tool call writes an `agent_tasks` row (input hash, output, status, duration) and an
    audit row. The Command Center page shows them.
 
+**"Why?" on every AI result.** Lead ratings, candidate scores, ticket investigations, vendor rankings, invoice runs
+and drafted emails each have a **Why?** button. It opens a panel with what the AI read, what it said, what plain code
+decided and who was involved (from the audit log). Agent calls store only a SHA-256 hash of their input, so the
+panel rebuilds the input and shows **Verified** when the hash matches the logged call, or says plainly that the
+record has changed since.
+
 Invoices, resumes and tickets are treated as untrusted text: they can only shape schema-validated output, never
 permissions or actions. Tags inside a document are stripped so it cannot close its own fence. For invoices, plain
 code also scans the text for lines aimed at the AI ("ignore previous instructions", "SYSTEM:", "approve this payment

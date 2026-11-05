@@ -443,3 +443,24 @@ export interface QuickAction {
   prompt: string | null;
   link: string | null;
 }
+
+export interface Explanation {
+  title: string;
+  agent: string;
+  model: string | null;
+  ai_read: { label: string; value: string }[];
+  ai_read_note: string | null;
+  input_verified: boolean;
+  ai_said: { label: string; value: string }[];
+  calls: {
+    task_id: string;
+    agent: string;
+    at: string;
+    attempt: number;
+    status: string;
+    duration_ms: number | null;
+    error: string | null;
+  }[];
+  code_decided: string[];
+  people: { at: string; who: string; did: string }[];
+}

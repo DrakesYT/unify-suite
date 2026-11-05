@@ -24,6 +24,7 @@ import type {
   VendorComparison,
 } from "../types";
 import { usePoll } from "../usePoll";
+import { WhyButton } from "../components/WhyDrawer";
 
 const pct = (value: string) => `${(Number(value) * 100).toFixed(0)}%`;
 
@@ -383,9 +384,12 @@ function RequestDetail({
 
       {request.comparison && (
         <div className="mt-5">
-          <h4 className="mb-2 text-xs font-semibold text-slate-400 uppercase">
-            Vendor ranking · {when(request.comparison.compared_at)}
-          </h4>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h4 className="text-xs font-semibold text-slate-400 uppercase">
+              Vendor ranking · {when(request.comparison.compared_at)}
+            </h4>
+            <WhyButton path={`purchase-request/${request.id}`} />
+          </div>
           <Ranking comparison={request.comparison} />
         </div>
       )}

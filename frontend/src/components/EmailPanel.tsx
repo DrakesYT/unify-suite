@@ -4,6 +4,7 @@ import { when } from "../format";
 import type { OutboundEmail } from "../types";
 import { usePoll } from "../usePoll";
 import { Badge, ErrorNote, ghostButton, inputClass, primaryButton } from "./ui";
+import { WhyButton } from "./WhyDrawer";
 
 /** An AI-drafted email: the agent drafts, a person edits, a manager approves, then it is sent. */
 export function EmailPanel({
@@ -64,7 +65,8 @@ export function EmailPanel({
     <div className="mt-3 rounded-lg border border-navy-800 bg-navy-950/40 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold text-slate-300 uppercase">
-          {title} {email && <Badge value={email.status} />}
+          {title} {email && <Badge value={email.status} />}{" "}
+          {email && <WhyButton path={`email/${email.id}`} verifiable={false} />}
         </p>
         {editable && (
           <button

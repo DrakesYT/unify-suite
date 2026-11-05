@@ -15,6 +15,7 @@ import { when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Approval, Customer, Page, Ticket } from "../types";
 import { usePoll } from "../usePoll";
+import { WhyButton } from "../components/WhyDrawer";
 
 const NEEDS_APPROVAL = new Set(["refund", "legal"]);
 
@@ -139,6 +140,7 @@ function TicketDetail({
           {ticket.category && <Badge value={ticket.category} />}
           {ticket.urgency && <Badge value={ticket.urgency} />}
           <Badge value={ticket.status} />
+          {(ticket.category || inv) && <WhyButton path={`ticket/${ticket.id}`} />}
         </div>
       </div>
       {ticket.description && (
