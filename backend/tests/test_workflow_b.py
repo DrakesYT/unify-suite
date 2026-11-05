@@ -15,11 +15,11 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.llm.fake import FakeLLMClient
 from app.models import ApprovalRequest, Invoice, Payment, User
-from app.models.enums import Department, Role
+from app.models.enums import Department, PurchaseOrderStatus, Role
 from app.schemas.procurement import PurchaseOrderCreate, VendorCreate
 from app.services import finance, procurement
 from tests.pdf import make_pdf
-from tests.test_finance import EXTRACTED, INVOICE_LINES
+from tests.test_finance import EXTRACTED, INVOICE_LINES, set_po_status
 
 AuthHeader = Callable[[User], dict[str, str]]
 MISMATCH = EXTRACTED | {"total_amount": "4500.00"}
@@ -40,12 +40,14 @@ def people(
         VendorCreate(name="ACME Industrial Supplies Ltd.", lead_time_days=7, on_time_rate="0.95"),
         users["manager"],
     )
-    procurement.create_order(
+    order = procurement.create_order(
         db,
         PurchaseOrderCreate(
             po_number="PO-1007", vendor_id=vendor.id, amount_minor=425000, currency="USD"
         ),
     )
+    order.status = PurchaseOrderStatus.approved
+    db.commit()
     return {name: auth_header(user) for name, user in users.items()}
 
 
@@ -148,6 +150,20 @@ def test_mismatch_then_rejected_ends_without_payment(
     assert run["result"]["passed"] is True
     assert db.scalar(select(func.count()).select_from(Payment)) == 0
     assert db.scalar(select(Invoice.status)) == "rejected"
+
+
+def test_unapproved_po_is_reported_to_the_manager(
+    client: TestClient, people: dict[str, dict[str, str]], fake_llm: FakeLLMClient, db: Session
+) -> None:
+    set_po_status(db, PurchaseOrderStatus.pending_approval)
+    fake_llm.replies.append(EXTRACTED)
+
+    run = _start(client, people["clerk"])
+
+    assert run["status"] == "waiting_approval"
+    f3 = next(s for s in run["steps"] if s["key"] == "F3")
+    assert f3["output"]["lines"] == ["PO status: pending approval (a PO must be approved first)"]
+    assert run["approval"]["payload"]["match_status"] == "mismatch"
 
 
 def test_who_may_decide(

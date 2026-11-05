@@ -31,8 +31,8 @@ flowchart LR
   | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
   | Verification Agent | finance | — (rules only) | 5 s |
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
-  extracts fields) → `get_po` → match by vendor, currency and amount (code) → duplicate check (code) →
-  `save_invoice` or `flag_anomaly`. Duplicates are recorded in `invoice_anomalies`, never inserted.
+  extracts fields) → `get_po` → match by PO status (must be approved), vendor, currency and amount
+  (code) → duplicate check (code) → `save_invoice` or `flag_anomaly`. Duplicates are recorded in `invoice_anomalies`, never inserted.
 - Workflow B (Supplier Payment Verification) is a plain state machine (`backend/app/orchestrator/`):
 
   ```mermaid

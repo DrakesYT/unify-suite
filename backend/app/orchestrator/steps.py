@@ -102,6 +102,9 @@ def _describe(diff: dict[str, Any], currency: str) -> str:
     if diff["field"] == "amount_minor":
         invoice, po = format_minor(diff["invoice"], currency), format_minor(diff["po"], currency)
         return f"amount: invoice {invoice}, PO {po}"
+    if diff["field"] == "po_status":
+        status = (diff["po"] or "unknown").replace("_", " ")
+        return f"PO status: {status} (a PO must be approved first)"
     return f"{diff['field']}: invoice {diff['invoice']}, PO {diff['po']}"
 
 

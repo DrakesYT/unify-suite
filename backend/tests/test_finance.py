@@ -6,13 +6,13 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.agents.base import UNTRUSTED_TEXT_RULE
 from app.llm.fake import FakeLLMClient
-from app.models import AgentTask, Invoice, User
-from app.models.enums import Department, Role
+from app.models import AgentTask, Invoice, PurchaseOrder, User
+from app.models.enums import Department, PurchaseOrderStatus, Role
 from app.schemas.procurement import PurchaseOrderCreate, VendorCreate
 from app.services import procurement
 from tests.pdf import make_pdf
@@ -50,12 +50,19 @@ def po(db: Session, make_user: Callable[..., User]) -> None:
         VendorCreate(name="ACME Industrial Supplies Ltd.", lead_time_days=7, on_time_rate="0.95"),
         admin,
     )
-    procurement.create_order(
+    order = procurement.create_order(
         db,
         PurchaseOrderCreate(
             po_number="PO-1007", vendor_id=vendor.id, amount_minor=425000, currency="USD"
         ),
     )
+    order.status = PurchaseOrderStatus.approved
+    db.commit()
+
+
+def set_po_status(db: Session, status: PurchaseOrderStatus) -> None:
+    db.execute(update(PurchaseOrder).values(status=status))
+    db.commit()
 
 
 def _upload(client: TestClient, headers: dict[str, str], lines: list[str] = INVOICE_LINES) -> Any:
@@ -114,6 +121,21 @@ def test_amount_mismatch_is_saved_for_review_and_flagged(
     }
     assert body["invoice"]["status"] == "needs_review"
     assert [a["kind"] for a in body["anomalies"]] == ["po_mismatch"]
+
+
+def test_po_not_yet_approved_is_a_mismatch(
+    client: TestClient, headers: dict[str, str], fake_llm: FakeLLMClient, po: None, db: Session
+) -> None:
+    set_po_status(db, PurchaseOrderStatus.pending_approval)
+    fake_llm.replies.append(EXTRACTED)
+
+    body = _upload(client, headers).json()
+
+    assert body["match"] == {
+        "status": "mismatch",
+        "differences": [{"field": "po_status", "invoice": "approved", "po": "pending_approval"}],
+    }
+    assert body["invoice"]["status"] == "needs_review"
 
 
 def test_invoice_without_po_is_no_po(

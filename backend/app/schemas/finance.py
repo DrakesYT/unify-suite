@@ -5,7 +5,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.enums import AnomalyKind, InvoiceStatus, MatchStatus
+from app.models.enums import AnomalyKind, InvoiceStatus, MatchStatus, PurchaseOrderStatus
 from app.money import to_minor
 from app.schemas.common import Currency
 
@@ -47,6 +47,8 @@ class PoSnapshot(BaseModel):
     vendor_name: str
     amount_minor: int
     currency: str
+    # None in runs stored before the PO status was recorded; treated as not approved.
+    status: PurchaseOrderStatus | None = None
 
 
 class FieldDifference(BaseModel):

@@ -214,6 +214,7 @@ def po_snapshot(db: Session, po_number: str) -> PoSnapshot | None:
         vendor_name=vendor.name,
         amount_minor=order.amount_minor,
         currency=order.currency,
+        status=order.status,
     )
 
 

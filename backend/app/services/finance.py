@@ -13,7 +13,13 @@ from app.agents.runner import TaskContext, call_tool, run_agent
 from app.errors import ApiError
 from app.llm import LLMClient
 from app.models import ApprovalRequest, Invoice, InvoiceAnomaly, Payment, Upload, Vendor
-from app.models.enums import AnomalyKind, ApprovalStatus, InvoiceStatus, MatchStatus
+from app.models.enums import (
+    AnomalyKind,
+    ApprovalStatus,
+    InvoiceStatus,
+    MatchStatus,
+    PurchaseOrderStatus,
+)
 from app.schemas.finance import (
     AnomalyOut,
     FieldDifference,
@@ -52,10 +58,12 @@ def load_po(db: Session, po_number: str | None, ctx: TaskContext) -> PoSnapshot 
 
 
 def match_invoice(fields: InvoiceFields, vendor: Vendor, po: PoSnapshot | None) -> MatchResult:
-    """FR-FIN-02, deterministic: same vendor, currency and amount as the PO → matched."""
+    """FR-FIN-02, deterministic: approved PO, same vendor, currency and amount → matched."""
     if po is None:
         return MatchResult(status=MatchStatus.no_po)
+    approved = PurchaseOrderStatus.approved
     checks = [
+        ("po_status", approved, po.status, po.status == approved),
         ("vendor", vendor.name, po.vendor_name, vendor.id == po.vendor_id),
         ("currency", fields.currency, po.currency, fields.currency == po.currency),
         (
