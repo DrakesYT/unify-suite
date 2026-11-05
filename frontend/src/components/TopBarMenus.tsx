@@ -1,9 +1,10 @@
-import { useCallback, useRef, useState } from "react";
-import { Link } from "react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { api } from "../api";
 import { approvalHeadline } from "../approvalText";
 import { ago, initials, label } from "../format";
-import { useAuth } from "../session";
-import type { Approval, Page } from "../types";
+import { isDemo, useAuth } from "../session";
+import type { Approval, Page, User } from "../types";
 import { usePoll } from "../usePoll";
 import { BellIcon, ChevronDown, LogoutIcon } from "./icons";
 import { useDismiss } from "./useDismiss";
@@ -93,6 +94,75 @@ export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
   );
 }
 
+/** Demo accounts only: jump to another seeded role without typing the shared password. */
+function DemoSwitcher({ onDone }: { onDone: () => void }) {
+  const { user, switchTo } = useAuth();
+  const navigate = useNavigate();
+  const [accounts, setAccounts] = useState<User[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    api<User[]>("/auth/demo-accounts")
+      .then((found) => live && setAccounts(found))
+      .catch((e) => live && setError(e instanceof Error ? e.message : "Could not load"));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const pick = async (email: string) => {
+    setBusy(email);
+    setError(null);
+    try {
+      await switchTo(email);
+      onDone();
+      navigate("/");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not switch");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="border-b border-white/5 py-2">
+      <p className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+        View as (demo roles)
+      </p>
+      {error && <p className="px-4 py-1 text-xs text-red-300">{error}</p>}
+      {!accounts && !error && <p className="px-4 py-1 text-xs text-slate-500">Loading…</p>}
+      <ul className="max-h-64 overflow-y-auto">
+        {accounts?.map((a) => {
+          const current = a.email === user?.email;
+          return (
+            <li key={a.id}>
+              <button
+                onClick={() => void pick(a.email)}
+                disabled={current || busy !== null}
+                className={`flex w-full items-center gap-2.5 px-4 py-1.5 text-left ${
+                  current ? "bg-accent-purple/15" : "hover:bg-white/5"
+                }`}
+              >
+                <Avatar name={a.full_name} size={24} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-slate-100">{a.full_name}</span>
+                  <span className="block truncate text-[11px] text-slate-500 capitalize">
+                    {label(a.role)} · {a.department}
+                  </span>
+                </span>
+                {current && <span className="text-[11px] text-accent-cyan">you</span>}
+                {busy === a.email && <span className="text-[11px] text-slate-400">…</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function UserMenu() {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -119,7 +189,7 @@ export function UserMenu() {
         <ChevronDown size={14} className="text-slate-400" />
       </button>
       {open && (
-        <div className={`${popover} w-64`}>
+        <div className={`${popover} w-72`}>
           <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3">
             <Avatar name={user.full_name} size={38} />
             <div className="min-w-0">
@@ -130,6 +200,7 @@ export function UserMenu() {
               </p>
             </div>
           </div>
+          {isDemo(user) && <DemoSwitcher onDone={close} />}
           <button
             onClick={signOut}
             className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-white/5 hover:text-white"

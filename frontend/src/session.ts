@@ -6,6 +6,8 @@ export interface AuthState {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
+  /** Demo accounts only: become another seeded demo user (no password typed). */
+  switchTo: (email: string) => Promise<User>;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);
@@ -14,6 +16,13 @@ export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
+}
+
+export const DEMO_DOMAIN = "@demo.example.com";
+
+/** Seeded demo account (the role switcher and the guided tour are only for these). */
+export function isDemo(user: User | null): boolean {
+  return Boolean(user && user.email.endsWith(DEMO_DOMAIN) && user.role !== "admin");
 }
 
 /** Mirrors the backend rule: who may read a department's data. */

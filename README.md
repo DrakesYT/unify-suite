@@ -116,6 +116,11 @@ docker compose exec backend python -m app.seed
 
 The demo password for the live site is given in the lablab.ai submission.
 
+**Guided tour and role switcher:** after signing in with any demo account, press **Tour** in the top bar. Five
+steps walk through the dashboard, an invoice upload (as the finance clerk), the approval pause (as the finance
+manager), Aura and the Command Center, switching to the right demo account at each step. The account menu's
+**View as** list switches between demo roles at any time. Both exist only for `@demo.example.com` accounts.
+
 **Workflow B in two minutes:** as the finance clerk, upload an invoice that references `PO-1007` (ACME, USD 4,250.00).
 The AI reads it, code matches it to the PO, and the run pauses at *Manager approval*. Sign in as the finance
 manager and approve → the payment is created and the verification step confirms every record is linked. Upload an

@@ -28,13 +28,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   };
 
+  const switchTo = async (email: string) => {
+    const res = await api<{ access_token: string; user: User }>("/auth/demo-switch", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    setToken(res.access_token);
+    setUser(res.user);
+    return res.user;
+  };
+
   const signOut = () => {
     setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut, switchTo }}>
       {children}
     </AuthContext.Provider>
   );

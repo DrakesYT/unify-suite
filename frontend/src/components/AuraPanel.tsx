@@ -113,7 +113,10 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
   };
 
   return (
-    <aside className="flex flex-col self-start overflow-hidden rounded-2xl border border-accent-purple/30 bg-navy-900/90 shadow-[0_0_40px] shadow-accent-purple/10 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)]">
+    <aside
+      data-tour="aura"
+      className="flex flex-col self-start overflow-hidden rounded-2xl border border-accent-purple/30 bg-navy-900/90 shadow-[0_0_40px] shadow-accent-purple/10 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)]"
+    >
       <div className="relative overflow-hidden bg-gradient-to-br from-accent-purple via-fuchsia-600/80 to-accent-cyan px-5 py-4">
         <div className="absolute -top-10 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex items-center gap-3">

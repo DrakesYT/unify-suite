@@ -51,13 +51,15 @@ export function Card({
   title,
   actions,
   children,
+  tour,
 }: {
   title?: string;
   actions?: ReactNode;
   children: ReactNode;
+  tour?: string; // anchor for the guided tour
 }) {
   return (
-    <section className="rounded-xl border border-navy-800 bg-navy-900 p-5">
+    <section data-tour={tour} className="rounded-xl border border-navy-800 bg-navy-900 p-5">
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {title && (

@@ -44,7 +44,7 @@ function StartForm() {
   };
 
   return (
-    <Card title="Verify a supplier invoice">
+    <Card title="Verify a supplier invoice" tour="upload-invoice">
       <form onSubmit={submit} className="grid gap-4 md:grid-cols-[1fr_200px_auto] md:items-end">
         <label className="space-y-1 text-sm">
           <span className="text-slate-300">Invoice (PDF or TXT, max 10 MB)</span>

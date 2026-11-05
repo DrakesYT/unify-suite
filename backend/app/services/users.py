@@ -3,9 +3,10 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import JWT_TTL_S
+from app.config import DEMO_DOMAIN, JWT_TTL_S
 from app.errors import ApiError
 from app.models import User
+from app.models.enums import Role
 from app.schemas.auth import LoginRequest, TokenResponse, UserCreate, UserOut
 from app.security import burn_password_check, create_access_token, hash_password, verify_password
 from app.services import audit
@@ -61,4 +62,50 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
         access_token=create_access_token(user.id),
         expires_in=JWT_TTL_S,
         user=UserOut.model_validate(user),
+    )
+
+
+# --- Demo accounts: judges can look at the app as any seeded role without re-typing a password ---
+
+
+def is_demo(user: User) -> bool:
+    """A seeded demo account. Admins never count, so a switch can never reach user management."""
+    return user.email.endswith(f"@{DEMO_DOMAIN}") and user.role != Role.admin
+
+
+def _require_demo(user: User) -> None:
+    if not is_demo(user):
+        raise ApiError(403, "not_demo_account", "Only demo accounts can switch roles")
+
+
+def demo_accounts(db: Session, user: User) -> list[User]:
+    _require_demo(user)
+    rows = db.scalars(
+        select(User)
+        .where(User.email.like(f"%@{DEMO_DOMAIN}"), User.is_active, User.role != Role.admin)
+        .order_by(User.department, User.role, User.full_name)
+    )
+    return [u for u in rows if is_demo(u)]
+
+
+def switch_demo(db: Session, user: User, email: str) -> TokenResponse:
+    """Sign in as another demo account. All demo accounts share one password, so this grants
+    nothing a demo user could not already do; real accounts can neither switch nor be reached."""
+    _require_demo(user)
+    target = db.scalar(select(User).where(User.email == email))
+    if target is None or not target.is_active or not is_demo(target):
+        raise ApiError(404, "not_found", "No such demo account")
+    audit.record(
+        db,
+        action="auth.demo_switch",
+        entity="user",
+        entity_id=target.id,
+        actor_id=user.id,
+        detail={"from": user.email, "to": target.email},
+    )
+    db.commit()
+    return TokenResponse(
+        access_token=create_access_token(target.id),
+        expires_in=JWT_TTL_S,
+        user=UserOut.model_validate(target),
     )

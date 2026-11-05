@@ -18,7 +18,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import PASSWORD_MAX_BYTES, PASSWORD_MIN_LEN
+from app.config import DEMO_DOMAIN, PASSWORD_MAX_BYTES, PASSWORD_MIN_LEN
 from app.db import session_factory
 from app.models import (
     Candidate,
@@ -52,8 +52,6 @@ from app.models.enums import (
 )
 from app.security import hash_password
 from app.services.uploads import save_upload
-
-DEMO_DOMAIN = "demo.example.com"
 
 USERS = [
     ("ceo", "Zara Khan", Role.executive, Department.finance),

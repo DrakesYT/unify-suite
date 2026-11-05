@@ -47,7 +47,7 @@ export function Activity() {
         title="Command Center"
         subtitle="Every agent call and tool call with its input hash, outcome and duration. Refreshes every 5 s."
       />
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div data-tour="command-center" className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat title="Calls shown" value={rows.length} />
         <Stat title="Agent calls" value={agentRows.length} />
         <Stat title="Failed" value={failed} />

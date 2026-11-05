@@ -22,6 +22,7 @@ DOCUMENT_MAX_CHARS = 20_000  # text sent to the LLM is cut to this length
 SUSPICIOUS_MAX_FINDINGS = 5  # instruction-like lines reported per document
 SUSPICIOUS_LINE_MAX_CHARS = 160
 
+DEMO_DOMAIN = "demo.example.com"  # the seeded demo accounts; they share one password
 SELLER_COMPANY = "UNIFY Demo Corp"  # the company the demo users work for (email signatures)
 DEFAULT_TERMS_DAYS = 30  # customer payment terms when none are on file (net 30)
 OFFICE_UTC_OFFSET_HOURS = 5  # interviews are scheduled in Pakistan time (PKT, no daylight saving)

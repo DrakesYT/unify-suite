@@ -207,7 +207,7 @@ export function Approvals() {
         ))}
       </div>
       <ErrorNote message={error} />
-      <div className="space-y-4">
+      <div className="space-y-4" data-tour="approvals">
         {data?.items.length === 0 && <Empty>Nothing {tab}.</Empty>}
         {data?.items.map((a) => (
           <ApprovalCard key={a.id} approval={a} onDone={reload} />

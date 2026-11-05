@@ -106,7 +106,10 @@ flowchart LR
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.
 - Auth: `POST /api/auth/login` returns an HS256 JWT valid 8 h (bcrypt password hashes). Each user has one
-  role and one department. Department routers use one guard:
+  role and one department. `POST /api/auth/demo-switch` lets a signed-in `@demo.example.com` account get a
+  token for another demo account (the guided tour and the "View as" menu use it). The demo accounts share
+  one password, so this adds no access; admins and real accounts can neither switch nor be switched to,
+  and every switch is audited. Department routers use one guard:
 
   | Role | Own department | Other departments |
   |---|---|---|

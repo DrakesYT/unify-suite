@@ -45,7 +45,10 @@ function greeting(): string {
 /** The facts that most need a look, worded by code from live data (never invented). */
 function InsightsBanner({ insights }: { insights: Overview["insights"] | undefined }) {
   return (
-    <div className="rounded-2xl bg-gradient-to-r from-accent-purple/60 via-fuchsia-500/30 to-accent-cyan/60 p-px">
+    <div
+      data-tour="insights"
+      className="rounded-2xl bg-gradient-to-r from-accent-purple/60 via-fuchsia-500/30 to-accent-cyan/60 p-px"
+    >
       <div className="flex flex-col gap-2 rounded-2xl bg-navy-950/90 px-4 py-3 md:flex-row md:items-center md:gap-4">
         <span
           className="flex shrink-0 items-center gap-2 text-sm font-semibold text-white"
