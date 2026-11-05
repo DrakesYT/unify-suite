@@ -32,6 +32,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
   const p = approval.payload;
   const isPayment = approval.action === "pay_invoice";
   const isOrder = approval.action === "approve_po";
+  const isEmail = approval.action === "send_email";
 
   const decide = async (verb: "approve" | "reject") => {
     setBusy(true);
@@ -75,6 +76,13 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
                 {p.budget_minor != null ? ` · budget ${money(p.budget_minor, p.currency)}` : ""}
               </p>
             </>
+          ) : isEmail ? (
+            <>
+              <p className="mt-1 text-lg font-semibold text-white">{p.subject}</p>
+              <p className="text-sm text-slate-300">
+                Email to {p.company ?? "a lead"} · {p.to}
+              </p>
+            </>
           ) : (
             <>
               <p className="mt-1 text-lg font-semibold text-white">{p.title}</p>
@@ -90,6 +98,11 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           <Badge value={approval.status} />
         </div>
       </div>
+      {isEmail && p.body && (
+        <p className="mt-4 rounded-lg bg-navy-950/70 p-3 text-sm whitespace-pre-wrap text-slate-300">
+          {p.body}
+        </p>
+      )}
       {!isPayment && !isOrder && (p.likely_cause || p.note) && (
         <div className="mt-4 space-y-1 rounded-lg bg-navy-950/70 p-3 text-sm">
           {p.likely_cause && (
@@ -145,7 +158,13 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           <ErrorNote message={error} />
           <div className="flex gap-2">
             <button disabled={busy} onClick={() => decide("approve")} className={primaryButton}>
-              {isPayment ? "Approve payment" : isOrder ? "Approve order" : "Approve"}
+              {isPayment
+                ? "Approve payment"
+                : isOrder
+                  ? "Approve order"
+                  : isEmail
+                    ? "Approve & send"
+                    : "Approve"}
             </button>
             <button
               disabled={busy || !comment.trim()}

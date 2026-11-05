@@ -28,6 +28,9 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_MODEL: ${LLM_MODEL:-glm-5.3-flash}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-UNIFY SUITE <onboarding@resend.dev>}
+      EMAIL_REDIRECT_TO: ${EMAIL_REDIRECT_TO:-}
     volumes:
       - uploads:/data/uploads  # uploaded files, outside the web root
     depends_on:

@@ -69,6 +69,7 @@ warning on the run and in the Approval Center.
 |---|---|---|---|
 | Invoice Processor | Finance | Reads an uploaded invoice PDF and extracts vendor, number, date, PO and total | Matches it to the PO (approved, same vendor, currency, amount), blocks duplicates, saves the invoice |
 | Lead Qualifier | Sales | Rates a lead hot / warm / cold with a 20+ word reason and the fields it relied on | Sends only business fields (no contact name or full email); saves the rating |
+| Outreach Writer | Sales | Drafts a first email to a qualified lead | Rejects drafts with links, placeholders or addresses; adds greeting and signature; a sales manager approves; then it is **really sent** through Resend |
 | Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score, ranks candidates |
 | Ticket Investigator | Support | Classifies new tickets; investigates against the customer's last 20 orders; drafts a reply | Rejects cited orders that are not the customer's; refund/legal escalations need a manager |
 | Vendor Comparator | Procurement | Explains why the top vendor wins | Ranks vendors: 50% price + 25% lead time + 25% on-time rate |
@@ -101,8 +102,8 @@ docker compose exec backend python -m app.seed
 | `ceo@demo.example.com` | executive | Dashboard, Aura chat, Approval Center (read-only) |
 | `finance.clerk@demo.example.com` | finance employee | Supplier payments: upload an invoice for `PO-1007` |
 | `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment |
-| `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI |
-| `sales.manager@demo.example.com` | sales manager | Dashboard, Sales leads |
+| `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
+| `sales.manager@demo.example.com` | sales manager | Approval Center: approve & send the email (or reject it) |
 | `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates |
 | `hr.manager@demo.example.com` | HR manager | Dashboard, Hiring |
 | `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
@@ -153,6 +154,9 @@ attached to the `frontend` service (port 80); no other service is exposed.
 | `JWT_SECRET` | backend | Required. At least 32 random characters; signs login tokens (valid 8 h). |
 | `LLM_API_KEY` | backend | Vultr Serverless Inference key. Without it AI endpoints return 503. |
 | `LLM_MODEL` | backend | Optional, default `glm-5.3-flash`. |
+| `RESEND_API_KEY` | backend | Optional. [Resend](https://resend.com) key for sending approved emails. Without it, approved emails are marked failed ("not configured"). |
+| `EMAIL_FROM` | backend | Optional, default `UNIFY SUITE <onboarding@resend.dev>`. |
+| `EMAIL_REDIRECT_TO` | backend | Optional demo safety: every email goes to this one inbox, with the real recipient noted at the top. |
 | `LOG_LEVEL` | backend | Optional, default `INFO`. |
 
 Set them in `.env` locally and in Coolify's Environment Variables page in production. Never commit `.env`.

@@ -10,6 +10,7 @@ import {
   inputClass,
   primaryButton,
 } from "../components/ui";
+import { OutreachPanel } from "../components/OutreachPanel";
 import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Lead, LeadStatus, Page, Priority } from "../types";
@@ -216,6 +217,7 @@ function LeadRow({
                 </p>
               </div>
             )}
+            {open && lead.qualification && <OutreachPanel leadId={lead.id} editable={editable} />}
           </td>
         </tr>
       )}

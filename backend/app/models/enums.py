@@ -145,3 +145,11 @@ class ApprovalStatus(StrEnum):
     approved = "approved"
     rejected = "rejected"
     cancelled = "cancelled"
+
+
+class EmailStatus(StrEnum):
+    draft = "draft"
+    pending_approval = "pending_approval"
+    sent = "sent"
+    failed = "failed"
+    rejected = "rejected"

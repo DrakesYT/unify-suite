@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings
 
 DB_CONNECT_TIMEOUT_S = 5
@@ -22,6 +22,10 @@ DOCUMENT_MAX_CHARS = 20_000  # text sent to the LLM is cut to this length
 SUSPICIOUS_MAX_FINDINGS = 5  # instruction-like lines reported per document
 SUSPICIOUS_LINE_MAX_CHARS = 160
 
+SELLER_COMPANY = "UNIFY Demo Corp"  # the company the demo users work for (email signatures)
+RESEND_API_URL = "https://api.resend.com/emails"
+EMAIL_SEND_TIMEOUT_S = 10.0
+
 LLM_MAX_TOKENS = 4_000  # includes the model's hidden reasoning tokens
 AGENT_RETRY_DELAYS_S = (2, 8)  # two retries: wait 2 s, then 8 s
 
@@ -34,6 +38,17 @@ class Settings(BaseSettings):
     llm_base_url: str = "https://api.vultrinference.com/v1"
     llm_model: str = "glm-5.3-flash"
     llm_api_key: SecretStr | None = None
+    # Email (Resend). Without a key, approved emails are not sent and are marked failed.
+    resend_api_key: SecretStr | None = None
+    email_from: str = "UNIFY SUITE <onboarding@resend.dev>"
+    # Demo safety: when set, every email goes to this one address instead of the real recipient.
+    email_redirect_to: str | None = None
+
+    @field_validator("resend_api_key", "email_redirect_to", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, value: object) -> object:
+        """docker compose passes an unset variable as an empty string."""
+        return None if isinstance(value, str) and not value.strip() else value
 
 
 @lru_cache

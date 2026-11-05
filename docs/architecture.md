@@ -24,6 +24,7 @@ flowchart LR
   |---|---|---|---|
   | Aura Router | caller's own | pick one route from a fixed list | 10 s |
   | Lead Qualifier | sales | rate a lead hot/warm/cold with a reason | 20 s |
+  | Outreach Writer | sales | draft a first email to a qualified lead | 30 s |
   | Invoice Processor | finance | extract invoice fields | 60 s |
   | Resume Parser | hr | extract skills, years, education | 30 s |
   | Resume Screener | hr | quote evidence for each requirement | 30 s |
@@ -56,6 +57,12 @@ flowchart LR
   steps with their stored inputs. Payments are created only for an approved request of that invoice.
 - Sales: the Lead Qualifier gets only company, email domain, status, priority, value and notes (no
   contact name or full email) and must return hot/warm/cold, a reason of 20+ words and the fields it cited.
+  For a qualified lead the Outreach Writer drafts a first email from the same facts; code rejects drafts
+  with links, placeholders, email addresses or greetings, then adds "Hi <first name>," and the rep's
+  signature. The rep edits and asks for approval (`send_email`, sales manager); only an approved email
+  is sent (`app/mailer/`, Resend over HTTPS) by the `mailer → send_email` tool. A failed send is kept as
+  `failed` with the provider's reason and can be retried without a new approval. `EMAIL_REDIRECT_TO`
+  sends every email to one demo inbox.
 - HR: the Resume parser extracts skills, years and education at upload. The Resume Screener only returns
   evidence (requirement + exact quote); code rejects any quote not found in the resume and computes the
   score: 70 × (skills with evidence ÷ required skills) + 30 × min(years ÷ minimum years, 1).

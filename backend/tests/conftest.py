@@ -13,12 +13,16 @@ os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://test:test@localhost:
 os.environ.setdefault("JWT_SECRET", "test-secret-test-secret-test-secret-0123")
 os.environ["UPLOAD_DIR"] = tempfile.mkdtemp(prefix="unify-test-uploads-")
 os.environ.pop("LLM_API_KEY", None)  # tests never call the real model unless they opt in
+os.environ.pop("RESEND_API_KEY", None)  # ...and never send real email
+os.environ.pop("EMAIL_REDIRECT_TO", None)
 
 from app import security
 from app.agents import runner
 from app.db import get_db, get_session_factory
 from app.llm import get_llm
 from app.llm.fake import FakeLLMClient
+from app.mailer import get_mailer
+from app.mailer.fake import FakeEmailSender
 from app.main import app
 from app.models import Base, User
 from app.models.enums import Department, Role
@@ -110,4 +114,12 @@ def fake_llm(client: TestClient) -> FakeLLMClient:
     """A scripted model wired into the app. Queue replies on `fake_llm.replies`."""
     fake = FakeLLMClient()
     app.dependency_overrides[get_llm] = lambda: fake
+    return fake
+
+
+@pytest.fixture
+def fake_mailer(client: TestClient) -> FakeEmailSender:
+    """A recording email sender wired into the app. Inspect `fake_mailer.sent`."""
+    fake = FakeEmailSender()
+    app.dependency_overrides[get_mailer] = lambda: fake
     return fake

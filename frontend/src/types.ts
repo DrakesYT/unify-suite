@@ -56,6 +56,10 @@ export interface Approval {
     quantity?: number | null;
     budget_minor?: number | null;
     over_budget?: boolean;
+    company?: string | null;
+    to?: string;
+    subject?: string;
+    body?: string;
   };
   required_role: Role;
   department: Department;
@@ -100,6 +104,22 @@ export interface AgentTask {
 
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
 export type Priority = "low" | "medium" | "high";
+
+export interface OutboundEmail {
+  id: string;
+  kind: string;
+  lead_id: string | null;
+  to_address: string;
+  subject: string;
+  body: string;
+  status: "draft" | "pending_approval" | "sent" | "failed" | "rejected";
+  approval_id: string | null;
+  drafted_by_model: string | null;
+  delivered_to: string | null;
+  sent_at: string | null;
+  error: string | null;
+  created_at: string;
+}
 
 export interface Lead {
   id: string;

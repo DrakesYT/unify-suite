@@ -8,10 +8,12 @@ from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX
 from app.db import DbSession
 from app.deps import CurrentUser, require_department
 from app.llm import LLM
+from app.mailer import Mailer
 from app.models.enums import Department, LeadRating, LeadStatus
 from app.schemas.common import Page
+from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
 from app.schemas.sales import LeadCreate, LeadOut, LeadUpdate
-from app.services import sales
+from app.services import outreach, sales
 
 router = APIRouter(
     prefix="/api/sales",
@@ -52,3 +54,38 @@ def update_lead(lead_id: uuid.UUID, data: LeadUpdate, db: DbSession, user: Curre
 def qualify_lead(lead_id: uuid.UUID, db: DbSession, user: CurrentUser, llm: LLM) -> LeadOut:
     """Lead Qualifier: hot / warm / cold with a reason and the lead fields it relied on."""
     return LeadOut.model_validate(sales.qualify_lead(db, llm, lead_id, TaskContext(actor=user)))
+
+
+@router.get("/leads/{lead_id}/emails")
+def list_lead_emails(lead_id: uuid.UUID, db: DbSession) -> list[OutboundEmailOut]:
+    return [OutboundEmailOut.model_validate(e) for e in outreach.list_for_lead(db, lead_id)]
+
+
+@router.post("/leads/{lead_id}/emails", status_code=201)
+def draft_lead_email(
+    lead_id: uuid.UUID, db: DbSession, user: CurrentUser, llm: LLM
+) -> OutboundEmailOut:
+    """Outreach Writer drafts a first email. Nothing is sent until a sales manager approves."""
+    email = outreach.draft_for_lead(db, llm, lead_id, TaskContext(actor=user))
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.patch("/emails/{email_id}")
+def edit_email(
+    email_id: uuid.UUID, data: EmailDraftUpdate, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(outreach.update_draft(db, email_id, data, user))
+
+
+@router.post("/emails/{email_id}/request-approval")
+def request_email_approval(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(outreach.request_approval(db, email_id, user))
+
+
+@router.post("/emails/{email_id}/retry")
+def retry_email(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser, mailer: Mailer
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(outreach.retry(db, email_id, user, mailer))
