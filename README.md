@@ -60,7 +60,10 @@ moves money or makes a commitment. The rule throughout: **AI reads, code decides
    audit row. The Command Center page shows them.
 
 Invoices, resumes and tickets are treated as untrusted text: they can only shape schema-validated output, never
-permissions or actions.
+permissions or actions. Tags inside a document are stripped so it cannot close its own fence. For invoices, plain
+code also scans the text for lines aimed at the AI ("ignore previous instructions", "SYSTEM:", "approve this payment
+immediately", …); they are logged to the audit trail and shown to the manager as a red "possible prompt injection"
+warning on the run and in the Approval Center.
 
 | Agent | Department | Real task it performs | What plain code does |
 |---|---|---|---|

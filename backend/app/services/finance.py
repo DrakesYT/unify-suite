@@ -20,6 +20,7 @@ from app.models.enums import (
     MatchStatus,
     PurchaseOrderStatus,
 )
+from app.safety import find_instruction_text
 from app.schemas.finance import (
     AnomalyOut,
     FieldDifference,
@@ -37,11 +38,25 @@ from app.services.uploads import read_text
 AGENT = InvoiceProcessor()
 
 
-def extract_invoice(db: Session, llm: LLMClient, upload: Upload, ctx: TaskContext) -> InvoiceFields:
+def extract_invoice(
+    db: Session, llm: LLMClient, upload: Upload, ctx: TaskContext
+) -> tuple[InvoiceFields, list[str]]:
+    """The model's fields, plus any lines of the invoice that try to instruct the AI (code)."""
     text = call_tool(
         db, AGENT, "read_upload", {"upload_id": str(upload.id)}, lambda: read_text(upload), ctx
     )
-    return run_agent(db, AGENT, InvoiceText(text=text), llm, ctx)
+    suspicious = find_instruction_text(text)
+    if suspicious:
+        audit.record(
+            db,
+            action="security.instruction_text_found",
+            entity="upload",
+            entity_id=upload.id,
+            actor_id=ctx.actor.id,
+            detail={"lines": suspicious},
+        )
+        db.commit()
+    return run_agent(db, AGENT, InvoiceText(text=text), llm, ctx), suspicious
 
 
 def load_po(db: Session, po_number: str | None, ctx: TaskContext) -> PoSnapshot | None:
@@ -200,7 +215,7 @@ def process_invoice_upload(
     db: Session, llm: LLMClient, upload: Upload, ctx: TaskContext
 ) -> InvoiceUploadResult:
     """FR-FIN-01..03 for one uploaded file."""
-    fields = extract_invoice(db, llm, upload, ctx)
+    fields, suspicious = extract_invoice(db, llm, upload, ctx)
     po = load_po(db, fields.po_number, ctx)
     match, invoice, anomalies = record_invoice(db, upload, fields, po, ctx)
     return InvoiceUploadResult(
@@ -209,6 +224,7 @@ def process_invoice_upload(
         match=match,
         invoice=InvoiceOut.model_validate(invoice) if invoice else None,
         anomalies=[AnomalyOut.model_validate(a) for a in anomalies],
+        suspicious_text=suspicious,
     )
 
 

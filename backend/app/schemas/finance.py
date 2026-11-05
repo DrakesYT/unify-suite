@@ -97,3 +97,6 @@ class InvoiceUploadResult(BaseModel):
     match: MatchResult | None = Field(description="None when flagged before matching")
     invoice: InvoiceOut | None = Field(description="None when the invoice was not saved")
     anomalies: list[AnomalyOut]
+    suspicious_text: list[str] = Field(
+        default=[], description="Lines of the document that try to give the AI instructions"
+    )

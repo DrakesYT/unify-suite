@@ -7,6 +7,7 @@ import {
   Card,
   Empty,
   ErrorNote,
+  InjectionWarning,
   PageHeader,
   dangerButton,
   inputClass,
@@ -115,6 +116,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           </ul>
         </div>
       )}
+      <InjectionWarning lines={p.suspicious_text} />
       <p className="mt-3 text-xs text-slate-500">
         Requested {when(approval.created_at)}
         {approval.execution_id && (

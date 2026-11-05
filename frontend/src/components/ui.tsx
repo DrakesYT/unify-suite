@@ -79,6 +79,29 @@ export function ErrorNote({ message }: { message: string | null }) {
   return <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{message}</p>;
 }
 
+/** Lines of an uploaded document that tried to give the AI orders (found by code, never obeyed). */
+export function InjectionWarning({ lines }: { lines?: string[] }) {
+  if (!lines || lines.length === 0) return null;
+  return (
+    <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 p-3">
+      <p className="text-xs font-semibold text-red-200 uppercase">
+        Possible prompt injection — ignored
+      </p>
+      <p className="mt-1 text-sm text-red-100">
+        This document contains text addressed to the AI. The agent did not follow it; check the
+        document before approving.
+      </p>
+      <ul className="mt-2 space-y-1 text-sm text-red-50">
+        {lines.map((line) => (
+          <li key={line} className="rounded bg-navy-950/70 px-2 py-1 font-mono text-xs">
+            {line}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="py-6 text-center text-sm text-slate-500">{children}</p>;
 }

@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { api } from "../api";
 import { canWrite, useAuth } from "../session";
-import { Badge, Card, ErrorNote, PageHeader, ghostButton } from "../components/ui";
+import {
+  Badge,
+  Card,
+  ErrorNote,
+  InjectionWarning,
+  PageHeader,
+  ghostButton,
+} from "../components/ui";
 import { label, money, when } from "../format";
 import type { AgentTask, Execution, Page, Step } from "../types";
 import { usePoll } from "../usePoll";
@@ -12,10 +19,13 @@ function StepDetail({ step }: { step: Step }) {
   if (step.error) return <p className="text-sm text-red-300">{step.error}</p>;
   if (step.key === "F1" && step.status === "succeeded")
     return (
-      <p className="text-sm text-slate-400">
-        {String(out.vendor_name)} · invoice {String(out.number)} · {String(out.total_amount)}{" "}
-        {String(out.currency)}
-      </p>
+      <>
+        <p className="text-sm text-slate-400">
+          {String(out.vendor_name)} · invoice {String(out.number)} · {String(out.total_amount)}{" "}
+          {String(out.currency)}
+        </p>
+        <InjectionWarning lines={out.suspicious_text as string[] | undefined} />
+      </>
     );
   if (step.key === "F2" && step.status === "succeeded")
     return (

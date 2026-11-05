@@ -45,6 +45,7 @@ export interface Approval {
     currency?: string;
     match_status?: string;
     discrepancies?: string[];
+    suspicious_text?: string[];
     title?: string;
     category?: string;
     urgency?: string;

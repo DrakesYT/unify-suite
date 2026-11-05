@@ -32,7 +32,9 @@ flowchart LR
   | Verification Agent | finance | — (rules only) | 5 s |
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
   extracts fields) → `get_po` → match by PO status (must be approved), vendor, currency and amount
-  (code) → duplicate check (code) → `save_invoice` or `flag_anomaly`. Duplicates are recorded in `invoice_anomalies`, never inserted.
+  (code) → duplicate check (code) → `save_invoice` or `flag_anomaly`. `app/safety.py` (code, no model)
+  scans the invoice text for lines aimed at the AI; findings are audited (`security.instruction_text_found`)
+  and shown as a prompt-injection warning on the run and on the approval card. Duplicates are recorded in `invoice_anomalies`, never inserted.
 - Workflow B (Supplier Payment Verification) is a plain state machine (`backend/app/orchestrator/`):
 
   ```mermaid

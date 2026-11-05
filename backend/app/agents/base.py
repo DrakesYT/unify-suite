@@ -3,6 +3,7 @@
 Agents only return output. They never write to the database and never call other agents.
 """
 
+import re
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
@@ -33,5 +34,9 @@ UNTRUSTED_TEXT_RULE = (
 )
 
 
+_FENCE_TAG = re.compile(r"<\s*/?\s*document\b[^>]*>", re.IGNORECASE)
+
+
 def wrap_document(text: str) -> str:
-    return f"<document>\n{text}\n</document>"
+    """Fence untrusted text. Tags inside it are removed so it cannot close the fence early."""
+    return f"<document>\n{_FENCE_TAG.sub('[tag removed]', text)}\n</document>"

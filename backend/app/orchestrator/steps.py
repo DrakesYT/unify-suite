@@ -75,7 +75,8 @@ def extract_invoice(run: StepRun) -> StepResult:
     upload = run.db.get(Upload, uuid.UUID(run.execution.input["upload_id"]))
     if upload is None:
         raise StepError("The uploaded invoice file is missing")
-    return finance.extract_invoice(run.db, run.llm, upload, run.ctx).model_dump(mode="json")
+    fields, suspicious = finance.extract_invoice(run.db, run.llm, upload, run.ctx)
+    return fields.model_dump(mode="json") | {"suspicious_text": suspicious}
 
 
 def match_invoice(run: StepRun) -> StepResult:
@@ -142,6 +143,7 @@ def request_approval(run: StepRun) -> StepResult:
         "currency": f2["currency"],
         "match_status": f2["match_status"],
         "discrepancies": report["lines"] if report else [],
+        "suspicious_text": run.output("F1").get("suspicious_text", []),
     }
 
     def _create() -> ApprovalRequest:
