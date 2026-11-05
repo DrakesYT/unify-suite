@@ -156,4 +156,4 @@ Set them in `.env` locally and in Coolify's Environment Variables page in produc
 
 ## License
 
-Copyright © 2026 the UNIFY SUITE authors. All rights reserved — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
