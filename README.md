@@ -1,9 +1,12 @@
 # UNIFY SUITE
 
 AI-powered enterprise workforce platform. Five departments (Sales, Finance, HR, Support, Procurement),
-one AI agent each, a rule-based orchestrator, a human Approval Center, and an agent activity log.
+one AI agent each, a rule-based orchestrator, a human Approval Center, an agent activity log (Command Center),
+an executive dashboard and the Aura chat assistant.
 
 Built for the lablab.ai **Vultr Agent Rush** hackathon (Challenge 2, "Powering the Future of Work").
+
+**Live demo:** https://unify.65.20.84.171.sslip.io — API docs at `/api/docs`.
 
 ## Architecture
 
@@ -12,7 +15,8 @@ See [docs/architecture.md](docs/architecture.md).
 
 ## How Vultr is used
 
-- **Vultr Cloud Compute** — one VM runs the whole stack.
+- **Vultr Cloud Compute** — one VM (4 vCPU, 8 GB, Mumbai) runs the whole stack; a Vultr firewall group allows
+  only SSH and HTTP(S).
 - **Coolify** (Vultr Marketplace image) — builds `docker-compose.yml` from this repository and serves it over HTTPS.
 - **Vultr Serverless Inference** — the LLM behind the agents, called through its OpenAI-compatible API
   (default model `glm-5.3-flash`). Agents only read, classify and draft; every reply is validated against a
@@ -33,7 +37,9 @@ docker compose exec backend python -m app.seed
 | `finance.clerk@demo.example.com` | finance employee | Supplier payments: upload an invoice for `PO-1007` |
 | `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment |
 | `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI |
+| `sales.manager@demo.example.com` | sales manager | Dashboard, Sales leads |
 | `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates |
+| `hr.manager@demo.example.com` | HR manager | Dashboard, Hiring |
 | `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
 | `support.manager@demo.example.com` | support manager | Approve the refund escalation |
 | `buyer@demo.example.com` | procurement employee | Procurement → Compare vendors, Create purchase order |

@@ -86,7 +86,7 @@ def match_invoice(run: StepRun) -> StepResult:
     match, invoice, anomalies = finance.record_invoice(run.db, upload, fields, po, run.ctx)
     if invoice is None or match is None:
         kinds = ", ".join(a.kind.replace("_", " ") for a in anomalies)
-        raise StepError(f"Invoice was not saved ({kinds}); see Finance → Anomalies")
+        raise StepError(f"Invoice was not saved ({kinds}); it is recorded as an anomaly")
     return {
         "match_status": match.status,
         "differences": [d.model_dump(mode="json") for d in match.differences],

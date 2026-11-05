@@ -5,18 +5,31 @@ flowchart LR
     user([Browser]) -->|HTTPS| proxy[Coolify proxy<br/>TLS + domain]
     subgraph vm[Vultr Cloud Compute VM — docker-compose.yml]
         proxy --> fe[frontend<br/>Caddy: React build + /api pass-through]
-        fe -->|/api/*| be[backend<br/>FastAPI + uvicorn]
+        fe -->|/api/*| be[backend<br/>FastAPI + uvicorn<br/>named volume uploads]
         be -->|SQLAlchemy| db[(db<br/>PostgreSQL 16<br/>named volume pgdata)]
     end
+    be -->|HTTPS, OpenAI-compatible API| llm[Vultr Serverless Inference<br/>glm-5.3-flash]
 ```
 
 - Only `frontend:80` is reachable from outside (through Coolify). `backend` and `db` live on the private compose network.
-- `GET /api/health` runs `SELECT 1`; Docker uses it as the backend healthcheck and the frontend polls it every 5 s.
+  Uploaded files are stored on the `uploads` volume, outside the web root.
+- `GET /api/health` runs `SELECT 1`; Docker uses it as the backend healthcheck.
 - Every request gets an `X-Request-ID`; logs are one JSON object per line tagged with it.
 - Errors always return `{"error": {"code", "message"}}`.
 - Agents (`backend/app/agents/`) get typed input, return typed output and never touch the database.
   The runner checks the caller's permission, retries invalid or timed-out model replies twice (2 s, 8 s),
   and writes an `agent_tasks` + `audit_logs` row for every agent call and every tool call.
+
+  | Agent | Department | Uses the LLM to | Time limit |
+  |---|---|---|---|
+  | Aura Router | caller's own | pick one route from a fixed list | 10 s |
+  | Lead Qualifier | sales | rate a lead hot/warm/cold with a reason | 20 s |
+  | Invoice Processor | finance | extract invoice fields | 60 s |
+  | Resume Parser | hr | extract skills, years, education | 30 s |
+  | Resume Screener | hr | quote evidence for each requirement | 30 s |
+  | Ticket Investigator | support | classify a ticket; explain it from the customer's orders | 30 s |
+  | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
+  | Verification Agent | finance | — (rules only) | 5 s |
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
   extracts fields) → `get_po` → match by vendor, currency and amount (code) → duplicate check (code) →
   `save_invoice` or `flag_anomaly`. Duplicates are recorded in `invoice_anomalies`, never inserted.
@@ -36,7 +49,7 @@ flowchart LR
 
   A step runs only when the steps it depends on have finished; `when` conditions skip F3 / F4.
   Steps run in a FastAPI background task and the UI polls every 5 s. A1 always pauses the run
-  (`waiting_approval`) until a finance manager approves or rejects in the Approval Center; nobody can
+  (`waiting_approval`) until a finance manager (or an admin) approves or rejects in the Approval Center; nobody can
   decide their own request. A failed step pauses the run as `failed`; Retry re-runs only failed
   steps with their stored inputs. Payments are created only for an approved request of that invoice.
 - Sales: the Lead Qualifier gets only company, email domain, status, priority, value and notes (no
