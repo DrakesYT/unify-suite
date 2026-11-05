@@ -34,6 +34,10 @@ flowchart LR
   | Payment Reminder Writer | finance | draft a reminder for an overdue customer order | 30 s |
   | Supplier Follow-up Writer | procurement | draft a chase email for a late purchase order | 30 s |
   | Verification Agent | finance | — (rules only) | 5 s |
+- Uploads (`services/uploads.py`) are refused before anything is stored if the agents could not read
+  them: only PDF, CSV and TXT up to 10 MB, type checked by content (magic bytes), images and Word files
+  get a message saying what to do, and a PDF with no text layer (a scan) is refused with its reason, so
+  no workflow starts on a file that cannot succeed.
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
   extracts fields) → `get_po` → match by PO status (must be approved), vendor, currency and amount
   (code) → duplicate check (code) → `save_invoice` or `flag_anomaly`. `app/safety.py` (code, no model)
@@ -98,6 +102,11 @@ flowchart LR
   read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
+- "Why?" drawer (`services/explain.py`, `GET /api/explain/...`): read-only, same department read rule as
+  the pages. It rebuilds an agent's input with the same function the service used and looks up
+  `agent_tasks` rows with the same `input_hash` (runs use `execution_id`), so a match proves the input
+  shown is the one the model saw. Output comes from the stored result, rules from code, people from
+  `audit_logs`. Categories set by a person (seed data) are not presented as AI output.
 - Aura brief and quick actions (`services/brief.py`): code collects the facts for the reader (dashboard
   counts, plus which pending decisions are theirs and which belong to another manager) and a focus line
   from their role. The Brief Writer only words them; `check_brief` rejects a draft with any number that
