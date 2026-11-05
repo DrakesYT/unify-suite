@@ -161,3 +161,17 @@ export function LogoMark({ size = 28 }: { size?: number }) {
     </svg>
   );
 }
+
+export const MicIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+  </Icon>
+);
+
+export const RefreshIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 11a8 8 0 0 0-14.9-3.5M4 4v4h4" />
+    <path d="M4 13a8 8 0 0 0 14.9 3.5M20 20v-4h-4" />
+  </Icon>
+);

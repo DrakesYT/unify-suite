@@ -419,3 +419,27 @@ export interface SearchHit {
   subtitle: string;
   link: string;
 }
+
+export interface BriefItem {
+  id: number;
+  text: string;
+  link: string;
+  tone: "alert" | "warn" | "good" | "info";
+}
+
+export interface Brief {
+  headline: string;
+  summary: string;
+  items: BriefItem[];
+  written_by: "model" | "code";
+  model: string | null;
+}
+
+export interface QuickAction {
+  kind: "ask" | "open";
+  icon: "approvals" | "lead" | "hiring" | "ticket" | "supplier";
+  label: string;
+  detail: string;
+  prompt: string | null;
+  link: string | null;
+}

@@ -1,22 +1,20 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { api } from "../api";
 import { label } from "../format";
 import { useAuth } from "../session";
 import type { AuraReply, Overview } from "../types";
-import { ArrowRight, SendIcon, SparkleIcon } from "./icons";
+import { AuraBrief } from "./AuraBrief";
+import { Orb } from "./AuraOrb";
+import { ArrowRight, MicIcon, SendIcon } from "./icons";
+import { QuickActions } from "./QuickActions";
+import { useVoice } from "./useVoice";
 
 interface Turn {
   question: string;
   answer: AuraReply | null;
   error: string | null;
 }
-
-const EXAMPLES = [
-  "Is the Karachi Logistics lead worth chasing?",
-  "Rank the applicants for Senior Backend Engineer",
-  "Which supplier should we buy the laptops from?",
-];
 
 const OUTCOME_TONE: Record<AuraReply["outcome"], string> = {
   done: "text-emerald-300",
@@ -26,24 +24,6 @@ const OUTCOME_TONE: Record<AuraReply["outcome"], string> = {
   failed: "text-red-300",
   no_route: "text-slate-400",
 };
-
-function Orb({ size = 40 }: { size?: number }) {
-  return (
-    <span
-      className="aura-orb relative grid shrink-0 place-items-center rounded-full"
-      style={{
-        width: size,
-        height: size,
-        background:
-          "radial-gradient(circle at 35% 30%, #e0f2fe 0%, #22d3ee 28%, #8b5cf6 70%, #4c1d95 100%)",
-        boxShadow: "0 0 24px rgb(34 211 238 / 0.45), 0 0 48px rgb(139 92 246 / 0.35)",
-      }}
-      aria-hidden="true"
-    >
-      <SparkleIcon size={size * 0.45} className="text-white/90" />
-    </span>
-  );
-}
 
 function SystemStatus({ agents }: { agents?: Overview["agents"] }) {
   const healthy = !agents || agents.failed === 0 || agents.succeeded >= agents.failed;
@@ -82,6 +62,8 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  const onVoice = useCallback((text: string) => setMessage(text.slice(0, 1000)), []);
+  const voice = useVoice(onVoice);
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
@@ -136,29 +118,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
         style={{ maxHeight: 460 }}
         aria-live="polite"
       >
-        {turns.length === 0 && (
-          <div className="space-y-3">
-            <div className="flex gap-2.5">
-              <Orb size={26} />
-              <p className="rounded-2xl rounded-tl-sm bg-navy-800/80 px-3 py-2 text-slate-200">
-                Hi {user?.full_name.split(" ")[0] ?? "there"}. Ask me about a lead, an applicant, a
-                supplier or a ticket and I&apos;ll run the right agent for you.
-              </p>
-            </div>
-            <div className="space-y-1.5 pl-9">
-              {EXAMPLES.map((e) => (
-                <button
-                  key={e}
-                  onClick={() => void ask(e)}
-                  disabled={busy}
-                  className="block w-full rounded-xl border border-white/10 px-3 py-2 text-left text-xs text-slate-300 transition hover:border-accent-cyan/50 hover:bg-white/[0.03] hover:text-white"
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {user && <AuraBrief userId={user.id} />}
         {turns.map((turn, i) => (
           <div key={i} className="space-y-2">
             <p className="ml-8 rounded-2xl rounded-tr-sm bg-gradient-to-r from-accent-purple/40 to-accent-purple/25 px-3 py-2 text-slate-100">
@@ -207,12 +167,28 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
       <form onSubmit={submit} className="flex gap-2 border-t border-white/5 px-4 py-3">
         <input
           className="w-full rounded-full border border-white/10 bg-navy-950 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent-cyan/60 focus:outline-none"
-          placeholder="Ask Aura…"
+          placeholder={voice.listening ? "Listening…" : "Ask Aura…"}
           aria-label="Message to Aura"
           value={message}
           maxLength={1000}
           onChange={(e) => setMessage(e.target.value)}
         />
+        {voice.supported && (
+          <button
+            type="button"
+            onClick={voice.toggle}
+            aria-label={voice.listening ? "Stop listening" : "Speak to Aura"}
+            aria-pressed={voice.listening}
+            title={voice.listening ? "Stop listening" : "Speak to Aura"}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border transition ${
+              voice.listening
+                ? "animate-pulse border-red-400/60 bg-red-500/20 text-red-200"
+                : "border-white/10 text-slate-300 hover:border-accent-cyan/50 hover:text-white"
+            }`}
+          >
+            <MicIcon size={16} />
+          </button>
+        )}
         <button
           type="submit"
           disabled={busy || !message.trim()}
@@ -222,6 +198,8 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
           <SendIcon size={16} />
         </button>
       </form>
+      {voice.error && <p className="-mt-1 px-5 pb-2 text-xs text-amber-200">{voice.error}</p>}
+      <QuickActions onAsk={(prompt) => void ask(prompt)} busy={busy} />
       <SystemStatus agents={agents} />
     </aside>
   );

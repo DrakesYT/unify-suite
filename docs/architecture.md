@@ -98,6 +98,14 @@ flowchart LR
   read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
+- Aura brief and quick actions (`services/brief.py`): code collects the facts for the reader (dashboard
+  counts, plus which pending decisions are theirs and which belong to another manager) and a focus line
+  from their role. The Brief Writer only words them; `check_brief` rejects a draft with any number that
+  no fact contains, so the runner retries and finally the code-written brief is kept. The panel shows the
+  code version at once (`?writer=code`) and swaps in the model's when it arrives. Quick actions are built
+  from real records (newest open job, unrated lead, pending purchase request, most urgent ticket) and send
+  Aura a normal chat message. Voice input uses the browser's own speech recognition (Chrome, Edge);
+  only the recognised text reaches the backend.
 - Demo data: `python -m app.seed` creates the demo company idempotently (natural keys: email, vendor name, PO
   number, …). AI results are not pre-filled; they come from running the agents.
 - The frontend container serves `index.html` with `Cache-Control: no-cache` and hashed `/assets/*` as immutable, so a

@@ -10,7 +10,15 @@ from app.errors import ApiError
 from app.llm.base import LLMClient, LLMError, LLMOutputError
 from app.llm.vultr import VultrLLMClient
 
-__all__ = ["LLM", "LLMClient", "LLMError", "LLMOutputError", "get_llm"]
+__all__ = [
+    "LLM",
+    "LLMClient",
+    "LLMError",
+    "LLMOutputError",
+    "OptionalLLM",
+    "get_llm",
+    "get_optional_llm",
+]
 
 
 @lru_cache
@@ -31,3 +39,11 @@ def get_llm() -> LLMClient:
 
 
 LLM = Annotated[LLMClient, Depends(get_llm)]
+
+
+def get_optional_llm() -> LLMClient | None:
+    """For features that still work without a model (they fall back to text written by code)."""
+    return _vultr_client() if get_settings().llm_api_key is not None else None
+
+
+OptionalLLM = Annotated[LLMClient | None, Depends(get_optional_llm)]
