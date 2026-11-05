@@ -3,10 +3,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from app.db import DbSession
-from app.deps import require_roles
+from app.deps import CurrentUser, require_roles
 from app.models.enums import Role
-from app.schemas.dashboard import ActivityItem, Charts, Kpis
-from app.services import dashboard
+from app.schemas.dashboard import ActivityItem, Charts, Kpis, Overview, SearchHit
+from app.services import dashboard, overview, search
 
 # Cross-department numbers: managers, executives and admins (employees see their own pages).
 router = APIRouter(
@@ -14,6 +14,9 @@ router = APIRouter(
     tags=["dashboard"],
     dependencies=[Depends(require_roles(Role.admin, Role.manager, Role.executive))],
 )
+
+# The top-bar search is for everyone; it only finds what the caller may read.
+search_router = APIRouter(prefix="/api/search", tags=["search"])
 
 
 @router.get("/kpis")
@@ -26,9 +29,22 @@ def charts(db: DbSession) -> Charts:
     return dashboard.charts(db)
 
 
+@router.get("/overview")
+def get_overview(db: DbSession) -> Overview:
+    """Every dashboard panel in one read: hiring board, deals, tickets, money, insights."""
+    return overview.overview(db)
+
+
 @router.get("/activity")
 def activity(
     db: DbSession, limit: Annotated[int, Query(ge=1, le=100)] = dashboard.FEED_SIZE
 ) -> list[ActivityItem]:
     """FR-DASH-02: the latest audit events, newest first."""
     return dashboard.recent_activity(db, limit)
+
+
+@search_router.get("")
+def find(
+    db: DbSession, user: CurrentUser, q: Annotated[str, Query(min_length=2, max_length=80)]
+) -> list[SearchHit]:
+    return search.search(db, user, q)

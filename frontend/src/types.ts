@@ -327,3 +327,95 @@ export interface Receivable {
   status: "not_due" | "overdue" | "on_hold";
   hold_reason: string | null;
 }
+
+export interface Count {
+  label: string;
+  value: number;
+}
+
+export type HiringStageKey = "applied" | "screened" | "invite_pending" | "invite_sent";
+
+export interface Overview {
+  insights: { tone: "alert" | "warn" | "good" | "info"; text: string; link: string }[];
+  hiring: {
+    open_jobs: number;
+    stages: {
+      stage: HiringStageKey;
+      count: number;
+      cards: {
+        candidate_id: string;
+        name: string;
+        job_title: string | null;
+        score: number | null;
+      }[];
+    }[];
+    applications_by_day: Count[];
+  };
+  crm: {
+    stages: { stage: LeadStatus; count: number; value: Money[] }[];
+    pipeline: Money[];
+    win_rate: number | null;
+    won: number;
+    lost: number;
+    target: { quarter: string; target_minor: number; won_minor: number; currency: string };
+    top_deals: {
+      lead_id: string;
+      company: string;
+      contact: string;
+      status: LeadStatus;
+      rating: "hot" | "warm" | "cold" | null;
+      amount_minor: number;
+      currency: string;
+    }[];
+  };
+  support: {
+    open: number;
+    by_urgency: Count[];
+    by_category: Count[];
+    tickets: {
+      ticket_id: string;
+      title: string;
+      customer_name: string | null;
+      category: string | null;
+      urgency: string | null;
+      status: string;
+      created_at: string;
+    }[];
+  };
+  money: {
+    unpaid_invoices: Money[];
+    invoices_to_review: number;
+    invoices_to_pay: number;
+    recent_invoices: {
+      invoice_id: string;
+      number: string;
+      vendor_name: string;
+      amount_minor: number;
+      currency: string;
+      status: string;
+      match_status: string | null;
+    }[];
+    receivables_open: number;
+    receivables_overdue: number;
+    overdue_amount: Money[];
+    receivables_on_hold: number;
+    overdue: {
+      order_number: string;
+      customer_name: string;
+      amount_minor: number;
+      currency: string;
+      days_overdue: number;
+      status: string;
+    }[];
+    deliveries_open: number;
+    late_deliveries: { po_number: string; vendor_name: string; days_late: number }[];
+  };
+  agents: { calls: number; succeeded: number; failed: number };
+}
+
+export interface SearchHit {
+  kind: string;
+  title: string;
+  subtitle: string;
+  link: string;
+}

@@ -90,7 +90,12 @@ flowchart LR
   Writer drafts a chase (it must quote the PO number); it goes through the same approve-then-send path
   as sales emails (`services/outbound.py`), approved by a procurement manager.
 - Dashboard (managers, executives, admins): KPIs and charts are SQL aggregates; the feed is the latest 20
-  audit events. The Command Center lists every agent/tool call and retries failed workflow runs.
+  audit events. `/api/dashboard/overview` feeds the panels in one read: a hiring board (each candidate in
+  the furthest stage their records prove: applied → screened → invite pending → invite sent), the deal
+  board (leads per status, win rate, won this quarter vs the `SALES_QUARTER_TARGET` setting), open
+  tickets by urgency, money stuck in invoices / customer payments / late deliveries, and an insights line
+  worded by code from those numbers (no model). The top-bar search (`/api/search`) applies the same
+  read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
 - Demo data: `python -m app.seed` creates the demo company idempotently (natural keys: email, vendor name, PO

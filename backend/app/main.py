@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(approvals.router)
     app.include_router(agents.router)
     app.include_router(dashboard.router)
+    app.include_router(dashboard.search_router)
     app.include_router(ai.router)
     return app
 

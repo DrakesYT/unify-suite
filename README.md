@@ -160,6 +160,8 @@ attached to the `frontend` service (port 80); no other service is exposed.
 | `RESEND_API_KEY` | backend | Optional. [Resend](https://resend.com) key for sending approved emails. Without it, approved emails are marked failed ("not configured"). |
 | `EMAIL_FROM` | backend | Optional, default `UNIFY SUITE <onboarding@resend.dev>`. |
 | `EMAIL_REDIRECT_TO` | backend | Optional demo safety: every email goes to this one inbox, with the real recipient noted at the top. |
+| `SALES_QUARTER_TARGET` | backend | Optional, default `250000`. Quarterly sales target (whole units) for the dashboard gauge. |
+| `SALES_TARGET_CURRENCY` | backend | Optional, default `USD`. Currency of the sales target. |
 | `LOG_LEVEL` | backend | Optional, default `INFO`. |
 
 Set them in `.env` locally and in Coolify's Environment Variables page in production. Never commit `.env`.

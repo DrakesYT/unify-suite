@@ -35,7 +35,10 @@ function ReceivableRow({
   };
 
   return (
-    <li className="rounded-lg border border-navy-800 px-3 py-2 text-sm">
+    <li
+      id={`order-${item.order_number}`}
+      className="rounded-lg border border-navy-800 px-3 py-2 text-sm"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2 text-slate-300">
         <span className="font-mono text-xs">{item.order_number}</span>
         <span>{item.customer_company ?? item.customer_name}</span>

@@ -149,7 +149,7 @@ function LeadRow({
 
   return (
     <>
-      <tr className="align-top">
+      <tr id={`lead-${lead.id}`} className="align-top">
         <td className="py-3 pr-4">
           <div className="text-slate-100">{lead.company}</div>
           <div className="text-xs text-slate-500">

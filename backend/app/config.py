@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     email_from: str = "UNIFY SUITE <onboarding@resend.dev>"
     # Demo safety: when set, every email goes to this one address instead of the real recipient.
     email_redirect_to: str | None = None
+    # Sales target shown on the dashboard gauge: whole units of the currency per quarter.
+    sales_quarter_target: int = Field(default=250_000, ge=1)
+    sales_target_currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
 
     @field_validator("resend_api_key", "email_redirect_to", mode="before")
     @classmethod

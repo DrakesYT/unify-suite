@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { api } from "../api";
 import {
   Badge,
@@ -246,12 +246,22 @@ function TicketDetail({
   );
 }
 
+const TICKET_HASH = "#ticket-";
+
 export function Support() {
   const { user } = useAuth();
   const editable = Boolean(user && canWrite(user, "support"));
   const tickets = usePoll<Page<Ticket>>("/support/tickets?limit=100");
   const customers = usePoll<Customer[]>("/support/customers");
-  const [picked, setPicked] = useState<string | null>(null);
+  // A link to /support#ticket-<id> (search, dashboard) opens that ticket.
+  const { hash } = useLocation();
+  const linked = hash.startsWith(TICKET_HASH) ? hash.slice(TICKET_HASH.length) : null;
+  const [picked, setPicked] = useState<string | null>(linked);
+  const [seenHash, setSeenHash] = useState(hash);
+  if (hash !== seenHash) {
+    setSeenHash(hash);
+    if (linked) setPicked(linked);
+  }
   const ticket = tickets.data?.items.find((t) => t.id === picked) ?? tickets.data?.items[0];
   const customerById = new Map((customers.data ?? []).map((c) => [c.id, c]));
 
@@ -276,7 +286,7 @@ export function Support() {
             {tickets.data?.items.length === 0 && <Empty>No tickets.</Empty>}
             <ul className="space-y-1">
               {tickets.data?.items.map((t) => (
-                <li key={t.id}>
+                <li key={t.id} id={`ticket-${t.id}`}>
                   <button
                     onClick={() => setPicked(t.id)}
                     className={`w-full rounded-lg px-3 py-2 text-left text-sm ${

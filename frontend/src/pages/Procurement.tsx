@@ -428,7 +428,7 @@ function OrderRow({
   };
 
   return (
-    <li className="rounded-lg border border-navy-800 px-3 py-2">
+    <li id={`po-${order.po_number}`} className="rounded-lg border border-navy-800 px-3 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2 text-slate-300">
         <span className="font-mono text-xs">{order.po_number}</span>
         <span>{vendor}</span>
