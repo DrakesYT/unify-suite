@@ -11,6 +11,7 @@ import {
   inputClass,
   primaryButton,
 } from "../components/ui";
+import { Receivables } from "../components/Receivables";
 import { when } from "../format";
 import type { Execution, ExecutionSummary, Page } from "../types";
 import { usePoll } from "../usePoll";
@@ -87,12 +88,12 @@ export function Payments() {
   return (
     <>
       <PageHeader
-        title="Supplier payments"
-        subtitle="Workflow B: invoice → PO match → manager approval → payment"
+        title="Payments"
+        subtitle="Supplier invoices (Workflow B: invoice → PO match → manager approval → payment) and customer payments due"
       />
       <div className="space-y-6">
         {user && canWrite(user, "finance") && <StartForm />}
-        <Card title="Recent runs">
+        <Card title="Recent supplier payment runs">
           <ErrorNote message={error} />
           {data && data.items.length === 0 && <Empty>No runs yet.</Empty>}
           {data && data.items.length > 0 && (
@@ -133,6 +134,7 @@ export function Payments() {
             </div>
           )}
         </Card>
+        <Receivables editable={Boolean(user && canWrite(user, "finance"))} />
       </div>
     </>
   );

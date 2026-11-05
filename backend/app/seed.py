@@ -282,6 +282,10 @@ RESUMES = [
     ),
 ]
 
+# Customer orders already paid: order number -> paid N days ago. The rest are open receivables:
+# SO-1101 is overdue (a reminder to demo); SO-1001 is overdue but on hold (open refund ticket).
+ORDERS_PAID = {"SO-1201": 28}
+
 # name, company, email, orders: (number, amount cents, status, days ago)
 CUSTOMERS = [
     (
@@ -528,7 +532,7 @@ def seed(db: Session, password: str) -> dict[str, int]:
         )
         count("customers", created)
         for number, amount, status, days in customer_orders:
-            _, created = _get_or_create(
+            order, created = _get_or_create(
                 db,
                 Order,
                 Order.order_number == number,
@@ -542,6 +546,9 @@ def seed(db: Session, password: str) -> dict[str, int]:
                 ),
             )
             count("orders", created)
+            if number in ORDERS_PAID and order.paid_on is None:
+                order.paid_on = today - timedelta(days=ORDERS_PAID[number])
+                count("payments_received", True)
 
     for title, description, email, category, urgency, status in TICKETS:
         _, created = _get_or_create(

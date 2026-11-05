@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -100,3 +100,20 @@ class InvoiceUploadResult(BaseModel):
     suspicious_text: list[str] = Field(
         default=[], description="Lines of the document that try to give the AI instructions"
     )
+
+
+class ReceivableOut(BaseModel):
+    """An unpaid customer order and where it stands (all computed by code)."""
+
+    order_id: uuid.UUID
+    order_number: str
+    customer_name: str
+    customer_company: str | None
+    customer_email: str | None
+    amount_minor: int
+    currency: str
+    ordered_on: date
+    due_on: date
+    days_overdue: int
+    status: Literal["not_due", "overdue", "on_hold"]
+    hold_reason: str | None

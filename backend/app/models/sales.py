@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, Date, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, IdMixin, JsonType, TimestampMixin, UtcDateTime, str_enum
@@ -53,3 +53,4 @@ class Order(IdMixin, TimestampMixin, Base):
     currency: Mapped[str] = mapped_column(String(3))
     status: Mapped[OrderStatus] = mapped_column(str_enum(OrderStatus, "order_status"), index=True)
     ordered_at: Mapped[datetime] = mapped_column(UtcDateTime())
+    paid_on: Mapped[date | None] = mapped_column(Date)  # money received (receivables)

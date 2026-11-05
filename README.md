@@ -73,6 +73,7 @@ warning on the run and in the Approval Center.
 | Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score, ranks candidates |
 | Ticket Investigator | Support | Classifies new tickets; investigates against the customer's last 20 orders; drafts a reply | Rejects cited orders that are not the customer's; refund/legal escalations need a manager |
 | Vendor Comparator | Procurement | Explains why the top vendor wins | Ranks vendors: 50% price + 25% lead time + 25% on-time rate |
+| Payment Reminder Writer | Finance | Drafts a reminder for an overdue customer order | Due date = order date + payment terms; customers with an open refund/billing/legal ticket are never chased; a finance manager approves; then it is sent |
 | Supplier Follow-up Writer | Procurement | Drafts a chase email to the supplier of a late order | Decides what is late (expected date = order date + vendor lead time); the draft must quote the PO; a procurement manager approves; then it is sent |
 | Aura Router | Any | Picks one route for a plain-English request ("compare vendors for the laptops") | Finds the record, checks the user's rights, runs the department agent |
 | Verification Agent | Finance | — (rules only, no model) | Checks every record of a payment run is linked correctly |
@@ -101,8 +102,8 @@ docker compose exec backend python -m app.seed
 | Sign in as | Role | Try this |
 |---|---|---|
 | `ceo@demo.example.com` | executive | Dashboard, Aura chat, Approval Center (read-only) |
-| `finance.clerk@demo.example.com` | finance employee | Supplier payments: upload an invoice for `PO-1007` |
-| `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment |
+| `finance.clerk@demo.example.com` | finance employee | Payments: upload an invoice for `PO-1007`; Customer payments due → SO-1101 → Send payment reminder |
+| `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment and the payment reminder |
 | `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
 | `sales.manager@demo.example.com` | sales manager | Approval Center: approve & send the email (or reject it) |
 | `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates |

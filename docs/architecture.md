@@ -30,6 +30,7 @@ flowchart LR
   | Resume Screener | hr | quote evidence for each requirement | 30 s |
   | Ticket Investigator | support | classify a ticket; explain it from the customer's orders | 30 s |
   | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
+  | Payment Reminder Writer | finance | draft a reminder for an overdue customer order | 30 s |
   | Supplier Follow-up Writer | procurement | draft a chase email for a late purchase order | 30 s |
   | Verification Agent | finance | — (rules only) | 5 s |
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
@@ -37,6 +38,10 @@ flowchart LR
   (code) → duplicate check (code) → `save_invoice` or `flag_anomaly`. `app/safety.py` (code, no model)
   scans the invoice text for lines aimed at the AI; findings are audited (`security.instruction_text_found`)
   and shown as a prompt-injection warning on the run and on the approval card. Duplicates are recorded in `invoice_anomalies`, never inserted.
+- Receivables (money owed to us): an unpaid customer order is due on its order date + the customer's
+  terms (`net_30`). Code computes `days_overdue` and puts a customer with an open refund, billing or legal
+  ticket on hold (never chased). For an overdue order the Payment Reminder Writer drafts a reminder that
+  must quote the order number; it goes through the shared approve-then-send path (finance manager).
 - Workflow B (Supplier Payment Verification) is a plain state machine (`backend/app/orchestrator/`):
 
   ```mermaid

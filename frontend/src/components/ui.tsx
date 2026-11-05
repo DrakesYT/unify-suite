@@ -31,6 +31,9 @@ const TONES: Record<string, string> = {
   on_track: "bg-emerald-500/15 text-emerald-300",
   late: "bg-red-500/15 text-red-300",
   delivered: "bg-sky-500/15 text-sky-300",
+  overdue: "bg-red-500/15 text-red-300",
+  on_hold: "bg-amber-500/15 text-amber-300",
+  not_due: "bg-slate-500/15 text-slate-300",
   sent: "bg-emerald-500/15 text-emerald-300",
   over_budget: "bg-amber-500/15 text-amber-300",
 };

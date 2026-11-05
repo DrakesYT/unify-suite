@@ -23,6 +23,7 @@ SUSPICIOUS_MAX_FINDINGS = 5  # instruction-like lines reported per document
 SUSPICIOUS_LINE_MAX_CHARS = 160
 
 SELLER_COMPANY = "UNIFY Demo Corp"  # the company the demo users work for (email signatures)
+DEFAULT_TERMS_DAYS = 30  # customer payment terms when none are on file (net 30)
 RESEND_API_URL = "https://api.resend.com/emails"
 EMAIL_SEND_TIMEOUT_S = 10.0
 

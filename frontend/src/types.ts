@@ -312,3 +312,18 @@ export interface AuraReply {
   summary: string;
   link: string | null;
 }
+
+export interface Receivable {
+  order_id: string;
+  order_number: string;
+  customer_name: string;
+  customer_company: string | null;
+  customer_email: string | null;
+  amount_minor: number;
+  currency: string;
+  ordered_on: string;
+  due_on: string;
+  days_overdue: number;
+  status: "not_due" | "overdue" | "on_hold";
+  hold_reason: string | null;
+}

@@ -38,6 +38,7 @@ def new_draft(
     model: str,
     lead_id: uuid.UUID | None = None,
     po_id: uuid.UUID | None = None,
+    order_id: uuid.UUID | None = None,
 ) -> OutboundEmail:
     """Store an agent's draft (called inside the agent's `save_email_draft` tool)."""
     email = OutboundEmail(
@@ -45,6 +46,7 @@ def new_draft(
         department=department,
         lead_id=lead_id,
         po_id=po_id,
+        order_id=order_id,
         to_address=to_address,
         subject=subject,
         body=body,

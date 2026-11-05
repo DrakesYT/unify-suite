@@ -37,6 +37,7 @@ def test_seed_is_complete_and_repeatable(db: Session) -> None:
         "purchase_requests": 3,
         "quotes": 7,
         "delivery_dates": 3,
+        "payments_received": 1,
     }
     assert all(n == 0 for n in seed(db, PASSWORD).values())  # second run adds nothing
     assert db.scalar(select(func.count()).select_from(User)) == len(USERS)

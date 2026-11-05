@@ -45,6 +45,7 @@ class OutboundEmailOut(BaseModel):
     department: Department
     lead_id: uuid.UUID | None
     po_id: uuid.UUID | None
+    order_id: uuid.UUID | None
     to_address: str
     subject: str
     body: str
@@ -69,3 +70,16 @@ class SupplierFollowUpInput(BaseModel):
     expected_delivery: date
     days_late: int
     buyer_company: str
+
+
+class PaymentReminderInput(BaseModel):
+    """What the Payment Reminder Writer sees about one overdue customer order (facts from code)."""
+
+    order_number: str
+    customer_company: str
+    amount: str
+    ordered_on: date
+    due_on: date
+    days_overdue: int
+    billing_terms: str
+    seller_company: str

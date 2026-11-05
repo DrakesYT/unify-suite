@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
@@ -7,10 +8,12 @@ from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, UPLOAD_MAX_BYTES
 from app.db import DbSession
 from app.deps import CurrentUser, require_department
 from app.llm import LLM
+from app.mailer import Mailer
 from app.models.enums import AnomalyKind, Department, InvoiceStatus, MatchStatus
 from app.schemas.common import Page
-from app.schemas.finance import AnomalyOut, InvoiceOut, InvoiceUploadResult
-from app.services import finance
+from app.schemas.finance import AnomalyOut, InvoiceOut, InvoiceUploadResult, ReceivableOut
+from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
+from app.services import finance, outbound, receivables
 from app.services.uploads import save_upload
 
 router = APIRouter(
@@ -56,3 +59,54 @@ def list_anomalies(
 ) -> Page[AnomalyOut]:
     rows, next_cursor = finance.list_anomalies(db, limit, cursor, kind)
     return Page(items=[AnomalyOut.model_validate(r) for r in rows], next_cursor=next_cursor)
+
+
+# --- receivables: overdue customer orders and payment reminders ---------------------------------
+
+
+@router.get("/receivables")
+def list_receivables(db: DbSession) -> list[ReceivableOut]:
+    """Unpaid customer orders with their due date, days overdue and any hold (all computed)."""
+    return receivables.list_open(db)
+
+
+@router.post("/receivables/{order_id}/paid")
+def mark_paid(order_id: uuid.UUID, db: DbSession, user: CurrentUser) -> ReceivableOut:
+    return receivables.mark_paid(db, order_id, user)
+
+
+@router.get("/receivables/{order_id}/emails")
+def list_reminders(order_id: uuid.UUID, db: DbSession) -> list[OutboundEmailOut]:
+    return [OutboundEmailOut.model_validate(e) for e in receivables.list_for_order(db, order_id)]
+
+
+@router.post("/receivables/{order_id}/emails", status_code=201)
+def draft_reminder(
+    order_id: uuid.UUID, db: DbSession, user: CurrentUser, llm: LLM
+) -> OutboundEmailOut:
+    """Payment Reminder Writer drafts a reminder. Sent only after a finance manager approves."""
+    email = receivables.draft_reminder(db, llm, order_id, TaskContext(actor=user))
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.patch("/emails/{email_id}")
+def edit_email(
+    email_id: uuid.UUID, data: EmailDraftUpdate, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    email = outbound.update_draft(db, email_id, Department.finance, data, user)
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.post("/emails/{email_id}/request-approval")
+def request_email_approval(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(receivables.request_approval(db, email_id, user))
+
+
+@router.post("/emails/{email_id}/retry")
+def retry_email(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser, mailer: Mailer
+) -> OutboundEmailOut:
+    email = outbound.retry(db, email_id, Department.finance, user, mailer)
+    return OutboundEmailOut.model_validate(email)
