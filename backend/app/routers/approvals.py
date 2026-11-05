@@ -12,7 +12,7 @@ from app.models.enums import ApprovalStatus
 from app.orchestrator import engine
 from app.schemas.common import Page
 from app.schemas.workflows import ApprovalOut, DecisionIn
-from app.services import approvals, outreach, procurement, support
+from app.services import approvals, outbound, procurement, support
 
 router = APIRouter(prefix="/api/approvals", tags=["approvals"])
 Limit = Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)]
@@ -49,7 +49,7 @@ def _decide(
     approval = approvals.decide(db, user, approval_id, approve=approve, comment=body.comment)
     support.apply_decision(db, approval, user)
     procurement.apply_decision(db, approval, user)
-    outreach.apply_decision(db, approval, user, mailer)
+    outbound.apply_decision(db, approval, user, mailer)
     execution = engine.resume_after_decision(db, approval, user)
     if execution is not None:
         background.add_task(engine.advance_in_background, factory, execution.id, llm, user.id)

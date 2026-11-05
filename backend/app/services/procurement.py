@@ -39,7 +39,7 @@ from app.schemas.procurement import (
     VendorCreate,
     VendorUpdate,
 )
-from app.services import approvals, audit
+from app.services import approvals, audit, deliveries
 from app.services.pagination import paginate
 
 
@@ -485,6 +485,10 @@ def apply_decision(db: Session, approval: ApprovalRequest, actor: User) -> None:
         return
     approved = approval.status == ApprovalStatus.approved
     order.status = PurchaseOrderStatus.approved if approved else PurchaseOrderStatus.rejected
+    if approved:
+        vendor = db.get(Vendor, order.vendor_id)
+        if vendor is not None:
+            deliveries.start_tracking(order, vendor)
     if approved and order.request_id:
         request = db.get(PurchaseRequest, order.request_id)
         if request is not None:

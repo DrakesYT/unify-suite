@@ -73,6 +73,7 @@ warning on the run and in the Approval Center.
 | Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score, ranks candidates |
 | Ticket Investigator | Support | Classifies new tickets; investigates against the customer's last 20 orders; drafts a reply | Rejects cited orders that are not the customer's; refund/legal escalations need a manager |
 | Vendor Comparator | Procurement | Explains why the top vendor wins | Ranks vendors: 50% price + 25% lead time + 25% on-time rate |
+| Supplier Follow-up Writer | Procurement | Drafts a chase email to the supplier of a late order | Decides what is late (expected date = order date + vendor lead time); the draft must quote the PO; a procurement manager approves; then it is sent |
 | Aura Router | Any | Picks one route for a plain-English request ("compare vendors for the laptops") | Finds the record, checks the user's rights, runs the department agent |
 | Verification Agent | Finance | — (rules only, no model) | Checks every record of a payment run is linked correctly |
 
@@ -108,8 +109,8 @@ docker compose exec backend python -m app.seed
 | `hr.manager@demo.example.com` | HR manager | Dashboard, Hiring |
 | `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
 | `support.manager@demo.example.com` | support manager | Approve the refund escalation |
-| `buyer@demo.example.com` | procurement employee | Procurement → Compare vendors, Create purchase order |
-| `procurement.manager@demo.example.com` | procurement manager | Approve the request and the purchase order |
+| `buyer@demo.example.com` | procurement employee | Procurement → Compare vendors, Create purchase order; PO-2001 is late → Follow up with supplier |
+| `procurement.manager@demo.example.com` | procurement manager | Approve the request, the purchase order and the supplier follow-up email |
 
 The demo password for the live site is given in the lablab.ai submission.
 

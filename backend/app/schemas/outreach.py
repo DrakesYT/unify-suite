@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,8 +23,8 @@ class OutreachInput(BaseModel):
     seller_company: str
 
 
-class OutreachDraft(BaseModel):
-    """Outreach Writer output. Code adds the greeting and signature."""
+class EmailDraft(BaseModel):
+    """An email-writing agent's output. Code adds the greeting and signature."""
 
     subject: Subject = Field(description="Email subject line")
     body: Body = Field(
@@ -44,6 +44,7 @@ class OutboundEmailOut(BaseModel):
     kind: str
     department: Department
     lead_id: uuid.UUID | None
+    po_id: uuid.UUID | None
     to_address: str
     subject: str
     body: str
@@ -54,3 +55,17 @@ class OutboundEmailOut(BaseModel):
     sent_at: datetime | None
     error: str | None
     created_at: datetime
+
+
+class SupplierFollowUpInput(BaseModel):
+    """What the Supplier Follow-up Writer sees about one late purchase order (facts from code)."""
+
+    po_number: str
+    vendor_name: str
+    item: str | None
+    quantity: int | None
+    amount: str
+    ordered_on: date
+    expected_delivery: date
+    days_late: int
+    buyer_company: str

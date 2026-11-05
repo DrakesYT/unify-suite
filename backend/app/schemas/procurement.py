@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -88,6 +88,15 @@ class PurchaseOrderOut(BaseModel):
     currency: str
     status: PurchaseOrderStatus
     created_at: datetime
+    ordered_on: date | None
+    expected_delivery: date | None
+    delivered_on: date | None
+    delivery_status: Literal["not_ordered", "no_date", "on_track", "late", "delivered"]
+    days_late: int
+
+
+class DeliveryDateIn(BaseModel):
+    expected_delivery: date
 
 
 class QuoteCreate(BaseModel):

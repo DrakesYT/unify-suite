@@ -109,6 +109,7 @@ export interface OutboundEmail {
   id: string;
   kind: string;
   lead_id: string | null;
+  po_id: string | null;
   to_address: string;
   subject: string;
   body: string;
@@ -265,6 +266,11 @@ export interface PurchaseOrder {
   currency: string;
   status: "pending_approval" | "approved" | "rejected";
   created_at: string;
+  ordered_on: string | null;
+  expected_delivery: string | null;
+  delivered_on: string | null;
+  delivery_status: "not_ordered" | "no_date" | "on_track" | "late" | "delivered";
+  days_late: number;
 }
 
 export interface Money {

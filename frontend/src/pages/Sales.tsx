@@ -10,7 +10,7 @@ import {
   inputClass,
   primaryButton,
 } from "../components/ui";
-import { OutreachPanel } from "../components/OutreachPanel";
+import { EmailPanel } from "../components/EmailPanel";
 import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Lead, LeadStatus, Page, Priority } from "../types";
@@ -217,7 +217,16 @@ function LeadRow({
                 </p>
               </div>
             )}
-            {open && lead.qualification && <OutreachPanel leadId={lead.id} editable={editable} />}
+            {open && lead.qualification && (
+              <EmailPanel
+                title="Outreach email"
+                intro="The Outreach Writer drafts a first email from the qualification. Nothing is sent until a sales manager approves it."
+                listPath={`/sales/leads/${lead.id}/emails`}
+                emailsPath="/sales/emails"
+                managerLabel="a sales manager"
+                editable={editable}
+              />
+            )}
           </td>
         </tr>
       )}

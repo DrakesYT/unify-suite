@@ -5,9 +5,25 @@ import type { OutboundEmail } from "../types";
 import { usePoll } from "../usePoll";
 import { Badge, ErrorNote, ghostButton, inputClass, primaryButton } from "./ui";
 
-/** Outreach for one qualified lead: AI drafts, the rep edits, a sales manager approves, it is sent. */
-export function OutreachPanel({ leadId, editable }: { leadId: string; editable: boolean }) {
-  const { data, reload } = usePoll<OutboundEmail[]>(`/sales/leads/${leadId}/emails`);
+/** An AI-drafted email: the agent drafts, a person edits, a manager approves, then it is sent. */
+export function EmailPanel({
+  title,
+  intro,
+  listPath,
+  emailsPath,
+  managerLabel,
+  editable,
+}: {
+  title: string;
+  intro: string;
+  /** GET = this record's emails; POST = ask the agent for a new draft */
+  listPath: string;
+  /** base path for one email: PATCH, /request-approval, /retry */
+  emailsPath: string;
+  managerLabel: string;
+  editable: boolean;
+}) {
+  const { data, reload } = usePoll<OutboundEmail[]>(listPath);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
@@ -35,25 +51,25 @@ export function OutreachPanel({ leadId, editable }: { leadId: string; editable: 
     }
   };
   const save = () =>
-    act("save", `/sales/emails/${email!.id}`, {
+    act("save", `${emailsPath}/${email!.id}`, {
       method: "PATCH",
       body: JSON.stringify({ subject, body }),
     });
   const send = async () => {
     if (subject !== email!.subject || body !== email!.body) await save();
-    await act("send", `/sales/emails/${email!.id}/request-approval`, { method: "POST" });
+    await act("send", `${emailsPath}/${email!.id}/request-approval`, { method: "POST" });
   };
 
   return (
     <div className="mt-3 rounded-lg border border-navy-800 bg-navy-950/40 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold text-slate-300 uppercase">
-          Outreach email {email && <Badge value={email.status} />}
+          {title} {email && <Badge value={email.status} />}
         </p>
         {editable && (
           <button
             disabled={!!busy}
-            onClick={() => act("draft", `/sales/leads/${leadId}/emails`, { method: "POST" })}
+            onClick={() => act("draft", listPath, { method: "POST" })}
             className={ghostButton}
           >
             {busy === "draft" ? "Writing…" : email ? "Draft a new email" : "Draft email with AI"}
@@ -61,12 +77,7 @@ export function OutreachPanel({ leadId, editable }: { leadId: string; editable: 
         )}
       </div>
       <ErrorNote message={error} />
-      {!email && (
-        <p className="mt-2 text-sm text-slate-500">
-          The Outreach Writer drafts a first email from the qualification. Nothing is sent until a
-          sales manager approves it.
-        </p>
-      )}
+      {!email && <p className="mt-2 text-sm text-slate-500">{intro}</p>}
       {email && (
         <div className="mt-3 space-y-2 text-sm">
           <p className="text-slate-400">
@@ -104,7 +115,7 @@ export function OutreachPanel({ leadId, editable }: { leadId: string; editable: 
             </>
           )}
           {email.status === "pending_approval" && (
-            <p className="text-amber-200">Waiting for a sales manager in the Approval Center.</p>
+            <p className="text-amber-200">Waiting for {managerLabel} in the Approval Center.</p>
           )}
           {email.status === "sent" && (
             <p className="text-emerald-300">
@@ -112,7 +123,9 @@ export function OutreachPanel({ leadId, editable }: { leadId: string; editable: 
             </p>
           )}
           {email.status === "rejected" && (
-            <p className="text-red-300">A sales manager rejected this email. It was not sent.</p>
+            <p className="text-red-300">
+              The {managerLabel.replace(/^an? /, "")} rejected this email. It was not sent.
+            </p>
           )}
           {email.status === "failed" && (
             <div className="space-y-2">
@@ -121,7 +134,7 @@ export function OutreachPanel({ leadId, editable }: { leadId: string; editable: 
                 <button
                   disabled={!!busy}
                   onClick={() =>
-                    act("retry", `/sales/emails/${email.id}/retry`, { method: "POST" })
+                    act("retry", `${emailsPath}/${email.id}/retry`, { method: "POST" })
                   }
                   className={ghostButton}
                 >

@@ -9,9 +9,12 @@ from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX
 from app.db import DbSession
 from app.deps import CurrentUser, require_department
 from app.llm import LLM
+from app.mailer import Mailer
 from app.models.enums import Department, PurchaseRequestStatus
 from app.schemas.common import Page
+from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
 from app.schemas.procurement import (
+    DeliveryDateIn,
     OrderFromRequest,
     OrderWithApproval,
     PurchaseOrderCreate,
@@ -26,7 +29,7 @@ from app.schemas.procurement import (
     VendorOut,
     VendorUpdate,
 )
-from app.services import procurement
+from app.services import deliveries, outbound, procurement
 
 
 class CompareIn(BaseModel):
@@ -156,3 +159,57 @@ def order_from_request(
 @router.get("/orders/{po_number}")
 def get_order(po_number: str, db: DbSession) -> PurchaseOrderOut:
     return PurchaseOrderOut.model_validate(procurement.get_order_by_number(db, po_number))
+
+
+# --- delivery tracking and supplier follow-ups -------------------------------------------------
+
+
+@router.post("/orders/{order_id}/delivered")
+def mark_delivered(order_id: uuid.UUID, db: DbSession, user: CurrentUser) -> PurchaseOrderOut:
+    return PurchaseOrderOut.model_validate(deliveries.mark_delivered(db, order_id, user))
+
+
+@router.patch("/orders/{order_id}/delivery")
+def set_expected_delivery(
+    order_id: uuid.UUID, data: DeliveryDateIn, db: DbSession, user: CurrentUser
+) -> PurchaseOrderOut:
+    """The supplier confirmed a new delivery date."""
+    order = deliveries.set_expected_delivery(db, order_id, data.expected_delivery, user)
+    return PurchaseOrderOut.model_validate(order)
+
+
+@router.get("/orders/{order_id}/emails")
+def list_order_emails(order_id: uuid.UUID, db: DbSession) -> list[OutboundEmailOut]:
+    return [OutboundEmailOut.model_validate(e) for e in deliveries.list_for_order(db, order_id)]
+
+
+@router.post("/orders/{order_id}/emails", status_code=201)
+def draft_followup(
+    order_id: uuid.UUID, db: DbSession, user: CurrentUser, llm: LLM
+) -> OutboundEmailOut:
+    """Supplier Follow-up Writer drafts a chase for a late order. Sent only after approval."""
+    email = deliveries.draft_followup(db, llm, order_id, TaskContext(actor=user))
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.patch("/emails/{email_id}")
+def edit_email(
+    email_id: uuid.UUID, data: EmailDraftUpdate, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    email = outbound.update_draft(db, email_id, Department.procurement, data, user)
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.post("/emails/{email_id}/request-approval")
+def request_email_approval(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(deliveries.request_approval(db, email_id, user))
+
+
+@router.post("/emails/{email_id}/retry")
+def retry_email(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser, mailer: Mailer
+) -> OutboundEmailOut:
+    email = outbound.retry(db, email_id, Department.procurement, user, mailer)
+    return OutboundEmailOut.model_validate(email)

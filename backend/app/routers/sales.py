@@ -13,7 +13,7 @@ from app.models.enums import Department, LeadRating, LeadStatus
 from app.schemas.common import Page
 from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
 from app.schemas.sales import LeadCreate, LeadOut, LeadUpdate
-from app.services import outreach, sales
+from app.services import outbound, outreach, sales
 
 router = APIRouter(
     prefix="/api/sales",
@@ -74,7 +74,9 @@ def draft_lead_email(
 def edit_email(
     email_id: uuid.UUID, data: EmailDraftUpdate, db: DbSession, user: CurrentUser
 ) -> OutboundEmailOut:
-    return OutboundEmailOut.model_validate(outreach.update_draft(db, email_id, data, user))
+    return OutboundEmailOut.model_validate(
+        outbound.update_draft(db, email_id, Department.sales, data, user)
+    )
 
 
 @router.post("/emails/{email_id}/request-approval")
@@ -88,4 +90,6 @@ def request_email_approval(
 def retry_email(
     email_id: uuid.UUID, db: DbSession, user: CurrentUser, mailer: Mailer
 ) -> OutboundEmailOut:
-    return OutboundEmailOut.model_validate(outreach.retry(db, email_id, user, mailer))
+    return OutboundEmailOut.model_validate(
+        outbound.retry(db, email_id, Department.sales, user, mailer)
+    )

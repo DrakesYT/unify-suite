@@ -84,6 +84,9 @@ PURCHASE_ORDERS = [
     ("PO-2001", "Northwind Metals Ltd.", 1_280_050),
     ("PO-2002", "Northwind Metals Ltd.", 375_000),
 ]
+# PO number -> (ordered N days ago, delivered N days ago or None). Expected = ordered + lead time:
+# PO-1007 is on track, PO-2001 is late (a supplier follow-up to demo), PO-2002 was delivered.
+PO_DELIVERY = {"PO-1007": (3, None), "PO-2001": (18, None), "PO-2002": (30, 24)}
 
 # invoice number, vendor, PO, amount (cents), status, match, days ago
 INVOICES = [
@@ -417,6 +420,7 @@ def seed(db: Session, password: str) -> dict[str, int]:
         )
         count("vendors", created)
 
+    today = utcnow().date()
     orders: dict[str, PurchaseOrder] = {}
     for number, vendor, amount in PURCHASE_ORDERS:
         orders[number], created = _get_or_create(
@@ -432,8 +436,17 @@ def seed(db: Session, password: str) -> dict[str, int]:
             ),
         )
         count("purchase_orders", created)
+        order = orders[number]
+        if order.ordered_on is None:  # also fills in dates on databases seeded before tracking
+            ordered_ago, delivered_ago = PO_DELIVERY[number]
+            order.ordered_on = today - timedelta(days=ordered_ago)
+            order.expected_delivery = order.ordered_on + timedelta(
+                days=vendors[vendor].lead_time_days
+            )
+            if delivered_ago is not None:
+                order.delivered_on = today - timedelta(days=delivered_ago)
+            count("delivery_dates", True)
 
-    today = utcnow().date()
     for number, vendor, po, amount, status, match, days in INVOICES:
         _, created = _get_or_create(
             db,

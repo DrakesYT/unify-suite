@@ -28,6 +28,9 @@ const TONES: Record<string, string> = {
   ordered: "bg-emerald-500/15 text-emerald-300",
   pending_approval: "bg-amber-500/15 text-amber-300",
   draft: "bg-slate-500/15 text-slate-300",
+  on_track: "bg-emerald-500/15 text-emerald-300",
+  late: "bg-red-500/15 text-red-300",
+  delivered: "bg-sky-500/15 text-sky-300",
   sent: "bg-emerald-500/15 text-emerald-300",
   over_budget: "bg-amber-500/15 text-amber-300",
 };

@@ -1,11 +1,20 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    Date,
+    ForeignKey,
+    Numeric,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
+from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum, utcnow
 from app.models.enums import PurchaseOrderStatus, PurchaseRequestStatus
 
 
@@ -74,3 +83,27 @@ class PurchaseOrder(IdMixin, TimestampMixin, Base):
         default=PurchaseOrderStatus.pending_approval,
         index=True,
     )
+    # Delivery tracking (set when the PO is approved; the buyer marks it delivered).
+    ordered_on: Mapped[date | None] = mapped_column(Date)
+    expected_delivery: Mapped[date | None] = mapped_column(Date, index=True)
+    delivered_on: Mapped[date | None] = mapped_column(Date)
+
+    @property
+    def days_late(self) -> int:
+        """Whole days past the expected delivery date (0 if on time, delivered or not ordered)."""
+        if self.status != PurchaseOrderStatus.approved or self.delivered_on is not None:
+            return 0
+        if self.expected_delivery is None:
+            return 0
+        return max((utcnow().date() - self.expected_delivery).days, 0)
+
+    @property
+    def delivery_status(self) -> str:
+        """not_ordered | no_date | on_track | late | delivered — computed, never stored."""
+        if self.status != PurchaseOrderStatus.approved:
+            return "not_ordered"
+        if self.delivered_on is not None:
+            return "delivered"
+        if self.expected_delivery is None:
+            return "no_date"
+        return "late" if self.days_late > 0 else "on_track"

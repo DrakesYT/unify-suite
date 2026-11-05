@@ -10,7 +10,7 @@ from typing import ClassVar
 from app.agents.base import UNTRUSTED_TEXT_RULE, Agent, wrap_document
 from app.llm import LLMClient, LLMOutputError
 from app.models.enums import Department
-from app.schemas.outreach import OutreachDraft, OutreachInput
+from app.schemas.outreach import EmailDraft, OutreachInput
 
 SYSTEM_PROMPT = f"""You write a short first outreach email from a B2B software company to a lead.
 {UNTRUSTED_TEXT_RULE}
@@ -46,32 +46,32 @@ def company_core(company: str) -> str:
     return " ".join(words)
 
 
-def check_draft(draft: OutreachDraft, data: OutreachInput) -> OutreachDraft:
+def check_draft(draft: EmailDraft, must_mention: str) -> EmailDraft:
     """Reject drafts that could embarrass us if sent as written (the runner retries)."""
     text = f"{draft.subject}\n{draft.body}"
     for what, pattern in _FORBIDDEN.items():
         if pattern.search(text):
             raise LLMOutputError(f"draft contains a {what}")
-    if company_core(data.company) not in text.lower():
-        raise LLMOutputError("draft does not mention the lead's company")
-    return OutreachDraft(subject=draft.subject.strip(), body=draft.body.strip())
+    if must_mention.lower() not in text.lower():
+        raise LLMOutputError(f"draft does not mention {must_mention!r}")
+    return EmailDraft(subject=draft.subject.strip(), body=draft.body.strip())
 
 
-class OutreachWriter(Agent[OutreachInput, OutreachDraft]):
+class OutreachWriter(Agent[OutreachInput, EmailDraft]):
     name: ClassVar[str] = "outreach_writer"
     department = Department.sales
     input_model = OutreachInput
-    output_model = OutreachDraft
+    output_model = EmailDraft
     tools = frozenset({"get_lead", "save_email_draft"})
     max_llm_calls = 1
     timeout_s = 30.0
 
-    def run(self, data: OutreachInput, llm: LLMClient) -> OutreachDraft:
+    def run(self, data: OutreachInput, llm: LLMClient) -> EmailDraft:
         prompt = SYSTEM_PROMPT.replace("{seller}", data.seller_company)
         reply = llm.complete_json(
-            OutreachDraft,
+            EmailDraft,
             prompt,
             wrap_document(data.model_dump_json(indent=1)),
             timeout_s=self.timeout_s,
         )
-        return check_draft(reply, data)
+        return check_draft(reply, company_core(data.company))

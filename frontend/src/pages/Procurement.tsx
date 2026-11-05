@@ -12,6 +12,7 @@ import {
   inputClass,
   primaryButton,
 } from "../components/ui";
+import { EmailPanel } from "../components/EmailPanel";
 import { money, when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type {
@@ -392,6 +393,87 @@ function RequestDetail({
   );
 }
 
+const day = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+/** One purchase order with its delivery status (computed by code) and, when late, a follow-up. */
+function OrderRow({
+  order,
+  vendor,
+  editable,
+  onChange,
+}: {
+  order: PurchaseOrder;
+  vendor: string;
+  editable: boolean;
+  onChange: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const tracked = order.status === "approved";
+  const late = order.delivery_status === "late";
+
+  const markDelivered = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/procurement/orders/${order.id}/delivered`, { method: "POST" });
+      onChange();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update the order");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <li className="rounded-lg border border-navy-800 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-slate-300">
+        <span className="font-mono text-xs">{order.po_number}</span>
+        <span>{vendor}</span>
+        <span>{money(order.amount_minor, order.currency)}</span>
+        {tracked ? (
+          <span className="flex items-center gap-2 text-xs text-slate-400">
+            {order.delivered_on
+              ? `delivered ${day(order.delivered_on)}`
+              : order.expected_delivery
+                ? `due ${day(order.expected_delivery)}`
+                : "no date"}
+            <Badge value={order.delivery_status} />
+            {late && <span className="font-semibold text-red-300">{order.days_late} days</span>}
+          </span>
+        ) : (
+          <Badge value={order.status} />
+        )}
+      </div>
+      {tracked && !order.delivered_on && editable && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button disabled={busy} onClick={() => void markDelivered()} className={ghostButton}>
+            {busy ? "Saving…" : "Mark delivered"}
+          </button>
+          {late && (
+            <button onClick={() => setOpen(!open)} className={ghostButton}>
+              {open ? "Hide follow-up" : "Follow up with supplier"}
+            </button>
+          )}
+        </div>
+      )}
+      <ErrorNote message={error} />
+      {(open || (late && !editable)) && (
+        <EmailPanel
+          title="Supplier follow-up"
+          intro="The Supplier Follow-up Writer drafts a chase quoting the PO, the due date and the days late. Nothing is sent until a procurement manager approves it."
+          listPath={`/procurement/orders/${order.id}/emails`}
+          emailsPath="/procurement/emails"
+          managerLabel="a procurement manager"
+          editable={editable}
+        />
+      )}
+    </li>
+  );
+}
+
 export function Procurement() {
   const { user } = useAuth();
   const editable = Boolean(user && canWrite(user, "procurement"));
@@ -467,17 +549,15 @@ export function Procurement() {
           )}
           <Card title="Purchase orders">
             {orders.data?.items.length === 0 && <Empty>No purchase orders.</Empty>}
-            <ul className="space-y-1 text-sm">
+            <ul className="space-y-2 text-sm">
               {orders.data?.items.map((o) => (
-                <li
+                <OrderRow
                   key={o.id}
-                  className="flex flex-wrap items-center justify-between gap-2 text-slate-300"
-                >
-                  <span className="font-mono text-xs">{o.po_number}</span>
-                  <span>{vendorName.get(o.vendor_id) ?? ""}</span>
-                  <span>{money(o.amount_minor, o.currency)}</span>
-                  <Badge value={o.status} />
-                </li>
+                  order={o}
+                  vendor={vendorName.get(o.vendor_id) ?? ""}
+                  editable={editable}
+                  onChange={() => void orders.reload()}
+                />
               ))}
             </ul>
           </Card>

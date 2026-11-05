@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.llm.fake import FakeLLMClient
-from app.models import Candidate, Lead, Payment, User
+from app.models import Candidate, Lead, Payment, PurchaseOrder, User
 from app.seed import DEMO_DOMAIN, USERS, demo_invoice_lines, seed
 from tests.pdf import make_pdf
 
@@ -36,11 +36,14 @@ def test_seed_is_complete_and_repeatable(db: Session) -> None:
         "tickets": 3,
         "purchase_requests": 3,
         "quotes": 7,
+        "delivery_dates": 3,
     }
     assert all(n == 0 for n in seed(db, PASSWORD).values())  # second run adds nothing
     assert db.scalar(select(func.count()).select_from(User)) == len(USERS)
     assert db.scalar(select(func.count()).select_from(Lead).where(Lead.rating.is_not(None))) == 0
     assert all(c.file_id for c in db.scalars(select(Candidate)))
+    statuses = {o.po_number: o.delivery_status for o in db.scalars(select(PurchaseOrder))}
+    assert statuses == {"PO-1007": "on_track", "PO-2001": "late", "PO-2002": "delivered"}
 
 
 def test_every_demo_user_can_sign_in(client: TestClient, db: Session) -> None:

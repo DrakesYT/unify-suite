@@ -30,6 +30,7 @@ flowchart LR
   | Resume Screener | hr | quote evidence for each requirement | 30 s |
   | Ticket Investigator | support | classify a ticket; explain it from the customer's orders | 30 s |
   | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
+  | Supplier Follow-up Writer | procurement | draft a chase email for a late purchase order | 30 s |
   | Verification Agent | finance | — (rules only) | 5 s |
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
   extracts fields) → `get_po` → match by PO status (must be approved), vendor, currency and amount
@@ -73,6 +74,11 @@ flowchart LR
   on-time rate, each relative to the best offer (ties: cheaper, then name). The Vendor Comparator only
   explains the result and must name the winner. A procurement manager approves the request; every PO
   (from a request or created directly) waits in the Approval Center as `pending_approval`.
+  Approval starts delivery tracking: `ordered_on` = today, `expected_delivery` = today + the vendor's
+  lead time. Code computes `delivery_status` (on_track / late / delivered) and `days_late`; the buyer
+  marks delivery or records a new date the supplier confirmed. For a late order the Supplier Follow-up
+  Writer drafts a chase (it must quote the PO number); it goes through the same approve-then-send path
+  as sales emails (`services/outbound.py`), approved by a procurement manager.
 - Dashboard (managers, executives, admins): KPIs and charts are SQL aggregates; the feed is the latest 20
   audit events. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
