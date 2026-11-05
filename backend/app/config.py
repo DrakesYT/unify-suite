@@ -24,6 +24,13 @@ SUSPICIOUS_LINE_MAX_CHARS = 160
 
 SELLER_COMPANY = "UNIFY Demo Corp"  # the company the demo users work for (email signatures)
 DEFAULT_TERMS_DAYS = 30  # customer payment terms when none are on file (net 30)
+OFFICE_UTC_OFFSET_HOURS = 5  # interviews are scheduled in Pakistan time (PKT, no daylight saving)
+OFFICE_TZ_LABEL = "PKT"
+INTERVIEW_START_HOURS = (10, 11, 14, 15, 16)  # local start times; 12:00-14:00 is lunch
+INTERVIEW_MINUTES = 45
+INTERVIEW_OPTIONS = 3  # slots offered per invite, one per working day
+INTERVIEW_MIN_SCORE = 50  # only candidates screened at least this high can be invited
+INTERVIEW_SEARCH_DAYS = 21
 RESEND_API_URL = "https://api.resend.com/emails"
 EMAIL_SEND_TIMEOUT_S = 10.0
 

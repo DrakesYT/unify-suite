@@ -8,10 +8,12 @@ from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, UPLOAD_MAX_BYTES
 from app.db import DbSession
 from app.deps import CurrentUser, require_department
 from app.llm import LLM
+from app.mailer import Mailer
 from app.models.enums import Department, JobStatus
 from app.schemas.common import Page
 from app.schemas.hr import CandidateOut, JobCreate, JobOut, JobUpdate, ScoreOut, ScreenRequest
-from app.services import hr
+from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
+from app.services import hr, interviews, outbound
 from app.services.uploads import save_upload
 
 router = APIRouter(
@@ -81,3 +83,50 @@ def screen_job(
 @router.get("/jobs/{job_id}/scores")
 def job_scores(job_id: uuid.UUID, db: DbSession) -> list[ScoreOut]:
     return hr.ranked_scores(db, job_id)
+
+
+# --- interview invitations ---------------------------------------------------------------------
+
+
+@router.get("/jobs/{job_id}/candidates/{candidate_id}/emails")
+def list_invites(
+    job_id: uuid.UUID, candidate_id: uuid.UUID, db: DbSession
+) -> list[OutboundEmailOut]:
+    return [
+        OutboundEmailOut.model_validate(e) for e in interviews.list_for(db, job_id, candidate_id)
+    ]
+
+
+@router.post("/jobs/{job_id}/candidates/{candidate_id}/emails", status_code=201)
+def draft_invite(
+    job_id: uuid.UUID, candidate_id: uuid.UUID, db: DbSession, user: CurrentUser, llm: LLM
+) -> OutboundEmailOut:
+    """Code holds 3 free interview times; the Interview Invite Writer drafts the invitation.
+    Nothing is sent until an HR manager approves."""
+    email = interviews.draft_invite(db, llm, job_id, candidate_id, TaskContext(actor=user))
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.patch("/emails/{email_id}")
+def edit_email(
+    email_id: uuid.UUID, data: EmailDraftUpdate, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(
+        outbound.update_draft(db, email_id, Department.hr, data, user)
+    )
+
+
+@router.post("/emails/{email_id}/request-approval")
+def request_email_approval(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(interviews.request_approval(db, email_id, user))
+
+
+@router.post("/emails/{email_id}/retry")
+def retry_email(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser, mailer: Mailer
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(
+        outbound.retry(db, email_id, Department.hr, user, mailer)
+    )

@@ -28,6 +28,7 @@ flowchart LR
   | Invoice Processor | finance | extract invoice fields | 60 s |
   | Resume Parser | hr | extract skills, years, education | 30 s |
   | Resume Screener | hr | quote evidence for each requirement | 30 s |
+  | Interview Invite Writer | hr | draft an interview invitation listing code-picked times | 30 s |
   | Ticket Investigator | support | classify a ticket; explain it from the customer's orders | 30 s |
   | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
   | Payment Reminder Writer | finance | draft a reminder for an overdue customer order | 30 s |
@@ -72,6 +73,10 @@ flowchart LR
 - HR: the Resume parser extracts skills, years and education at upload. The Resume Screener only returns
   evidence (requirement + exact quote); code rejects any quote not found in the resume and computes the
   score: 70 × (skills with evidence ÷ required skills) + 30 × min(years ÷ minimum years, 1).
+- Interviews: a candidate screened 50+ for an open job can be invited. `app/scheduling.py` (code) picks the
+  first free 45-minute start (10, 11, 14, 15 or 16:00 PKT) on each of the next three working days, skipping
+  times already held. The slots are held with the draft (`interview_slots`); the Interview Invite Writer must
+  copy every time verbatim or the draft is retried. An HR manager approves; a rejected invite frees its times.
 - Support: new tickets are saved, then classified (category + urgency). Investigation sends the customer's
   last 20 orders; code rejects any cited order number that is not theirs. Escalating a refund or legal ticket
   creates an approval for a support manager; approved → resolved, rejected → reopened. Replies are drafts only.

@@ -46,6 +46,8 @@ class OutboundEmailOut(BaseModel):
     lead_id: uuid.UUID | None
     po_id: uuid.UUID | None
     order_id: uuid.UUID | None
+    candidate_id: uuid.UUID | None
+    job_id: uuid.UUID | None
     to_address: str
     subject: str
     body: str
@@ -83,3 +85,14 @@ class PaymentReminderInput(BaseModel):
     days_overdue: int
     billing_terms: str
     seller_company: str
+
+
+class InterviewInviteInput(BaseModel):
+    """What the Interview Invite Writer sees: the job, verified strengths and code-picked times."""
+
+    job_title: str
+    matched_skills: list[str]
+    slot_options: list[str]
+    duration_minutes: int
+    interview_format: str
+    employer: str

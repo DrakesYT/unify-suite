@@ -9,10 +9,13 @@ import {
   inputClass,
   primaryButton,
 } from "../components/ui";
+import { EmailPanel } from "../components/EmailPanel";
 import { when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Candidate, CandidateScore, Job, Page } from "../types";
 import { usePoll } from "../usePoll";
+
+const INTERVIEW_MIN_SCORE = 50; // mirrors the backend rule; the backend enforces it
 
 function NewJob({ onCreated }: { onCreated: (job: Job) => void }) {
   const [title, setTitle] = useState("");
@@ -123,8 +126,18 @@ function ResumeUpload({ onUploaded }: { onUploaded: () => void }) {
   );
 }
 
-function ScoreCard({ s }: { s: CandidateScore }) {
+function ScoreCard({
+  s,
+  jobId,
+  editable,
+}: {
+  s: CandidateScore;
+  jobId: string;
+  editable: boolean;
+}) {
   const [open, setOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const invitable = s.score >= INTERVIEW_MIN_SCORE && Boolean(s.candidate.email);
   const tone = s.score >= 75 ? "bg-emerald-400" : s.score >= 50 ? "bg-amber-400" : "bg-slate-500";
   return (
     <li className="rounded-lg border border-navy-800 bg-navy-950/60 p-4">
@@ -175,6 +188,21 @@ function ScoreCard({ s }: { s: CandidateScore }) {
             </li>
           ))}
         </ul>
+      )}
+      {editable && invitable && (
+        <button onClick={() => setInviting(!inviting)} className={`${ghostButton} mt-3 block`}>
+          {inviting ? "Hide interview invite" : "Invite to interview"}
+        </button>
+      )}
+      {inviting && (
+        <EmailPanel
+          title="Interview invitation"
+          intro="Code holds three free 45-minute times (office hours, never double-booked); the Interview Invite Writer drafts the invitation and must list every time exactly. Nothing is sent until an HR manager approves it."
+          listPath={`/hr/jobs/${jobId}/candidates/${s.candidate.id}/emails`}
+          emailsPath="/hr/emails"
+          managerLabel="an HR manager"
+          editable={editable}
+        />
       )}
     </li>
   );
@@ -267,7 +295,7 @@ export function Hiring() {
           {job && ranked.length === 0 && <Empty>No one screened for this job yet.</Empty>}
           <ol className="space-y-3">
             {ranked.map((s) => (
-              <ScoreCard key={s.candidate.id} s={s} />
+              <ScoreCard key={s.candidate.id} s={s} jobId={job!.id} editable={editable} />
             ))}
           </ol>
           {ranked[0] && (

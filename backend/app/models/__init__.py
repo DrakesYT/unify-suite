@@ -4,7 +4,7 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.email import OutboundEmail
 from app.models.finance import Invoice, InvoiceAnomaly, Payment, Transaction
-from app.models.hr import Candidate, CandidateScore, Job
+from app.models.hr import Candidate, CandidateScore, InterviewSlot, Job
 from app.models.procurement import PurchaseOrder, PurchaseRequest, Vendor, VendorQuote
 from app.models.sales import Customer, Lead, Order
 from app.models.support import Ticket
@@ -26,6 +26,7 @@ __all__ = [
     "Candidate",
     "CandidateScore",
     "Customer",
+    "InterviewSlot",
     "Invoice",
     "InvoiceAnomaly",
     "Job",

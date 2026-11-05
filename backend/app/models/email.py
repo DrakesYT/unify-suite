@@ -18,6 +18,8 @@ class OutboundEmail(IdMixin, TimestampMixin, Base):
     lead_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("leads.id"), index=True)
     po_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("purchase_orders.id"), index=True)
     order_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("orders.id"), index=True)
+    candidate_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("candidates.id"), index=True)
+    job_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jobs.id"), index=True)
     to_address: Mapped[str] = mapped_column(String(254))
     subject: Mapped[str] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text)

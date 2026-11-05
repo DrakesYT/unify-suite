@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import CheckConstraint, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, IdMixin, JsonType, TimestampMixin, str_enum
+from app.models.base import Base, IdMixin, JsonType, TimestampMixin, UtcDateTime, str_enum
 from app.models.enums import JobStatus
 
 
@@ -43,3 +44,17 @@ class CandidateScore(IdMixin, TimestampMixin, Base):
     score: Mapped[int]  # computed by code from verified evidence, not chosen by the model
     evidence: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, default=list)
     summary: Mapped[str] = mapped_column(Text, default="", server_default="")
+
+
+class InterviewSlot(IdMixin, TimestampMixin, Base):
+    """A time offered to a candidate. Held while its invite is drafted, pending or sent;
+    released if the invite is rejected or replaced. Code picks these, never the model."""
+
+    __tablename__ = "interview_slots"
+
+    candidate_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("candidates.id"), index=True)
+    job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("jobs.id"), index=True)
+    starts_at: Mapped[datetime] = mapped_column(UtcDateTime(), index=True)
+    ends_at: Mapped[datetime] = mapped_column(UtcDateTime())
+    email_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("outbound_emails.id"), index=True)
+    released: Mapped[bool] = mapped_column(default=False, index=True)

@@ -71,6 +71,7 @@ warning on the run and in the Approval Center.
 | Lead Qualifier | Sales | Rates a lead hot / warm / cold with a 20+ word reason and the fields it relied on | Sends only business fields (no contact name or full email); saves the rating |
 | Outreach Writer | Sales | Drafts a first email to a qualified lead | Rejects drafts with links, placeholders or addresses; adds greeting and signature; a sales manager approves; then it is **really sent** through Resend |
 | Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score, ranks candidates |
+| Interview Invite Writer | HR | Drafts an interview invitation for a strong candidate | Only candidates screened 50+ qualify; code holds 3 free 45-min office-hour times (never double-booked) and rejects a draft that changes any time; an HR manager approves; then it is sent |
 | Ticket Investigator | Support | Classifies new tickets; investigates against the customer's last 20 orders; drafts a reply | Rejects cited orders that are not the customer's; refund/legal escalations need a manager |
 | Vendor Comparator | Procurement | Explains why the top vendor wins | Ranks vendors: 50% price + 25% lead time + 25% on-time rate |
 | Payment Reminder Writer | Finance | Drafts a reminder for an overdue customer order | Due date = order date + payment terms; customers with an open refund/billing/legal ticket are never chased; a finance manager approves; then it is sent |
@@ -106,8 +107,8 @@ docker compose exec backend python -m app.seed
 | `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment and the payment reminder |
 | `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
 | `sales.manager@demo.example.com` | sales manager | Approval Center: approve & send the email (or reject it) |
-| `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates |
-| `hr.manager@demo.example.com` | HR manager | Dashboard, Hiring |
+| `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates → Invite to interview (top candidate) |
+| `hr.manager@demo.example.com` | HR manager | Approval Center: approve & send the interview invite (or reject it, which frees the times) |
 | `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
 | `support.manager@demo.example.com` | support manager | Approve the refund escalation |
 | `buyer@demo.example.com` | procurement employee | Procurement → Compare vendors, Create purchase order; PO-2001 is late → Follow up with supplier |
