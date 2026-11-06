@@ -83,6 +83,7 @@ warning on the run and in the Approval Center.
 | Payment Reminder Writer | Finance | Drafts a reminder for an overdue customer order | Due date = order date + payment terms; customers with an open refund/billing/legal ticket are never chased; a finance manager approves; then it is sent |
 | Supplier Follow-up Writer | Procurement | Drafts a chase email to the supplier of a late order | Decides what is late (expected date = order date + vendor lead time); the draft must quote the PO; a procurement manager approves; then it is sent |
 | Aura Router | Any | Picks one route for a plain-English request ("compare vendors for the laptops") | Finds the record, checks the user's rights, runs the department agent |
+| Call Analyzer | Sales, Support | Summarises a call transcript linked to a lead or ticket: customer sentiment, concerns, and who promised what by when | Rejects any quote that is not word for word in the transcript (and action-item quotes under 4 words); counts each speaker's talk share; changes nothing on the lead or ticket |
 | Brief Writer | Any (managers, executives) | Words a 2-sentence morning brief in Aura from the facts it is given | Collects the facts (live counts, who must decide what), rejects a draft that states any number no fact contains, and shows a code-written brief instantly and whenever the model is unavailable |
 | Verification Agent | Finance | — (rules only, no model) | Checks every record of a payment run is linked correctly |
 

@@ -29,11 +29,12 @@ from app.models import (
 )
 from app.models.enums import Department
 from app.money import format_minor
+from app.schemas.calls import CallAnalysis, CallInput
 from app.schemas.explain import AiCall, Explanation, Field, Person
 from app.schemas.hr import EXPERIENCE, EvidenceItem, ScreeningInput
 from app.schemas.procurement import RankedVendor, VendorComparison
 from app.schemas.support import InvestigationInput, OrderFact, TicketText
-from app.services import hr, procurement, sales, support
+from app.services import calls, hr, procurement, sales, support
 from app.services.authz import can_access
 from app.services.uploads import read_text
 
@@ -65,6 +66,8 @@ DID = {
     "email.edited": "edited the draft",
     "email.sent": "sent the email",
     "email.failed": "tried to send it (failed)",
+    "call.added": "added the call transcript",
+    "call.analyzed": "ran the Call Analyzer",
 }
 
 
@@ -483,4 +486,59 @@ def email(db: Session, user: User, email_id: uuid.UUID) -> Explanation:
             status,
         ],
         people=_people(db, [("outbound_email", record.id), *_approval_people(db, approval)]),
+    )
+
+
+# --- calls (sales leads and support tickets) -----------------------------------------------
+
+
+def call(db: Session, user: User, call_id: uuid.UUID) -> Explanation:
+    record = calls.get_call(db, user, call_id)
+    if not record.analysis:
+        raise ApiError(409, "no_ai_result", "This call has not been analysed yet")
+    upload = db.get(Upload, record.upload_id)
+    text = read_text(upload) if upload else ""
+    context = calls.context_line(db, record)
+    found = _calls(db, "call_analyzer", CallInput(context=context, transcript=text))
+    result = CallAnalysis.model_validate(record.analysis)
+    shares = calls.speakers(text)
+    talk = (
+        "Counted talk share from the speaker labels: "
+        + ", ".join(f"{s.speaker} {s.share_pct}%" for s in shares)
+        + "."
+        if shares
+        else "The transcript has no speaker labels, so talk share was not counted."
+    )
+    where = "lead" if record.lead_id else "ticket"
+    return Explanation(
+        title=f"How “{record.title}” was analysed",
+        agent="Call Analyzer",
+        model=record.analyzed_by_model,
+        ai_read=[
+            Field(label="context", value=context),
+            Field(label="transcript (start)", value=_cut(text, 1200)),
+        ],
+        ai_read_note="The transcript is untrusted text: it can only shape the summary and the "
+        "quoted action items.",
+        input_verified=bool(found),
+        ai_said=[
+            Field(label="summary", value=result.summary),
+            Field(label=f"sentiment: {result.sentiment}", value=f'"{result.sentiment_quote}"'),
+            *(Field(label="concern", value=c) for c in result.concerns),
+            *(
+                Field(
+                    label=f"action ({a.owner}{', ' + a.due if a.due else ''})",
+                    value=f'{a.task}: "{a.quote}"',
+                )
+                for a in result.action_items
+            ),
+        ],
+        calls=found,
+        code_decided=[
+            "Checked every quote word for word against the transcript; a reply with a quote "
+            "that is not in it is invalid and retried.",
+            talk,
+            f"Changed nothing on the {where}: action items are suggestions for people.",
+        ],
+        people=_people(db, [("call_transcript", record.id)]),
     )

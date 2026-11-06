@@ -36,6 +36,10 @@ const TONES: Record<string, string> = {
   not_due: "bg-slate-500/15 text-slate-300",
   sent: "bg-emerald-500/15 text-emerald-300",
   over_budget: "bg-amber-500/15 text-amber-300",
+  positive: "bg-emerald-500/15 text-emerald-300",
+  neutral: "bg-slate-500/15 text-slate-300",
+  negative: "bg-red-500/15 text-red-300",
+  mixed: "bg-amber-500/15 text-amber-300",
 };
 
 export function Badge({ value }: { value: string }) {

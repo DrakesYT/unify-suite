@@ -16,6 +16,7 @@ import { canWrite, useAuth } from "../session";
 import type { Lead, LeadStatus, Page, Priority } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
+import { CallsPanel } from "../components/CallsPanel";
 
 const STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "won", "lost"];
 const PRIORITIES: Priority[] = ["low", "medium", "high"];
@@ -133,6 +134,7 @@ function LeadRow({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [callsOpen, setCallsOpen] = useState(false);
 
   const run = async (path: string, init: RequestInit) => {
     setBusy(true);
@@ -196,7 +198,14 @@ function LeadRow({
             <span className="text-xs text-slate-600">not rated</span>
           )}
         </td>
-        <td className="py-3 text-right">
+        <td className="py-3 text-right whitespace-nowrap">
+          <button
+            onClick={() => setCallsOpen(!callsOpen)}
+            className={`${ghostButton} mr-2`}
+            aria-expanded={callsOpen}
+          >
+            Calls
+          </button>
           {editable && (
             <button
               disabled={busy}
@@ -208,7 +217,7 @@ function LeadRow({
           )}
         </td>
       </tr>
-      {(error || (open && lead.qualification)) && (
+      {(error || callsOpen || (open && lead.qualification)) && (
         <tr>
           <td colSpan={6} className="pb-3">
             <ErrorNote message={error} />
@@ -231,6 +240,7 @@ function LeadRow({
                 editable={editable}
               />
             )}
+            {callsOpen && <CallsPanel leadId={lead.id} editable={editable} />}
           </td>
         </tr>
       )}

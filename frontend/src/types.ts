@@ -464,3 +464,27 @@ export interface Explanation {
   code_decided: string[];
   people: { at: string; who: string; did: string }[];
 }
+
+export interface CallAnalysis {
+  summary: string;
+  sentiment: "positive" | "neutral" | "negative" | "mixed";
+  sentiment_quote: string;
+  concerns: string[];
+  action_items: { owner: "us" | "customer"; task: string; due: string | null; quote: string }[];
+}
+
+export interface CallRecord {
+  id: string;
+  title: string;
+  department: Department;
+  lead_id: string | null;
+  ticket_id: string | null;
+  file_name: string;
+  transcript: string;
+  speakers: { speaker: string; turns: number; words: number; share_pct: number }[];
+  analysis: CallAnalysis | null;
+  analyzed_by_model: string | null;
+  analyzed_at: string | null;
+  analysis_error: string | null;
+  created_at: string;
+}

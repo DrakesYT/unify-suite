@@ -16,6 +16,7 @@ import { canWrite, useAuth } from "../session";
 import type { Approval, Customer, Page, Ticket } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
+import { CallsPanel } from "../components/CallsPanel";
 
 const NEEDS_APPROVAL = new Set(["refund", "legal"]);
 
@@ -244,6 +245,7 @@ function TicketDetail({
           .
         </p>
       )}
+      <CallsPanel ticketId={ticket.id} editable={editable} />
     </Card>
   );
 }

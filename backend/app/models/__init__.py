@@ -2,6 +2,7 @@
 
 from app.models.audit import AuditLog
 from app.models.base import Base
+from app.models.calls import CallTranscript
 from app.models.email import OutboundEmail
 from app.models.finance import Invoice, InvoiceAnomaly, Payment, Transaction
 from app.models.hr import Candidate, CandidateScore, InterviewSlot, Job
@@ -23,6 +24,7 @@ __all__ = [
     "ApprovalRequest",
     "AuditLog",
     "Base",
+    "CallTranscript",
     "Candidate",
     "CandidateScore",
     "Customer",

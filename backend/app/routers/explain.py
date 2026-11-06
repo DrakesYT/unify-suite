@@ -42,3 +42,8 @@ def run(execution_id: uuid.UUID, db: DbSession, user: CurrentUser) -> Explanatio
 @router.get("/email/{email_id}")
 def email(email_id: uuid.UUID, db: DbSession, user: CurrentUser) -> Explanation:
     return explain.email(db, user, email_id)
+
+
+@router.get("/call/{call_id}")
+def call(call_id: uuid.UUID, db: DbSession, user: CurrentUser) -> Explanation:
+    return explain.call(db, user, call_id)

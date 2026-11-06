@@ -8,6 +8,7 @@ from app.routers import (
     ai,
     approvals,
     auth,
+    calls,
     dashboard,
     explain,
     finance,
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.search_router)
     app.include_router(ai.router)
     app.include_router(explain.router)
+    app.include_router(calls.router)
     return app
 
 

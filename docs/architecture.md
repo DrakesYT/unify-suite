@@ -102,6 +102,12 @@ flowchart LR
   read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
+- Calls (`services/calls.py`, `/api/calls`, table `call_transcripts`, migration 0011): a transcript
+  (pasted text or a TXT/PDF upload, same upload checks) belongs to exactly one lead or one ticket, and
+  its department decides who may read or add it. The Call Analyzer returns summary, sentiment,
+  concerns and action items; `verify` rejects quotes not found in the transcript. Talk share per
+  speaker is counted by code from "Name:" lines. A failed analysis keeps the transcript ("Analyse
+  again"). Nothing on the lead or ticket changes because of a call.
 - "Why?" drawer (`services/explain.py`, `GET /api/explain/...`): read-only, same department read rule as
   the pages. It rebuilds an agent's input with the same function the service used and looks up
   `agent_tasks` rows with the same `input_hash` (runs use `execution_id`), so a match proves the input
