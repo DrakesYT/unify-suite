@@ -27,14 +27,16 @@ import re
 import sys
 import uuid
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.agents.runner import AgentFailed, TaskContext
@@ -48,9 +50,11 @@ from app.models import (
     Candidate,
     CandidateScore,
     Customer,
+    InterviewSlot,
     Job,
     Lead,
     Order,
+    OutboundEmail,
     Ticket,
     Upload,
     User,
@@ -62,11 +66,12 @@ from app.schemas.hr import JobCreate
 from app.schemas.procurement import VendorCreate
 from app.schemas.sales import LeadCreate
 from app.schemas.support import TicketCreate
-from app.services import calls, hr, procurement, sales, support
+from app.services import audit, calls, hr, procurement, sales, support
 from app.services.uploads import save_upload
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "demo_data"
 WORKERS = 4  # resumes processed side by side (each in its own database session)
+LOCK_KEY = 4_242_001  # PostgreSQL advisory lock held while an import changes data
 ACTORS = {"sales": "sales.rep", "support": "support.agent", "hr": "hr.recruiter", "buyer": "buyer"}
 _ORDER_NUMBER = re.compile(r"\bSO-\d+\b")
 _CALL_HEADER = re.compile(r"^\s*Call:\s*(.+?)\s+-\s+", re.MULTILINE)
@@ -545,7 +550,7 @@ def run_import(
     if not data_dir.is_dir():
         raise DemoImportError(f"No demo data at {data_dir}")
     rep = Report()
-    with factory() as db:
+    with _one_at_a_time(factory, skip=dry_run), factory() as db:
         users = {key: _demo_user(db, handle) for key, handle in ACTORS.items()}
         progress("vendors and jobs...")
         import_vendors(db, read_rows("vendors.csv", data_dir), users["buyer"], rep, dry_run)
@@ -566,13 +571,135 @@ def run_import(
     return rep
 
 
+@contextmanager
+def _one_at_a_time(factory: sessionmaker[Session], *, skip: bool = False) -> Iterator[None]:
+    """Only one import (or clean-up) may change data at a time: two at once would both add the
+    records neither has saved yet. PostgreSQL holds a lock for as long as the run lasts; a
+    second run stops straight away. (Tests on SQLite run one at a time anyway.)"""
+    engine = factory.kw.get("bind")
+    if skip or engine is None or engine.dialect.name != "postgresql":
+        yield
+        return
+    with engine.connect() as conn:
+        if not conn.scalar(text("SELECT pg_try_advisory_lock(:key)"), {"key": LOCK_KEY}):
+            raise DemoImportError(
+                "Another demo import is running. Wait for it to finish, then run this again."
+            )
+        try:
+            yield
+        finally:
+            conn.execute(text("SELECT pg_advisory_unlock(:key)"), {"key": LOCK_KEY})
+
+
+def _candidate_in_use(db: Session, candidate_id: uuid.UUID) -> bool:
+    """Someone has worked with this candidate: an interview time or an email exists."""
+    for model in (InterviewSlot, OutboundEmail):
+        count = db.scalar(
+            select(func.count()).select_from(model).where(model.candidate_id == candidate_id)
+        )
+        if count:
+            return True
+    return False
+
+
+def remove_duplicates(factory: sessionmaker[Session], *, dry_run: bool = False) -> Report:
+    """Undo what two imports running at once leave behind: a resume read into two candidates (the
+    same uploaded file) and a transcript added as two calls. One copy stays: the one someone
+    already worked with (an interview slot or an email), otherwise the earliest; the others and
+    their scores go, so nothing anyone did is lost. Each removal is audited."""
+    rep = Report()
+    with _one_at_a_time(factory, skip=dry_run), factory() as db:
+        actor = _demo_user(db, ACTORS["hr"])
+        by_file: dict[uuid.UUID, list[Candidate]] = defaultdict(list)
+        for candidate in db.scalars(
+            select(Candidate)
+            .where(Candidate.file_id.is_not(None))
+            .order_by(Candidate.created_at, Candidate.id)
+        ):
+            by_file[candidate.file_id].append(candidate)  # type: ignore[index]
+        several_in_use = []
+        for copies in by_file.values():
+            if len(copies) < 2:
+                continue
+            in_use = [c for c in copies if _candidate_in_use(db, c.id)]
+            keep = in_use or copies[:1]  # the copy someone worked with, else the earliest
+            if len(in_use) > 1:
+                several_in_use.append(copies[0].name)
+            for extra in copies:
+                if extra in keep:
+                    continue
+                rep.add("duplicate candidates removed")
+                if dry_run:
+                    continue
+                db.execute(delete(CandidateScore).where(CandidateScore.candidate_id == extra.id))
+                audit.record(
+                    db,
+                    action="demo_import.duplicate_removed",
+                    entity="candidate",
+                    entity_id=extra.id,
+                    actor_id=actor.id,
+                    detail={"kept": str(keep[0].id), "name": extra.name},
+                )
+                db.delete(extra)
+        if several_in_use:
+            rep.note(
+                "kept every copy that is in use (interview slot or email): "
+                + ", ".join(several_in_use)
+            )
+
+        by_transcript: dict[tuple[Any, ...], list[tuple[CallTranscript, Upload]]] = defaultdict(
+            list
+        )
+        for call, upload in db.execute(
+            select(CallTranscript, Upload)
+            .join(Upload, Upload.id == CallTranscript.upload_id)
+            .order_by(CallTranscript.created_at, CallTranscript.id)
+        ):
+            by_transcript[(call.lead_id, call.ticket_id, upload.original_name)].append(
+                (call, upload)
+            )
+        for copies in by_transcript.values():
+            for call, upload in copies[1:]:
+                rep.add("duplicate calls removed")
+                if dry_run:
+                    continue
+                audit.record(
+                    db,
+                    action="demo_import.duplicate_removed",
+                    entity="call_transcript",
+                    entity_id=call.id,
+                    actor_id=actor.id,
+                    detail={"kept": str(copies[0][0].id), "title": call.title},
+                )
+                db.delete(call)
+                db.flush()
+                db.delete(upload)  # this copy's own file: nothing else points to it
+                Path(upload.storage_path).unlink(missing_ok=True)
+        if not dry_run:
+            db.commit()
+    return rep
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--records-only", action="store_true", help="no model calls")
     parser.add_argument("--dry-run", action="store_true", help="report only, change nothing")
     parser.add_argument("--workers", type=int, default=WORKERS, help="resumes in parallel")
     parser.add_argument("--data", type=Path, default=DATA_DIR, help="demo data folder")
+    parser.add_argument(
+        "--remove-duplicates",
+        action="store_true",
+        help="remove candidates and calls added twice by two imports run at once",
+    )
     args = parser.parse_args(argv)
+    if args.remove_duplicates:
+        try:
+            report = remove_duplicates(session_factory(), dry_run=args.dry_run)
+        except DemoImportError as exc:
+            print(exc, file=sys.stderr)
+            return 2
+        print(report.render(args.dry_run))
+        return 0
     llm = None if (args.records_only or args.dry_run) else get_llm()
     try:
         report = run_import(

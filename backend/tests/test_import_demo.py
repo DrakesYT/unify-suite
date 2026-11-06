@@ -330,3 +330,63 @@ def test_word_files_become_plain_text_lines() -> None:
     assert text == "Call: Acme - intro\nAgent: Hello\nCustomer: Hi"
     with pytest.raises(DocxError):
         docx_text(b"not a zip at all")
+
+
+def test_duplicates_left_by_two_imports_at_once_are_removed(
+    factory: sessionmaker[Session], db: Session
+) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from app.models import InterviewSlot, Upload, User
+    from app.models.enums import Department
+    from app.services.uploads import save_upload
+
+    recruiter = db.scalar(select(User).where(User.email == "hr.recruiter@demo.example.com"))
+    job = db.scalar(select(Job).where(Job.title == "Senior Backend Engineer"))
+    lead = db.scalar(select(Lead).where(Lead.company == "Karachi Logistics Group"))
+    assert recruiter and job and lead
+    resume = save_upload(db, filename="cv.pdf", data=make_pdf(NIDA_LINES),
+                         department=Department.hr, actor=recruiter)  # fmt: skip
+    first, second, in_use = (
+        Candidate(name="Nida Farooq", email="nida.farooq@example.com", file_id=resume.id)
+        for _ in range(3)
+    )
+    db.add_all([first, second, in_use])
+    db.flush()
+    db.add_all(
+        [CandidateScore(candidate_id=c.id, job_id=job.id, score=90) for c in (first, second)]
+    )
+    now = datetime.now(UTC)
+    db.add(InterviewSlot(candidate_id=in_use.id, job_id=job.id, starts_at=now,
+                         ends_at=now + timedelta(minutes=45)))  # fmt: skip
+    copies = []
+    for _ in range(2):
+        upload = save_upload(db, filename="call-karachi-logistics.txt", data=TRANSCRIPT.encode(),
+                             department=Department.sales, actor=recruiter)  # fmt: skip
+        copies.append(upload)
+        db.add(CallTranscript(title="Karachi call", department=Department.sales,
+                              lead_id=lead.id, upload_id=upload.id))  # fmt: skip
+        db.flush()
+    db.commit()
+    first_id, second_id, in_use_id = first.id, second.id, in_use.id
+    kept_upload, extra_upload = copies[0].id, copies[1].id
+    extra_file = Path(copies[1].storage_path)
+
+    preview = import_demo.remove_duplicates(factory, dry_run=True)
+    assert dict(preview.added) == {"duplicate candidates removed": 2, "duplicate calls removed": 1}
+    assert _count(db, Candidate) >= 3  # the dry run changed nothing
+
+    report = import_demo.remove_duplicates(factory)
+
+    db.expire_all()
+    left = db.scalars(select(Candidate).where(Candidate.email == "nida.farooq@example.com")).all()
+    assert [c.id for c in left] == [in_use_id]  # the copy someone worked with is the one kept
+    scored = db.scalars(select(CandidateScore.candidate_id)).all()
+    assert first_id not in scored and second_id not in scored
+    assert report.notes == []
+    calls = db.scalars(select(CallTranscript).where(CallTranscript.lead_id == lead.id)).all()
+    assert len(calls) == 1 and calls[0].upload_id == kept_upload
+    assert db.get(Upload, extra_upload) is None
+    assert not extra_file.exists()
+    again = import_demo.remove_duplicates(factory)
+    assert {k: v for k, v in again.added.items() if v} == {}
