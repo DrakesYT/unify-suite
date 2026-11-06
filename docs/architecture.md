@@ -103,7 +103,9 @@ flowchart LR
 - Dashboard (managers, executives, admins): KPIs and charts are SQL aggregates; the feed is the latest 20
   audit events. `/api/dashboard/overview` feeds the panels in one read: a hiring board (each candidate in
   the furthest stage their records prove: applied → screened → invite pending → invite sent), the deal
-  board (leads per status, win rate, won this quarter vs the `SALES_QUARTER_TARGET` setting), open
+  board (leads per status, win rate, won this quarter vs the quarterly target, which an executive or admin
+  sets on the dashboard: `PUT /api/settings/sales-target`, stored in `app_settings`, audited; until then
+  `SALES_QUARTER_TARGET` applies), open
   tickets by urgency, money stuck in invoices / customer payments / late deliveries, and an insights line
   worded by code from those numbers (no model). The top-bar search (`/api/search`) applies the same
   read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.

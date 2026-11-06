@@ -16,6 +16,7 @@ from app.routers import (
     hr,
     procurement,
     sales,
+    settings,
     support,
     workflows,
 )
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(ai.router)
     app.include_router(explain.router)
     app.include_router(calls.router)
+    app.include_router(settings.router)
     return app
 
 

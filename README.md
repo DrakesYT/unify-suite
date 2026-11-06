@@ -156,7 +156,7 @@ The 57 supplier invoices in `backend/demo_data/invoices/` are left for live uplo
 
 | Sign in as | Role | Try this |
 |---|---|---|
-| `ceo@demo.example.com` | executive | Dashboard, Aura chat, Approval Center (read-only) |
+| `ceo@demo.example.com` | executive | Dashboard (set the quarterly sales target with **Edit target** on the deal board), Aura chat, Approval Center (read-only) |
 | `finance.clerk@demo.example.com` | finance employee | Payments: upload an invoice for `PO-1007`; Customer payments due → SO-1101 → Send payment reminder |
 | `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment and the payment reminder |
 | `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
@@ -247,8 +247,8 @@ attached to the `frontend` service (port 80); no other service is exposed.
 | `EMAIL_FROM` | backend | Optional, default `UNIFY SUITE <onboarding@resend.dev>`. |
 | `EMAIL_REDIRECT_TO` | backend | Optional demo safety: every email goes to this one inbox, with the real recipient noted at the top. |
 | `EMAIL_SEND_TO_REAL_RECIPIENTS` | backend | Optional, default `false`. Without a redirect, approved emails are only sent to their real recipients when this is `true`. |
-| `SALES_QUARTER_TARGET` | backend | Optional, default `250000`. Quarterly sales target (whole units) for the dashboard gauge. |
-| `SALES_TARGET_CURRENCY` | backend | Optional, default `USD`. Currency of the sales target. |
+| `SALES_QUARTER_TARGET` | backend | Optional, default `250000`. Starting quarterly sales target (whole units) until an executive or admin sets one on the dashboard; from then on the value set in the app is used (stored in `app_settings`, every change audited). |
+| `SALES_TARGET_CURRENCY` | backend | Optional, default `USD`. Currency of that starting target. |
 | `LOG_LEVEL` | backend | Optional, default `INFO`. |
 
 Set them in `.env` locally and in Coolify's Environment Variables page in production. Never commit `.env`.

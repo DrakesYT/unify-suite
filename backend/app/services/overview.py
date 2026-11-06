@@ -11,7 +11,6 @@ from datetime import UTC, date, datetime, time, timedelta
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.models import (
     AgentTask,
     ApprovalRequest,
@@ -38,7 +37,7 @@ from app.models.enums import (
     TaskStatus,
     Urgency,
 )
-from app.money import format_minor, minor_unit_exponent
+from app.money import format_minor
 from app.schemas.dashboard import (
     AgentHealth,
     Count,
@@ -59,7 +58,7 @@ from app.schemas.dashboard import (
     SupportPanel,
     TicketRow,
 )
-from app.services import interviews, receivables
+from app.services import company_settings, interviews, receivables
 from app.services.dashboard import OPEN_LEADS, OPEN_TICKETS, UNPAID
 
 CARDS_PER_STAGE = 6
@@ -185,8 +184,8 @@ def crm(db: Session, today: date) -> Crm:
         if status in OPEN_LEADS:
             pipeline[currency] += int(total)
 
-    settings = get_settings()
-    currency = settings.sales_target_currency
+    target = company_settings.sales_target(db)
+    currency = target.currency
     label, quarter_start = quarter_of(today)
     won_minor = db.scalar(
         select(func.coalesce(func.sum(Lead.value_minor), 0)).where(
@@ -210,9 +209,11 @@ def crm(db: Session, today: date) -> Crm:
         lost=lost,
         target=SalesTarget(
             quarter=label,
-            target_minor=settings.sales_quarter_target * 10 ** minor_unit_exponent(currency),
+            target_minor=target.amount_minor,
             won_minor=int(won_minor or 0),
             currency=currency,
+            set_by=target.set_by,
+            set_at=target.set_at,
         ),
         top_deals=[
             Deal(

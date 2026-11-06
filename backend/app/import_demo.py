@@ -86,6 +86,7 @@ class Report:
     added: dict[str, int] = field(default_factory=lambda: defaultdict(int))
     notes: list[str] = field(default_factory=list)
     failed: list[str] = field(default_factory=list)
+    verbs: tuple[str, str] = ("Would add", "Added")  # (dry run, real run)
 
     def add(self, kind: str, n: int = 1) -> None:
         self.added[kind] += n
@@ -97,13 +98,21 @@ class Report:
         self.failed.append(text)
 
     def render(self, dry_run: bool) -> str:
-        verb = "Would add" if dry_run else "Added"
-        out = [f"{verb}: " + (", ".join(f"{n} {k}" for k, n in self.added.items()) or "nothing")]
+        verb = self.verbs[0] if dry_run else self.verbs[1]
+        counts = ", ".join(f"{n} {k}" for k, n in self.added.items() if n)
+        out = [f"{verb}: {counts or 'nothing'}"]
         out += [f"  - {n}" for n in self.notes]
         if self.failed:
             out.append(f"Failed ({len(self.failed)}; run again to retry):")
             out += [f"  ! {f}" for f in self.failed]
         return "\n".join(out)
+
+
+def listing(items: list[str], shown: int = 5) -> str:
+    """'a, b, c' for a few names; 'a, b, c, d, e and 12 more' for many."""
+    if len(items) <= shown + 1:
+        return ", ".join(items)
+    return f"{', '.join(items[:shown])} and {len(items) - shown} more"
 
 
 def read_rows(name: str, data_dir: Path) -> list[dict[str, str]]:
@@ -146,7 +155,7 @@ def import_vendors(db: Session, rows: list[dict[str, str]], actor: User, rep: Re
             )
             procurement.create_vendor(db, data, actor)
     if kept:
-        rep.note(f"vendors already in the app, kept as they are: {', '.join(kept)}")
+        rep.note(f"{len(kept)} vendors already in the app, kept as they are: {listing(kept)}")
 
 
 def import_jobs(db: Session, rows: list[dict[str, str]], actor: User, rep: Report, dry: bool):  # type: ignore[no-untyped-def]
@@ -239,7 +248,7 @@ def import_customers_and_orders(db: Session, rows: list[dict[str, str]], rep: Re
     if not dry:
         db.commit()
     if kept:
-        rep.note(f"orders already in the app, kept as they are: {', '.join(kept)}")
+        rep.note(f"{len(kept)} orders already in the app, kept as they are: {listing(kept)}")
 
 
 def import_tickets(
@@ -392,7 +401,7 @@ def import_resumes(
     if repeats:
         rep.note(
             f"{len(repeats)} resumes come from people who are already candidates (kept the "
-            f"first): {', '.join(repeats)}"
+            f"first): {listing(repeats)}"
         )
     rep.add("resumes", len(tasks))
     if dry or not tasks:
@@ -529,7 +538,7 @@ def import_calls(
     elif unattached:
         rep.note(
             f"{len(unattached)} transcripts have no lead or ticket to attach to and were left "
-            f"for live uploads: {', '.join(unattached)}"
+            f"for live uploads: {listing(unattached)}"
         )
     if llm is None and not dry:
         rep.note("call transcripts need the model; run without --records-only to add them")
@@ -607,7 +616,7 @@ def remove_duplicates(factory: sessionmaker[Session], *, dry_run: bool = False) 
     same uploaded file) and a transcript added as two calls. One copy stays: the one someone
     already worked with (an interview slot or an email), otherwise the earliest; the others and
     their scores go, so nothing anyone did is lost. Each removal is audited."""
-    rep = Report()
+    rep = Report(verbs=("Would remove", "Removed"))
     with _one_at_a_time(factory, skip=dry_run), factory() as db:
         actor = _demo_user(db, ACTORS["hr"])
         by_file: dict[uuid.UUID, list[Candidate]] = defaultdict(list)
@@ -628,7 +637,7 @@ def remove_duplicates(factory: sessionmaker[Session], *, dry_run: bool = False) 
             for extra in copies:
                 if extra in keep:
                     continue
-                rep.add("duplicate candidates removed")
+                rep.add("duplicate candidates")
                 if dry_run:
                     continue
                 db.execute(delete(CandidateScore).where(CandidateScore.candidate_id == extra.id))
@@ -644,7 +653,7 @@ def remove_duplicates(factory: sessionmaker[Session], *, dry_run: bool = False) 
         if several_in_use:
             rep.note(
                 "kept every copy that is in use (interview slot or email): "
-                + ", ".join(several_in_use)
+                + listing(several_in_use)
             )
 
         by_transcript: dict[tuple[Any, ...], list[tuple[CallTranscript, Upload]]] = defaultdict(
@@ -660,7 +669,7 @@ def remove_duplicates(factory: sessionmaker[Session], *, dry_run: bool = False) 
             )
         for copies in by_transcript.values():
             for call, upload in copies[1:]:
-                rep.add("duplicate calls removed")
+                rep.add("duplicate calls")
                 if dry_run:
                     continue
                 audit.record(

@@ -9,6 +9,7 @@ from app.models.hr import Candidate, CandidateScore, InterviewSlot, Job
 from app.models.procurement import PurchaseOrder, PurchaseRequest, Vendor, VendorQuote
 from app.models.sales import Customer, Lead, Order
 from app.models.sessions import UserSession
+from app.models.settings import AppSetting
 from app.models.support import Ticket
 from app.models.uploads import Upload
 from app.models.users import User
@@ -22,6 +23,7 @@ from app.models.workflows import (
 
 __all__ = [
     "AgentTask",
+    "AppSetting",
     "ApprovalRequest",
     "AuditLog",
     "Base",

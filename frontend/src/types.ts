@@ -362,7 +362,15 @@ export interface Overview {
     win_rate: number | null;
     won: number;
     lost: number;
-    target: { quarter: string; target_minor: number; won_minor: number; currency: string };
+    target: {
+      quarter: string;
+      target_minor: number;
+      won_minor: number;
+      currency: string;
+      /** Who set the target in the app; null while the deployment default applies. */
+      set_by: string | null;
+      set_at: string | null;
+    };
     top_deals: {
       lead_id: string;
       company: string;

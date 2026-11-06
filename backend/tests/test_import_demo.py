@@ -312,6 +312,7 @@ def test_with_the_model_tickets_resumes_and_calls_go_through_the_agents(
     assert lead is not None and lead.company == "Karachi Logistics Group"
     assert all(c.analysis for c in calls.values())
     assert any("call-nobody-trading.docx" in n for n in report.notes)
+    assert report.render(False).startswith("Added: ")
 
     again = import_demo.run_import(factory, llm, data_dir, workers=1)
     assert {k: v for k, v in again.added.items() if v} == {}
@@ -373,7 +374,8 @@ def test_duplicates_left_by_two_imports_at_once_are_removed(
     extra_file = Path(copies[1].storage_path)
 
     preview = import_demo.remove_duplicates(factory, dry_run=True)
-    assert dict(preview.added) == {"duplicate candidates removed": 2, "duplicate calls removed": 1}
+    assert dict(preview.added) == {"duplicate candidates": 2, "duplicate calls": 1}
+    assert preview.render(True).startswith("Would remove: 2 duplicate candidates, 1 duplicate")
     assert _count(db, Candidate) >= 3  # the dry run changed nothing
 
     report = import_demo.remove_duplicates(factory)
@@ -390,3 +392,9 @@ def test_duplicates_left_by_two_imports_at_once_are_removed(
     assert not extra_file.exists()
     again = import_demo.remove_duplicates(factory)
     assert {k: v for k, v in again.added.items() if v} == {}
+
+
+def test_long_lists_in_the_report_are_summarised() -> None:
+    assert import_demo.listing(["a", "b"]) == "a, b"
+    assert import_demo.listing([str(n) for n in range(6)]) == "0, 1, 2, 3, 4, 5"
+    assert import_demo.listing([str(n) for n in range(20)]) == "0, 1, 2, 3, 4 and 15 more"

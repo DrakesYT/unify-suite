@@ -102,6 +102,8 @@ class SalesTarget(BaseModel):
     target_minor: int
     won_minor: int
     currency: str
+    set_by: str | None = None  # who set the target in the app; None = deployment default
+    set_at: datetime | None = None
 
 
 class Crm(BaseModel):

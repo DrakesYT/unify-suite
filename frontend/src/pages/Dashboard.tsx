@@ -156,7 +156,7 @@ export function Dashboard() {
             <div className="stagger space-y-5">
               <AgentBoard agents={o.agents} charts={charts.data} feed={feed.data} />
               <div className="grid gap-5 lg:grid-cols-2">
-                <DealBoard crm={o.crm} />
+                <DealBoard crm={o.crm} onTargetChanged={() => void overview.reload()} />
                 <HiringBoard hiring={o.hiring} />
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
