@@ -246,10 +246,11 @@ body {
   }
 }
 
-/* Logo loader: fades in only after 300 ms (a fast load never flashes it), the U draws itself, the
+/* Logo loader: by default fades in only after 300 ms (a fast load never flashes it; `immediate` skips
+   the wait where the app holds it on purpose), the U draws itself, the
    centre bar drops in, then the extruded mark swings slowly left and right like a coin on a stand. */
 .logo-loader {
-  animation: fade-in 200ms var(--ease-out) 300ms backwards;
+  animation: fade-in 200ms var(--ease-out) var(--loader-delay, 300ms) backwards;
 }
 .logo-loader-stage {
   position: relative;
@@ -262,7 +263,8 @@ body {
   inset: 0 0 16px;
   transform-style: preserve-3d;
   transform: rotateX(10deg) rotateY(-28deg);
-  animation: logo-swing 2.6s cubic-bezier(0.45, 0, 0.55, 1) 300ms infinite alternate;
+  animation: logo-swing 2.6s cubic-bezier(0.45, 0, 0.55, 1) var(--loader-delay, 300ms) infinite
+    alternate;
 }
 .logo-loader-layer {
   position: absolute;
@@ -273,11 +275,11 @@ body {
 }
 .logo-loader-u {
   stroke-dasharray: 40;
-  animation: logo-draw 700ms var(--ease-out) 300ms backwards;
+  animation: logo-draw 700ms var(--ease-out) var(--loader-delay, 300ms) backwards;
 }
 .logo-loader-bar {
   stroke-dasharray: 8;
-  animation: logo-draw-bar 280ms var(--ease-out) 850ms backwards;
+  animation: logo-draw-bar 280ms var(--ease-out) calc(var(--loader-delay, 300ms) + 550ms) backwards;
 }
 .logo-loader-shadow {
   position: absolute;
@@ -288,7 +290,8 @@ body {
   border-radius: 50%;
   background: rgb(0 0 0 / 0.45);
   transform: scaleX(0.82);
-  animation: logo-shadow 1.3s cubic-bezier(0.45, 0, 0.55, 1) 300ms infinite alternate;
+  animation: logo-shadow 1.3s cubic-bezier(0.45, 0, 0.55, 1) var(--loader-delay, 300ms) infinite
+    alternate;
 }
 @keyframes logo-swing {
   to {

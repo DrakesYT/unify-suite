@@ -44,13 +44,22 @@ function Mark({ layer }: { layer: number }) {
 }
 
 /** Loading state built from the logo: the U draws itself, then the solid mark turns slowly.
- *  It only fades in after 300 ms, so a quick load never flashes it. */
-export function LogoLoader({ label, fullScreen = false }: { label: string; fullScreen?: boolean }) {
+ *  By default it fades in only after 300 ms, so a quick load never flashes it. */
+export function LogoLoader({
+  label,
+  fullScreen = false,
+  immediate = false,
+}: {
+  label: string;
+  fullScreen?: boolean;
+  immediate?: boolean; // shown on purpose for a moment (sign-in, sign-out): no 300 ms wait
+}) {
   return (
     <div
       role="status"
       aria-live="polite"
       className={`logo-loader grid place-items-center ${fullScreen ? "min-h-screen" : "min-h-[60vh]"}`}
+      style={immediate ? ({ "--loader-delay": "0ms" } as CSSProperties) : undefined}
     >
       <div className="flex flex-col items-center gap-6">
         <div className="logo-loader-stage">
