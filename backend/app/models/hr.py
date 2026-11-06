@@ -30,6 +30,9 @@ class Candidate(IdMixin, TimestampMixin, Base):
     years_experience: Mapped[int | None]
     education: Mapped[list[str]] = mapped_column(JsonType, default=list)
     file_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("uploads.id"), index=True)
+    # The job they applied for. None for candidates on file before applications were recorded:
+    # they count as applicants for every job.
+    job_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jobs.id"), index=True)
 
 
 class CandidateScore(IdMixin, TimestampMixin, Base):

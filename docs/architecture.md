@@ -39,10 +39,17 @@ flowchart LR
   get a message saying what to do, and a PDF with no text layer (a scan) is refused with its reason, so
   no workflow starts on a file that cannot succeed.
 - Invoice intake: upload (type checked by content, max 10 MB) → `read_upload` → Invoice Processor (LLM
-  extracts fields) → `get_po` → match by PO status (must be approved), vendor, currency and amount
-  (code) → duplicate check (code) → `save_invoice` or `flag_anomaly`. `app/safety.py` (code, no model)
-  scans the invoice text for lines aimed at the AI; findings are audited (`security.instruction_text_found`)
-  and shown as a prompt-injection warning on the run and on the approval card. Duplicates are recorded in `invoice_anomalies`, never inserted.
+  extracts the document type, fields, the PO reference as printed and every line item) → `get_po` → code
+  (`app/invoice_checks.py`, `services/finance.py`): only a document of type invoice with a total of zero or
+  more can be paid (a credit note, quotation or reminder is flagged `not_an_invoice`); the PO reference is
+  normalised (`po-1007` → `PO-1007`) and one naming two numbers is ambiguous, never guessed; each line's
+  quantity × price and the lines' sum must equal the total; match by PO status (must be approved), vendor,
+  currency and amount (and, in Workflow B, the PO the invoice names must be the PO chosen) → duplicate check →
+  `save_invoice` or `flag_anomaly` (a `no_po` anomaly records whether the PO was missing, unknown or
+  ambiguous). `app/safety.py` (code, no model) scans invoice and call-transcript text for lines aimed at the
+  AI; invoice findings are audited (`security.instruction_text_found`) and shown as a prompt-injection warning
+  on the run and on the approval card, call findings above the analysis. Duplicates are recorded in
+  `invoice_anomalies`, never inserted.
 - Receivables (money owed to us): an unpaid customer order is due on its order date + the customer's
   terms (`net_30`). Code computes `days_overdue` and puts a customer with an open refund, billing or legal
   ticket on hold (never chased). For an overdue order the Payment Reminder Writer drafts a reminder that
@@ -127,7 +134,16 @@ flowchart LR
   Aura a normal chat message. Voice input uses the browser's own speech recognition (Chrome, Edge);
   only the recognised text reaches the backend.
 - Demo data: `python -m app.seed` creates the demo company idempotently (natural keys: email, vendor name, PO
-  number, …). AI results are not pre-filled; they come from running the agents.
+  number, …). AI results are not pre-filled; they come from running the agents. `python -m app.import_demo`
+  then adds the fictional data set in `backend/demo_data/` (CSV sheets, resume PDFs, Word call transcripts)
+  without changing existing records: repeat leads are merged by email, identical tickets imported once, new
+  tickets classified, resumes parsed and screened for the job applied to (4 at a time, each in its own
+  session; `candidates.job_id` records the application, and screening a job covers only its applicants
+  not yet screened, so no resume is screened twice by accident), and calls attached to the lead or ticket they name and analysed. Word files are turned into text
+  by `app/docx_text.py` (standard library only); uploads themselves stay PDF/CSV/TXT.
+- Accuracy check: `python -m app.evaluate` runs the same agents and rules on the demo files in a scratch
+  SQLite database (seed + the sheet's vendors and jobs) and compares with the answer keys in
+  `backend/demo_data/answer_keys/`; the scoring rules are fixed in code and pinned by tests.
 - The frontend container serves `index.html` with `Cache-Control: no-cache` and hashed `/assets/*` as immutable, so a
   new release is picked up on the next page load. Its Caddy also sets the security headers (Content Security Policy,
   HSTS, frame denial, `nosniff`, referrer and permissions policies), refuses bodies over 12 MB, and works out the

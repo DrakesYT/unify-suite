@@ -62,7 +62,7 @@ def _run(db: Session, llm: LLMClient, route: str, record, ctx: TaskContext) -> s
             f"{record.company} is rated {sales.qualify_lead(db, llm, record.id, ctx).rating}."
         ),
         "hr.screen_candidates": lambda: _screen_summary(
-            hr.screen_job(db, llm, record.id, None, ctx), record
+            len(hr.unscreened(db, record)), hr.screen_job(db, llm, record.id, None, ctx), record
         ),
         "support.investigate_ticket": lambda: _ticket_summary(
             support.investigate(db, llm, record.id, ctx)
@@ -74,13 +74,12 @@ def _run(db: Session, llm: LLMClient, route: str, record, ctx: TaskContext) -> s
     return actions[route]()
 
 
-def _screen_summary(scores: list, job: Job) -> str:  # type: ignore[type-arg]
+def _screen_summary(new: int, scores: list, job: Job) -> str:  # type: ignore[type-arg]
     if not scores:
         return f"No candidates with a resume to screen for {job.title}."
     top = scores[0]
-    return (
-        f"Screened {len(scores)} for {job.title}; top is {top.candidate.name} with {top.score}/100."
-    )
+    done = f"Screened {new} new applicants" if new else "Everyone who applied was already screened"
+    return f"{done} for {job.title}; top is {top.candidate.name} with {top.score}/100."
 
 
 def _ticket_summary(ticket: Ticket) -> str:

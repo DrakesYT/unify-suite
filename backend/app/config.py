@@ -51,7 +51,7 @@ INTERVIEW_SEARCH_DAYS = 21
 RESEND_API_URL = "https://api.resend.com/emails"
 EMAIL_SEND_TIMEOUT_S = 10.0
 
-LLM_MAX_TOKENS = 4_000  # includes the model's hidden reasoning tokens
+LLM_MAX_TOKENS = 8_000  # includes the model's hidden reasoning tokens; only used when needed
 AGENT_RETRY_DELAYS_S = (2, 8)  # two retries: wait 2 s, then 8 s
 
 

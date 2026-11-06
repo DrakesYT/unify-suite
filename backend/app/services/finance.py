@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.agents.invoice_processor import InvoiceProcessor
 from app.agents.runner import TaskContext, call_tool, run_agent
 from app.errors import ApiError
+from app.invoice_checks import PoReference, line_item_differences, parse_po_reference
 from app.llm import LLMClient
 from app.models import ApprovalRequest, Invoice, InvoiceAnomaly, Payment, Upload, Vendor
 from app.models.enums import (
@@ -72,10 +73,20 @@ def load_po(db: Session, po_number: str | None, ctx: TaskContext) -> PoSnapshot 
     )
 
 
-def match_invoice(fields: InvoiceFields, vendor: Vendor, po: PoSnapshot | None) -> MatchResult:
-    """FR-FIN-02, deterministic: approved PO, same vendor, currency and amount → matched."""
+def match_invoice(
+    fields: InvoiceFields,
+    vendor: Vendor,
+    po: PoSnapshot | None,
+    reference: PoReference | None = None,
+    *,
+    po_chosen: bool = False,
+) -> MatchResult:
+    """FR-FIN-02, deterministic: approved PO, same vendor, currency and amount, and line items that
+    really add up to the total → matched. With `po_chosen` the PO was picked by a person (Workflow
+    B), so the invoice's own PO reference must name that same PO."""
+    arithmetic = line_item_differences(fields)
     if po is None:
-        return MatchResult(status=MatchStatus.no_po)
+        return MatchResult(status=MatchStatus.no_po, differences=arithmetic)
     approved = PurchaseOrderStatus.approved
     checks = [
         ("po_status", approved, po.status, po.status == approved),
@@ -88,9 +99,13 @@ def match_invoice(fields: InvoiceFields, vendor: Vendor, po: PoSnapshot | None) 
             fields.amount_minor == po.amount_minor,
         ),
     ]
+    if po_chosen:
+        ref = reference or parse_po_reference(fields.po_number)
+        shown = ref.number or ref.raw or "no PO"
+        checks.append(("po_reference", shown, po.po_number, ref.number == po.po_number))
     differences = [
         FieldDifference(field=f, invoice=i, po=p) for f, i, p, same in checks if not same
-    ]
+    ] + arithmetic
     return MatchResult(
         status=MatchStatus.mismatch if differences else MatchStatus.matched, differences=differences
     )
@@ -131,9 +146,22 @@ def _flag(
 
 
 def record_invoice(
-    db: Session, upload: Upload, fields: InvoiceFields, po: PoSnapshot | None, ctx: TaskContext
+    db: Session,
+    upload: Upload,
+    fields: InvoiceFields,
+    po: PoSnapshot | None,
+    ctx: TaskContext,
+    *,
+    po_chosen: bool = False,
 ) -> tuple[MatchResult | None, Invoice | None, list[InvoiceAnomaly]]:
     """Save the invoice, or flag why it was not saved. Returns (match, invoice, anomalies)."""
+    reference = parse_po_reference(fields.po_number)
+    # Code decides: only an invoice with something to pay can go on to matching and payment.
+    if fields.document_type != "invoice" or fields.total_amount < 0:
+        detail = {"document_type": fields.document_type, "number": fields.number}
+        if fields.total_amount < 0:
+            detail["reason"] = "negative total"
+        return None, None, [_flag(db, AnomalyKind.not_an_invoice, upload, ctx, detail=detail)]
     vendor = procurement.find_vendor_by_name(db, fields.vendor_name)
     if vendor is None:
         anomaly = _flag(
@@ -152,14 +180,14 @@ def record_invoice(
         detail = {"number": fields.number, "amount_minor": fields.amount_minor}
         return None, None, [_flag(db, kind, upload, ctx, existing=existing, detail=detail)]
 
-    match = match_invoice(fields, vendor, po)
+    match = match_invoice(fields, vendor, po, reference, po_chosen=po_chosen)
 
     def _save() -> Invoice:
         invoice = Invoice(
             number=fields.number,
             vendor_id=vendor.id,
             purchase_order_id=po.id if po else None,
-            po_number=fields.po_number,
+            po_number=reference.number or (fields.po_number or "")[:40] or None,
             invoice_date=fields.invoice_date,
             amount_minor=fields.amount_minor,
             currency=fields.currency,
@@ -205,7 +233,12 @@ def record_invoice(
                 upload,
                 ctx,
                 invoice=invoice,
-                detail={"po_number": fields.po_number},
+                detail={
+                    "po_number": fields.po_number,
+                    # missing: none printed; ambiguous: names several; not_found: no such PO
+                    "reason": "not_found" if reference.status == "clear" else reference.status,
+                    "differences": [d.model_dump(mode="json") for d in match.differences],
+                },
             )
         )
     return match, invoice, anomalies
@@ -216,7 +249,7 @@ def process_invoice_upload(
 ) -> InvoiceUploadResult:
     """FR-FIN-01..03 for one uploaded file."""
     fields, suspicious = extract_invoice(db, llm, upload, ctx)
-    po = load_po(db, fields.po_number, ctx)
+    po = load_po(db, parse_po_reference(fields.po_number).number, ctx)
     match, invoice, anomalies = record_invoice(db, upload, fields, po, ctx)
     return InvoiceUploadResult(
         upload_id=upload.id,

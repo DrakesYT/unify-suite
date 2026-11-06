@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.agents.resume_parser import ResumeParser
@@ -87,8 +87,15 @@ def list_candidates(
 
 
 def add_candidate_from_resume(
-    db: Session, llm: LLMClient, upload: Upload, ctx: TaskContext
+    db: Session,
+    llm: LLMClient,
+    upload: Upload,
+    ctx: TaskContext,
+    job_id: uuid.UUID | None = None,
 ) -> Candidate:
+    """Read a resume into a candidate; `job_id` is the job they applied for, when known."""
+    if job_id is not None:
+        get_job(db, job_id)  # 404 for an unknown job, before any model call
     text = call_tool(
         db, PARSER, "read_upload", {"upload_id": str(upload.id)}, lambda: read_text(upload), ctx
     )
@@ -102,6 +109,7 @@ def add_candidate_from_resume(
             years_experience=profile.years_experience,
             education=profile.education,
             file_id=upload.id,
+            job_id=job_id,
         )
         db.add(candidate)
         db.flush()
@@ -203,13 +211,41 @@ def screen_job(
     candidate_ids: list[uuid.UUID] | None,
     ctx: TaskContext,
 ) -> list[ScoreOut]:
+    """Screen the given candidates, or else every applicant for the job not screened for it yet
+    (screening each résumé costs a model call, so nobody is screened twice by accident)."""
     job = get_job(db, job_id)
-    stmt = select(Candidate).where(Candidate.file_id.is_not(None))
     if candidate_ids:
-        stmt = stmt.where(Candidate.id.in_(candidate_ids))
-    for candidate in db.scalars(stmt).all():
+        targets = list(
+            db.scalars(
+                select(Candidate).where(
+                    Candidate.file_id.is_not(None), Candidate.id.in_(candidate_ids)
+                )
+            )
+        )
+    else:
+        targets = unscreened(db, job)
+    for candidate in targets:
         screen_candidate(db, llm, job, candidate, ctx)
     return ranked_scores(db, job_id)
+
+
+def _applicants(job: Job):  # type: ignore[no-untyped-def]
+    """Candidates with a resume who applied for `job` (or whose job is not recorded)."""
+    return select(Candidate).where(
+        Candidate.file_id.is_not(None),
+        or_(Candidate.job_id == job.id, Candidate.job_id.is_(None)),
+    )
+
+
+def unscreened(db: Session, job: Job) -> list[Candidate]:
+    scored = select(CandidateScore.candidate_id).where(CandidateScore.job_id == job.id)
+    return list(db.scalars(_applicants(job).where(Candidate.id.not_in(scored))))
+
+
+def applicant_counts(db: Session, job: Job) -> tuple[int, int]:
+    """(applicants, of whom not screened yet) for one job."""
+    total = db.scalar(select(func.count()).select_from(_applicants(job).subquery())) or 0
+    return total, len(unscreened(db, job))
 
 
 def ranked_scores(db: Session, job_id: uuid.UUID) -> list[ScoreOut]:

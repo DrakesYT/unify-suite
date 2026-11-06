@@ -17,6 +17,8 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app
+# Fictional demo data: the importer and the accuracy check read it (python -m app.import_demo).
+COPY demo_data ./demo_data
 
 # /data/uploads is owned by appuser; the named volume mounted there inherits that on first use.
 RUN useradd --create-home --uid 1000 appuser \

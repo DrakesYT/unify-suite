@@ -16,18 +16,45 @@ class InvoiceText(BaseModel):
     text: Annotated[str, Field(min_length=1)]
 
 
+class InvoiceLine(BaseModel):
+    """One printed line. Figures may be negative (a discount line, a credit note)."""
+
+    description: Annotated[str, Field(max_length=200)] = ""
+    quantity: Annotated[Decimal, Field(description="Quantity as a decimal string")]
+    unit_price: Annotated[Decimal, Field(description="Unit price as a decimal string")]
+    amount: Annotated[Decimal, Field(description="Line amount as printed")]
+
+
+DocumentType = Literal["invoice", "credit_note", "quotation", "reminder", "other"]
+
+
 class InvoiceFields(BaseModel):
     """Invoice Processor output. Validated before anything is saved."""
+
+    document_type: DocumentType = Field(
+        default="invoice",
+        description="What the document is: an invoice asking for payment, a credit note, a "
+        "quotation or estimate, a payment reminder or past-due notice, or something else",
+    )
 
     number: Annotated[str, Field(min_length=1, max_length=60, description="Invoice number")]
     invoice_date: date = Field(description="Invoice date, YYYY-MM-DD")
     vendor_name: Annotated[str, Field(min_length=1, max_length=160, description="Who issued it")]
     total_amount: Annotated[
-        Decimal, Field(ge=0, description="Total due as a decimal string, e.g. '1234.50'")
+        Decimal,
+        Field(
+            description="Total as printed, as a decimal string, e.g. '1234.50' (a credit note's "
+            "total may be negative)"
+        ),
     ]
     currency: Currency
-    po_number: Annotated[str, Field(max_length=40)] | None = Field(
-        default=None, description="Purchase order number referenced on the invoice, if any"
+    po_number: Annotated[str, Field(max_length=80)] | None = Field(
+        default=None,
+        description="The purchase order reference exactly as printed (keep any extra words), "
+        "or null if there is none",
+    )
+    line_items: Annotated[list[InvoiceLine], Field(max_length=100)] = Field(
+        default_factory=list, description="Every line item as printed, in order"
     )
 
     @model_validator(mode="after")
@@ -52,6 +79,9 @@ class PoSnapshot(BaseModel):
 
 
 class FieldDifference(BaseModel):
+    """One check that failed: what the invoice says, and what it should be (the PO's value, or the
+    figure code computed, e.g. what the line items really add up to)."""
+
     field: str
     invoice: Any
     po: Any

@@ -48,6 +48,8 @@ class JobOut(BaseModel):
     min_years: int
     status: JobStatus
     created_at: datetime
+    applicants: int = 0  # candidates with a resume who applied for this job
+    unscreened: int = 0  # ...of whom have not been screened for it yet
 
 
 class CandidateOut(BaseModel):
@@ -60,6 +62,7 @@ class CandidateOut(BaseModel):
     years_experience: int | None
     education: list[str]
     file_id: uuid.UUID | None
+    job_id: uuid.UUID | None = None
     created_at: datetime
 
 

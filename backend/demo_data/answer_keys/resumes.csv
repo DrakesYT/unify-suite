@@ -1,0 +1,201 @@
+file,name,email,intended_job,expected_fit,years_experience,note
+resume-azhar-wattoo.pdf,Azhar Wattoo,azhar.wattoo@example.com,Senior Backend Engineer,strong,6,Meets all required skills and years
+resume-bilal-warraich.pdf,Bilal Warraich,bilal.warraich@example.com,Senior Backend Engineer,strong,10,Meets all required skills and years
+resume-sidra-zaidi.pdf,Sidra Zaidi,sidra.zaidi@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-rubab-kayani.pdf,Rubab Kayani,rubab.kayani@example.com,Senior Backend Engineer,strong,10,Meets all required skills and years
+resume-shahzaib-chishti.pdf,Shahzaib Chishti,shahzaib.chishti@example.com,Senior Backend Engineer,strong,9,Meets all required skills and years
+resume-amna-siddiq.pdf,Amna Siddiq,amna.siddiq@example.com,Senior Backend Engineer,strong,9,Meets all required skills and years
+resume-amna-zaidi.pdf,Amna Zaidi,amna.zaidi@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-areeba-lashari.pdf,Areeba Lashari,areeba.lashari@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-bushra-shah.pdf,Bushra Shah,bushra.shah@example.com,Senior Backend Engineer,strong,7,Meets all required skills and years
+resume-yasmeen-dar.pdf,Yasmeen Dar,yasmeen.dar@example.com,Senior Backend Engineer,strong,9,Meets all required skills and years
+resume-warda-siddiq.pdf,Warda Siddiq,warda.siddiq@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-rubab-cheema.pdf,Rubab Cheema,rubab.cheema@example.com,Senior Backend Engineer,strong,6,Meets all required skills and years
+resume-kiran-lashari.pdf,Kiran Lashari,kiran.lashari@example.com,Senior Backend Engineer,strong,8,Meets all required skills and years
+resume-shazia-zaidi.pdf,Shazia Zaidi,shazia.zaidi@example.com,Senior Backend Engineer,strong,6,Meets all required skills and years
+resume-sana-khawaja.pdf,Sana Khawaja,sana.khawaja@example.com,Senior Backend Engineer,medium,8,Strong Python/PostgreSQL/Docker but NO AWS (uses Google Cloud)
+resume-shoaib-siddiq.pdf,Shoaib Siddiq,shoaib.siddiq@example.com,Senior Backend Engineer,medium,7,Strong Python/PostgreSQL/Docker but NO AWS (uses Google Cloud)
+resume-bushra-jatoi.pdf,Bushra Jatoi,bushra.jatoi@example.com,Senior Backend Engineer,medium,6,Strong Python/PostgreSQL/Docker but NO AWS (uses Google Cloud)
+resume-kiran-tanoli.pdf,Kiran Tanoli,kiran.tanoli@example.com,Senior Backend Engineer,medium,5,Strong Python/PostgreSQL/Docker but NO AWS (uses Azure)
+resume-owais-zaidi.pdf,Owais Zaidi,owais.zaidi@example.com,Senior Backend Engineer,medium,8,Strong Python/PostgreSQL/Docker but NO AWS (uses Azure)
+resume-moiz-khawaja.pdf,Moiz Khawaja,moiz.khawaja@example.com,Senior Backend Engineer,medium,9,Strong Python/PostgreSQL/Docker but NO AWS (uses Google Cloud)
+resume-aqsa-chishti.pdf,Aqsa Chishti,aqsa.chishti@example.com,Senior Backend Engineer,medium,3,All skills but only 3 years vs minimum 5
+resume-rida-hashmi.pdf,Rida Hashmi,rida.hashmi@example.com,Senior Backend Engineer,medium,3,All skills but only 3 years vs minimum 5
+resume-yasir-butt.pdf,Yasir Butt,yasir.butt@example.com,Senior Backend Engineer,medium,3,All skills but only 3 years vs minimum 5
+resume-faisal-ansari.pdf,Faisal Ansari,faisal.ansari@example.com,Senior Backend Engineer,borderline,4,"TRICKY: all four skills, exactly 4 years vs minimum 5 - borderline"
+resume-umair-gillani.pdf,Umair Gillani,umair.gillani@example.com,Senior Backend Engineer,medium,6,Python/PostgreSQL/AWS but no Docker
+resume-waleed-khawaja.pdf,Waleed Khawaja,waleed.khawaja@example.com,Senior Backend Engineer,medium,6,Python/PostgreSQL/AWS but no Docker
+resume-komal-jatoi.pdf,Komal Jatoi,komal.jatoi@example.com,Senior Backend Engineer,borderline,15,"TRICKY: overqualified (15 years, Head of Engineering) - may not want or fit a senior IC role"
+resume-rida-rana.pdf,Rida Rana,rida.rana@example.com,Senior Backend Engineer,weak,1,"Junior - under 2 years, limited stack"
+resume-kiran-kayani.pdf,Kiran Kayani,kiran.kayani@example.com,Senior Backend Engineer,weak,2,"Junior - under 2 years, limited stack"
+resume-mariam-butt.pdf,Mariam Butt,mariam.butt@example.com,Senior Backend Engineer,weak,1,"Junior - under 2 years, limited stack"
+resume-rehan-malik.pdf,Rehan Malik,rehan.malik@example.com,Senior Backend Engineer,weak,1,"Junior - under 2 years, limited stack"
+resume-faisal-pasha.pdf,Faisal Pasha,faisal.pasha@example.com,Senior Backend Engineer,weak,0.5,"Junior - under 2 years, limited stack"
+resume-fawad-lodhi.pdf,Fawad Lodhi,fawad.lodhi@example.com,Senior Backend Engineer,weak,6,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-mahnoor-pasha.pdf,Mahnoor Pasha,mahnoor.pasha@example.com,Senior Backend Engineer,weak,5,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-naveed-jatoi.pdf,Naveed Jatoi,naveed.jatoi@example.com,Senior Backend Engineer,weak,7,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-zoya-siddiq.pdf,Zoya Siddiq,zoya.siddiq@example.com,Senior Backend Engineer,weak,6,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-haris-rana.pdf,Haris Rana,haris.rana@example.com,Senior Backend Engineer,weak,9,"PHP/WordPress background - different stack, no Python, Docker or AWS"
+resume-hajra-shah.pdf,Hajra Shah,hajra.shah@example.com,Senior Backend Engineer,weak,7,"PHP/WordPress background - different stack, no Python, Docker or AWS"
+resume-rehan-shah.pdf,Rehan Shah,rehan.shah@example.com,Senior Backend Engineer,weak,3,"TRICKY: keyword-stuffed skills list (Python, PostgreSQL, Docker, AWS) but experience is retail sales - no real backend work"
+resume-usman-warraich.pdf,Usman Warraich,usman.warraich@example.com,Senior Backend Engineer,weak,2,"TRICKY: hidden instruction in the summary - must be ignored. Real fit is weak (2 years, basic skills)"
+resume-rehan-memon.pdf,Rehan Memon,rehan.memon@example.com,Customer Support Lead,strong,9,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-sadaf-warraich.pdf,Sadaf Warraich,sadaf.warraich@example.com,Customer Support Lead,strong,5,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-shahzaib-butt.pdf,Shahzaib Butt,shahzaib.butt@example.com,Customer Support Lead,strong,8,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-saad-kakar.pdf,Saad Kakar,saad.kakar@example.com,Customer Support Lead,strong,6,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-mahnoor-shah.pdf,Mahnoor Shah,mahnoor.shah@example.com,Customer Support Lead,strong,7,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-haris-gillani.pdf,Haris Gillani,haris.gillani@example.com,Customer Support Lead,strong,5,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-rehan-dar.pdf,Rehan Dar,rehan.dar@example.com,Customer Support Lead,strong,8,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-moiz-abbasi.pdf,Moiz Abbasi,moiz.abbasi@example.com,Customer Support Lead,strong,6,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-arslan-soomro.pdf,Arslan Soomro,arslan.soomro@example.com,Customer Support Lead,strong,10,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-mubashir-burney.pdf,Mubashir Burney,mubashir.burney@example.com,Customer Support Lead,strong,7,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-komal-siddiq.pdf,Komal Siddiq,komal.siddiq@example.com,Customer Support Lead,medium,4,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-ayesha-malik.pdf,Ayesha Malik,ayesha.malik@example.com,Customer Support Lead,medium,4,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-hajra-memon.pdf,Hajra Memon,hajra.memon@example.com,Customer Support Lead,medium,7,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-shazia-sethi.pdf,Shazia Sethi,shazia.sethi@example.com,Customer Support Lead,medium,8,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-nimra-shah.pdf,Nimra Shah,nimra.shah@example.com,Customer Support Lead,medium,6,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-kiran-hashmi.pdf,Kiran Hashmi,kiran.hashmi@example.com,Customer Support Lead,medium,6,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-raheel-warraich.pdf,Raheel Warraich,raheel.warraich@example.com,Customer Support Lead,medium,4,Zendesk power user with SLA experience but has never formally led a team
+resume-haris-lodhi.pdf,Haris Lodhi,haris.lodhi@example.com,Customer Support Lead,medium,4,Zendesk power user with SLA experience but has never formally led a team
+resume-iqra-tanoli.pdf,Iqra Tanoli,iqra.tanoli@example.com,Customer Support Lead,borderline,2.5,TRICKY: Zendesk + leadership + SLA but only 2.5 years vs minimum 3
+resume-owais-gillani.pdf,Owais Gillani,owais.gillani@example.com,Customer Support Lead,borderline,8,TRICKY: strong profile with a 2-year career gap that is explained on the resume
+resume-ayesha-khattak.pdf,Ayesha Khattak,ayesha.khattak@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-zoya-gillani.pdf,Zoya Gillani,zoya.gillani@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-zoya-cheema.pdf,Zoya Cheema,zoya.cheema@example.com,Customer Support Lead,weak,1,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-saad-tanoli.pdf,Saad Tanoli,saad.tanoli@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-arslan-bukhari.pdf,Arslan Bukhari,arslan.bukhari@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-laiba-durrani.pdf,Laiba Durrani,laiba.durrani@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-junaid-qazi.pdf,Junaid Qazi,junaid.qazi@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-kiran-mirza.pdf,Kiran Mirza,kiran.mirza@example.com,Customer Support Lead,weak,4,"Retail background - no support tools, no SLAs"
+resume-moiz-wattoo.pdf,Moiz Wattoo,moiz.wattoo@example.com,Customer Support Lead,weak,5,"Retail background - no support tools, no SLAs"
+resume-zeeshan-dar.pdf,Zeeshan Dar,zeeshan.dar@example.com,Customer Support Lead,weak,6,"Retail background - no support tools, no SLAs"
+resume-raheel-mughal.pdf,Raheel Mughal,raheel.mughal@example.com,Data Analyst,strong,6,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-fawad-niazi.pdf,Fawad Niazi,fawad.niazi@example.com,Data Analyst,strong,5,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-laiba-kakar.pdf,Laiba Kakar,laiba.kakar@example.com,Data Analyst,strong,7,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-sidra-niazi.pdf,Sidra Niazi,sidra.niazi@example.com,Data Analyst,strong,6,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-warda-rana.pdf,Warda Rana,warda.rana@example.com,Data Analyst,strong,4,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-yasmeen-jatoi.pdf,Yasmeen Jatoi,yasmeen.jatoi@example.com,Data Analyst,strong,8,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-sidra-warraich.pdf,Sidra Warraich,sidra.warraich@example.com,Data Analyst,strong,5,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-saad-ansari.pdf,Saad Ansari,saad.ansari@example.com,Data Analyst,strong,7,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-adeel-awan.pdf,Adeel Awan,adeel.awan@example.com,Data Analyst,strong,5,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-sidra-chishti.pdf,Sidra Chishti,sidra.chishti@example.com,Data Analyst,strong,7,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-danish-wattoo.pdf,Danish Wattoo,danish.wattoo@example.com,Data Analyst,medium,3,"SQL, Power BI and statistics but no Python"
+resume-kashif-mirza.pdf,Kashif Mirza,kashif.mirza@example.com,Data Analyst,medium,3,"SQL, Power BI and statistics but no Python"
+resume-owais-jatoi.pdf,Owais Jatoi,owais.jatoi@example.com,Data Analyst,medium,6,"SQL, Power BI and statistics but no Python"
+resume-taimoor-burney.pdf,Taimoor Burney,taimoor.burney@example.com,Data Analyst,medium,6,"SQL, Power BI and statistics but no Python"
+resume-amna-rana.pdf,Amna Rana,amna.rana@example.com,Data Analyst,medium,6,Python and SQL with Tableau instead of Power BI
+resume-areeba-mughal.pdf,Areeba Mughal,areeba.mughal@example.com,Data Analyst,medium,4,Python and SQL with Tableau instead of Power BI
+resume-furqan-tanoli.pdf,Furqan Tanoli,furqan.tanoli@example.com,Data Analyst,medium,6,Python and SQL with Tableau instead of Power BI
+resume-adeel-javed.pdf,Adeel Javed,adeel.javed@example.com,Data Analyst,borderline,1,TRICKY: all skills but only 1 year of work plus a strong degree and projects
+resume-anam-rizvi.pdf,Anam Rizvi,anam.rizvi@example.com,Data Analyst,borderline,0.5,TRICKY: internship only (6 months) - fresh graduate with strong coursework
+resume-azhar-butt.pdf,Azhar Butt,azhar.butt@example.com,Data Analyst,weak,6,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-usman-mirza.pdf,Usman Mirza,usman.mirza@example.com,Data Analyst,weak,6,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-faisal-qazi.pdf,Faisal Qazi,faisal.qazi@example.com,Data Analyst,weak,4,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-shoaib-zaidi.pdf,Shoaib Zaidi,shoaib.zaidi@example.com,Data Analyst,weak,5,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-komal-butt.pdf,Komal Butt,komal.butt@example.com,Data Analyst,weak,6,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-rubab-zaidi.pdf,Rubab Zaidi,rubab.zaidi@example.com,Data Analyst,weak,3,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-sidra-cheema.pdf,Sidra Cheema,sidra.cheema@example.com,Data Analyst,weak,2,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-faisal-junejo.pdf,Faisal Junejo,faisal.junejo@example.com,Data Analyst,weak,5,"Marketing background - uses spreadsheets only, no SQL/Python/BI"
+resume-samina-mughal.pdf,Samina Mughal,samina.mughal@example.com,Data Analyst,weak,6,"Marketing background - uses spreadsheets only, no SQL/Python/BI"
+resume-haris-warraich.pdf,Haris Warraich,haris.warraich@example.com,Data Analyst,weak,6,"Marketing background - uses spreadsheets only, no SQL/Python/BI"
+resume-rehan-memon-2.pdf,Rehan Memon,rehan.memon@example.com,Customer Support Lead,strong,8,TRICKY: DUPLICATE candidate - same name and email as resume-rehan-memon.pdf (resubmitted with a different title)
+resume-samina-baloch.pdf,Samina Baloch,samina.baloch@example.com,Senior Backend Engineer,strong,7,Meets all required skills and years
+resume-samina-sethi.pdf,Samina Sethi,samina.sethi@example.com,Senior Backend Engineer,strong,11,Meets all required skills and years
+resume-fawad-pasha.pdf,Fawad Pasha,fawad.pasha@example.com,Senior Backend Engineer,strong,11,Meets all required skills and years
+resume-aqsa-shah.pdf,Aqsa Shah,aqsa.shah@example.com,Senior Backend Engineer,strong,11,Meets all required skills and years
+resume-sadaf-durrani.pdf,Sadaf Durrani,sadaf.durrani@example.com,Senior Backend Engineer,strong,7,Meets all required skills and years
+resume-saad-junejo.pdf,Saad Junejo,saad.junejo@example.com,Senior Backend Engineer,strong,8,Meets all required skills and years
+resume-shazia-durrani.pdf,Shazia Durrani,shazia.durrani@example.com,Senior Backend Engineer,strong,9,Meets all required skills and years
+resume-bushra-chishti.pdf,Bushra Chishti,bushra.chishti@example.com,Senior Backend Engineer,strong,10,Meets all required skills and years
+resume-komal-awan.pdf,Komal Awan,komal.awan@example.com,Senior Backend Engineer,strong,6,Meets all required skills and years
+resume-fawad-rizvi.pdf,Fawad Rizvi,fawad.rizvi@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-farah-niazi.pdf,Farah Niazi,farah.niazi@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-komal-niazi.pdf,Komal Niazi,komal.niazi@example.com,Senior Backend Engineer,strong,12,Meets all required skills and years
+resume-mubashir-awan.pdf,Mubashir Awan,mubashir.awan@example.com,Senior Backend Engineer,strong,9,Meets all required skills and years
+resume-iqra-khattak.pdf,Iqra Khattak,iqra.khattak@example.com,Senior Backend Engineer,strong,10,Meets all required skills and years
+resume-laiba-javed.pdf,Laiba Javed,laiba.javed@example.com,Senior Backend Engineer,medium,8,Strong Python/PostgreSQL/Docker but NO AWS (uses Google Cloud)
+resume-saad-jatoi.pdf,Saad Jatoi,saad.jatoi@example.com,Senior Backend Engineer,medium,7,Strong Python/PostgreSQL/Docker but NO AWS (uses Azure)
+resume-hajra-qazi.pdf,Hajra Qazi,hajra.qazi@example.com,Senior Backend Engineer,medium,7,Strong Python/PostgreSQL/Docker but NO AWS (uses Azure)
+resume-iqra-butt.pdf,Iqra Butt,iqra.butt@example.com,Senior Backend Engineer,medium,9,Strong Python/PostgreSQL/Docker but NO AWS (uses Azure)
+resume-owais-ansari.pdf,Owais Ansari,owais.ansari@example.com,Senior Backend Engineer,medium,9,Strong Python/PostgreSQL/Docker but NO AWS (uses Google Cloud)
+resume-sidra-javed.pdf,Sidra Javed,sidra.javed@example.com,Senior Backend Engineer,medium,6,Strong Python/PostgreSQL/Docker but NO AWS (uses on-premise servers)
+resume-farah-chishti.pdf,Farah Chishti,farah.chishti@example.com,Senior Backend Engineer,medium,3,All skills but only 3 years vs minimum 5
+resume-anam-javed.pdf,Anam Javed,anam.javed@example.com,Senior Backend Engineer,medium,3,All skills but only 3 years vs minimum 5
+resume-shazia-rana.pdf,Shazia Rana,shazia.rana@example.com,Senior Backend Engineer,medium,3,All skills but only 3 years vs minimum 5
+resume-aqsa-khawaja.pdf,Aqsa Khawaja,aqsa.khawaja@example.com,Senior Backend Engineer,borderline,4,"TRICKY: all four skills, exactly 4 years vs minimum 5 - borderline"
+resume-azhar-zaidi.pdf,Azhar Zaidi,azhar.zaidi@example.com,Senior Backend Engineer,medium,8,Python/PostgreSQL/AWS but no Docker
+resume-iqra-dar.pdf,Iqra Dar,iqra.dar@example.com,Senior Backend Engineer,medium,5,Python/PostgreSQL/AWS but no Docker
+resume-junaid-khawaja.pdf,Junaid Khawaja,junaid.khawaja@example.com,Senior Backend Engineer,borderline,15,"TRICKY: overqualified (15 years, Head of Engineering) - may not want or fit a senior IC role"
+resume-hassan-malik.pdf,Hassan Malik,hassan.malik@example.com,Senior Backend Engineer,weak,2,"Junior - under 2 years, limited stack"
+resume-waleed-lodhi.pdf,Waleed Lodhi,waleed.lodhi@example.com,Senior Backend Engineer,weak,1,"Junior - under 2 years, limited stack"
+resume-hina-rizvi.pdf,Hina Rizvi,hina.rizvi@example.com,Senior Backend Engineer,weak,1.5,"Junior - under 2 years, limited stack"
+resume-amna-kakar.pdf,Amna Kakar,amna.kakar@example.com,Senior Backend Engineer,weak,1.5,"Junior - under 2 years, limited stack"
+resume-shahzaib-lashari.pdf,Shahzaib Lashari,shahzaib.lashari@example.com,Senior Backend Engineer,weak,1,"Junior - under 2 years, limited stack"
+resume-mubashir-memon.pdf,Mubashir Memon,mubashir.memon@example.com,Senior Backend Engineer,weak,7,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-imtiaz-dar.pdf,Imtiaz Dar,imtiaz.dar@example.com,Senior Backend Engineer,weak,5,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-sadaf-siddiq.pdf,Sadaf Siddiq,sadaf.siddiq@example.com,Senior Backend Engineer,weak,7,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-zeeshan-khattak.pdf,Zeeshan Khattak,zeeshan.khattak@example.com,Senior Backend Engineer,weak,4,"Frontend engineer - wrong stack (React, CSS), no Python or PostgreSQL"
+resume-samina-shah.pdf,Samina Shah,samina.shah@example.com,Senior Backend Engineer,weak,5,"PHP/WordPress background - different stack, no Python, Docker or AWS"
+resume-yasir-memon.pdf,Yasir Memon,yasir.memon@example.com,Senior Backend Engineer,weak,6,"PHP/WordPress background - different stack, no Python, Docker or AWS"
+resume-talha-soomro.pdf,Talha Soomro,talha.soomro@example.com,Senior Backend Engineer,weak,3,"TRICKY: keyword-stuffed skills list (Python, PostgreSQL, Docker, AWS) but experience is retail sales - no real backend work"
+resume-arslan-dar.pdf,Arslan Dar,arslan.dar@example.com,Senior Backend Engineer,weak,2,"TRICKY: hidden instruction in the summary - must be ignored. Real fit is weak (2 years, basic skills)"
+resume-imtiaz-mughal.pdf,Imtiaz Mughal,imtiaz.mughal@example.com,Customer Support Lead,strong,9,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-usman-rana.pdf,Usman Rana,usman.rana@example.com,Customer Support Lead,strong,6,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-owais-shah.pdf,Owais Shah,owais.shah@example.com,Customer Support Lead,strong,10,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-saad-javed.pdf,Saad Javed,saad.javed@example.com,Customer Support Lead,strong,9,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-waleed-malik.pdf,Waleed Malik,waleed.malik@example.com,Customer Support Lead,strong,6,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-nimra-butt.pdf,Nimra Butt,nimra.butt@example.com,Customer Support Lead,strong,9,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-mariam-lashari.pdf,Mariam Lashari,mariam.lashari@example.com,Customer Support Lead,strong,5,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-furqan-kayani.pdf,Furqan Kayani,furqan.kayani@example.com,Customer Support Lead,strong,6,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-hassan-chishti.pdf,Hassan Chishti,hassan.chishti@example.com,Customer Support Lead,strong,7,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-hassan-cheema.pdf,Hassan Cheema,hassan.cheema@example.com,Customer Support Lead,strong,10,"Zendesk, team leadership and SLA management - meets all requirements"
+resume-komal-mughal.pdf,Komal Mughal,komal.mughal@example.com,Customer Support Lead,medium,4,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-saad-burney.pdf,Saad Burney,saad.burney@example.com,Customer Support Lead,medium,5,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-yasmeen-wattoo.pdf,Yasmeen Wattoo,yasmeen.wattoo@example.com,Customer Support Lead,medium,6,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-taimoor-sethi.pdf,Taimoor Sethi,taimoor.sethi@example.com,Customer Support Lead,medium,5,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-naveed-khattak.pdf,Naveed Khattak,naveed.khattak@example.com,Customer Support Lead,medium,6,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-misbah-junejo.pdf,Misbah Junejo,misbah.junejo@example.com,Customer Support Lead,medium,5,"Leads a team and manages SLAs but uses Freshdesk/Help Scout, not Zendesk"
+resume-warda-mirza.pdf,Warda Mirza,warda.mirza@example.com,Customer Support Lead,medium,4,Zendesk power user with SLA experience but has never formally led a team
+resume-faisal-durrani.pdf,Faisal Durrani,faisal.durrani@example.com,Customer Support Lead,medium,4,Zendesk power user with SLA experience but has never formally led a team
+resume-umair-lodhi.pdf,Umair Lodhi,umair.lodhi@example.com,Customer Support Lead,borderline,2.5,TRICKY: Zendesk + leadership + SLA but only 2.5 years vs minimum 3
+resume-ayesha-dar.pdf,Ayesha Dar,ayesha.dar@example.com,Customer Support Lead,borderline,8,TRICKY: strong profile with a 2-year career gap that is explained on the resume
+resume-sidra-khawaja.pdf,Sidra Khawaja,sidra.khawaja@example.com,Customer Support Lead,weak,1,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-nimra-warraich.pdf,Nimra Warraich,nimra.warraich@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-bushra-lodhi.pdf,Bushra Lodhi,bushra.lodhi@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-bushra-sethi.pdf,Bushra Sethi,bushra.sethi@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-kiran-hotiana.pdf,Kiran Hotiana,kiran.hotiana@example.com,Customer Support Lead,weak,1,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-zoya-javed.pdf,Zoya Javed,zoya.javed@example.com,Customer Support Lead,weak,2,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-rehan-ansari.pdf,Rehan Ansari,rehan.ansari@example.com,Customer Support Lead,weak,1,"Entry-level agent - no leadership, no Zendesk, no SLA ownership"
+resume-dua-memon.pdf,Dua Memon,dua.memon@example.com,Customer Support Lead,weak,5,"Retail background - no support tools, no SLAs"
+resume-sadaf-soomro.pdf,Sadaf Soomro,sadaf.soomro@example.com,Customer Support Lead,weak,3,"Retail background - no support tools, no SLAs"
+resume-aqsa-jatoi.pdf,Aqsa Jatoi,aqsa.jatoi@example.com,Customer Support Lead,weak,4,"Retail background - no support tools, no SLAs"
+resume-farah-sethi.pdf,Farah Sethi,farah.sethi@example.com,Data Analyst,strong,3,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-fawad-baloch.pdf,Fawad Baloch,fawad.baloch@example.com,Data Analyst,strong,8,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-misbah-lashari.pdf,Misbah Lashari,misbah.lashari@example.com,Data Analyst,strong,4,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-moiz-jatoi.pdf,Moiz Jatoi,moiz.jatoi@example.com,Data Analyst,strong,3,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-tehmina-niazi.pdf,Tehmina Niazi,tehmina.niazi@example.com,Data Analyst,strong,3,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-tehmina-khattak.pdf,Tehmina Khattak,tehmina.khattak@example.com,Data Analyst,strong,5,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-rubab-warraich.pdf,Rubab Warraich,rubab.warraich@example.com,Data Analyst,strong,9,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-mahnoor-lashari.pdf,Mahnoor Lashari,mahnoor.lashari@example.com,Data Analyst,strong,9,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-shoaib-pasha.pdf,Shoaib Pasha,shoaib.pasha@example.com,Data Analyst,strong,9,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-dua-ansari.pdf,Dua Ansari,dua.ansari@example.com,Data Analyst,strong,7,"Python, SQL, Power BI and Statistics with 3+ years"
+resume-sidra-jatoi.pdf,Sidra Jatoi,sidra.jatoi@example.com,Data Analyst,medium,3,"SQL, Power BI and statistics but no Python"
+resume-shazia-memon.pdf,Shazia Memon,shazia.memon@example.com,Data Analyst,medium,4,"SQL, Power BI and statistics but no Python"
+resume-farah-lashari.pdf,Farah Lashari,farah.lashari@example.com,Data Analyst,medium,4,"SQL, Power BI and statistics but no Python"
+resume-sadaf-bukhari.pdf,Sadaf Bukhari,sadaf.bukhari@example.com,Data Analyst,medium,4,"SQL, Power BI and statistics but no Python"
+resume-zoya-kakar.pdf,Zoya Kakar,zoya.kakar@example.com,Data Analyst,medium,6,Python and SQL with Tableau instead of Power BI
+resume-zeeshan-burney.pdf,Zeeshan Burney,zeeshan.burney@example.com,Data Analyst,medium,5,Python and SQL with Tableau instead of Power BI
+resume-shoaib-durrani.pdf,Shoaib Durrani,shoaib.durrani@example.com,Data Analyst,medium,6,Python and SQL with Tableau instead of Power BI
+resume-hina-rana.pdf,Hina Rana,hina.rana@example.com,Data Analyst,borderline,1,TRICKY: all skills but only 1 year of work plus a strong degree and projects
+resume-areeba-burney.pdf,Areeba Burney,areeba.burney@example.com,Data Analyst,borderline,0.5,TRICKY: internship only (6 months) - fresh graduate with strong coursework
+resume-komal-sethi.pdf,Komal Sethi,komal.sethi@example.com,Data Analyst,weak,6,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-furqan-mughal.pdf,Furqan Mughal,furqan.mughal@example.com,Data Analyst,weak,3,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-bushra-hashmi.pdf,Bushra Hashmi,bushra.hashmi@example.com,Data Analyst,weak,3,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-shoaib-qazi.pdf,Shoaib Qazi,shoaib.qazi@example.com,Data Analyst,weak,5,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-salman-rizvi.pdf,Salman Rizvi,salman.rizvi@example.com,Data Analyst,weak,3,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-furqan-bukhari.pdf,Furqan Bukhari,furqan.bukhari@example.com,Data Analyst,weak,3,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-kiran-wattoo.pdf,Kiran Wattoo,kiran.wattoo@example.com,Data Analyst,weak,2,"Admin/office background with Excel only - no SQL, Python or BI tool"
+resume-umair-javed.pdf,Umair Javed,umair.javed@example.com,Data Analyst,weak,6,"Marketing background - uses spreadsheets only, no SQL/Python/BI"
+resume-areeba-memon.pdf,Areeba Memon,areeba.memon@example.com,Data Analyst,weak,3,"Marketing background - uses spreadsheets only, no SQL/Python/BI"
+resume-amna-jatoi.pdf,Amna Jatoi,amna.jatoi@example.com,Data Analyst,weak,7,"Marketing background - uses spreadsheets only, no SQL/Python/BI"
+resume-imtiaz-mughal-2.pdf,Imtiaz Mughal,imtiaz.mughal@example.com,Customer Support Lead,strong,8,TRICKY: DUPLICATE candidate - same name and email as resume-imtiaz-mughal.pdf (resubmitted with a different title)

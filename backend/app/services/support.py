@@ -135,8 +135,11 @@ def classify(db: Session, llm: LLMClient, ticket: Ticket, ctx: TaskContext) -> T
     return ticket
 
 
-def create_ticket(db: Session, llm: LLMClient, data: TicketCreate, ctx: TaskContext) -> Ticket:
-    """Save first, then classify. If the model is down the ticket is kept, just unclassified."""
+def create_ticket(
+    db: Session, llm: LLMClient | None, data: TicketCreate, ctx: TaskContext
+) -> Ticket:
+    """Save first, then classify. If the model is down (or not given, as in a records-only
+    import) the ticket is kept, just unclassified."""
     if data.customer_id and db.get(Customer, data.customer_id) is None:
         raise ApiError(404, "not_found", "Customer not found")
     ticket = Ticket(**data.model_dump())
@@ -146,6 +149,8 @@ def create_ticket(db: Session, llm: LLMClient, data: TicketCreate, ctx: TaskCont
         db, action="ticket.created", entity="ticket", entity_id=ticket.id, actor_id=ctx.actor.id
     )
     db.commit()
+    if llm is None:
+        return ticket
     try:
         classify(db, llm, ticket, ctx)
     except AgentFailed:

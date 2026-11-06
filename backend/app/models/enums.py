@@ -66,6 +66,7 @@ class AnomalyKind(StrEnum):
     unknown_vendor = "unknown_vendor"
     po_mismatch = "po_mismatch"
     no_po = "no_po"
+    not_an_invoice = "not_an_invoice"  # a credit note, quotation or reminder: nothing to pay
 
 
 class PaymentStatus(StrEnum):

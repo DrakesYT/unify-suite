@@ -84,8 +84,18 @@ def match_invoice(run: StepRun) -> StepResult:
     assert upload is not None
     fields = InvoiceFields.model_validate(run.output("F1"))
     po = PoSnapshot.model_validate(run.output("P1"))
-    match, invoice, anomalies = finance.record_invoice(run.db, upload, fields, po, run.ctx)
+    match, invoice, anomalies = finance.record_invoice(
+        run.db, upload, fields, po, run.ctx, po_chosen=True
+    )
     if invoice is None or match is None:
+        if fields.document_type != "invoice":
+            kind = fields.document_type.replace("_", " ")
+            raise StepError(
+                f"This document is a {kind}, not an invoice, so there is nothing to pay; it is "
+                "recorded as an anomaly"
+            )
+        if fields.total_amount < 0:
+            raise StepError("The total is negative, so there is nothing to pay; it is recorded")
         kinds = ", ".join(a.kind.replace("_", " ") for a in anomalies)
         raise StepError(f"Invoice was not saved ({kinds}); it is recorded as an anomaly")
     return {
@@ -103,6 +113,17 @@ def _describe(diff: dict[str, Any], currency: str) -> str:
     if diff["field"] == "amount_minor":
         invoice, po = format_minor(diff["invoice"], currency), format_minor(diff["po"], currency)
         return f"amount: invoice {invoice}, PO {po}"
+    if diff["field"] == "line_items_total":
+        stated, real = format_minor(diff["invoice"], currency), format_minor(diff["po"], currency)
+        return f"line items add up to {real}, but the total due says {stated}"
+    if diff["field"] == "line_math":
+        line = diff["invoice"]
+        return (
+            f"line '{line['description']}': {line['quantity']} x {line['unit_price']} = "
+            f"{diff['po']}, but the invoice says {line['amount']}"
+        )
+    if diff["field"] == "po_reference":
+        return f"the invoice refers to {diff['invoice']}, but this run is for {diff['po']}"
     if diff["field"] == "po_status":
         status = (diff["po"] or "unknown").replace("_", " ")
         return f"PO status: {status} (a PO must be approved first)"

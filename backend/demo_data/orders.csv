@@ -1,0 +1,82 @@
+customer_name,company,customer_email,billing_terms,order_number,amount_usd,order_status,order_date,paid_date,tricky_note
+Hamza Iqbal,Iqbal Traders,hamza@iqbaltraders.example.com,net_30,SO-1001,125.00,delivered,2026-10-03,,
+Hamza Iqbal,Iqbal Traders,hamza@iqbaltraders.example.com,net_30,SO-1002,125.00,delivered,2026-10-21,,Same amount twice - customer says double charge
+Fatima Zahra,Zahra Boutique,fatima@zahraboutique.example.com,net_30,SO-1101,450.00,delivered,2026-09-26,,Unpaid and overdue - payment reminder demo
+Imran Sheikh,Sheikh & Sons Legal,imran@sheikhlegal.example.com,net_30,SO-1202,1500.00,refunded,2026-10-06,,Refunded order behind a legal dispute
+Fatima Zahra,Zahra Boutique,fatima@zahraboutique.example.com,net_30,SO-1102,320.00,placed,2026-11-04,,"Placed 2 days ago, not shipped yet - matches the ticket"
+Imran Sheikh,Sheikh & Sons Legal,imran@sheikhlegal.example.com,net_30,SO-1201,2400.00,delivered,2026-09-12,2026-10-10,Paid on time - earlier order from the same customer
+Nadia Hussain,Hussain Pharmacy Group,nadia@hussainpharma.example.com,net_15,SO-1301,980.00,delivered,2026-10-10,2026-10-22,
+Nadia Hussain,Hussain Pharmacy Group,nadia@hussainpharma.example.com,net_15,SO-1302,1250.00,shipped,2026-11-02,,"In transit, not due yet"
+Usman Ghani,Ghani Electronics,usman@ghanielectronics.example.com,net_60,SO-1401,3200.00,delivered,2026-08-20,2026-10-15,Paid late but inside net_60 terms
+Usman Ghani,Ghani Electronics,usman@ghanielectronics.example.com,net_60,SO-1402,2750.00,delivered,2026-09-01,,Net_60 means due 2026-10-31 - overdue by 6 days
+Usman Ghani,Ghani Electronics,usman@ghanielectronics.example.com,net_60,SO-1403,1800.00,cancelled,2026-10-15,,"Cancelled before payment - no money was taken, so nothing to refund"
+Zara Ahmed,Ahmed Textiles Export,zara@ahmedtextiles.example.com,net_30,SO-1501,8900.00,delivered,2026-10-01,2026-10-28,
+Zara Ahmed,Ahmed Textiles Export,zara@ahmedtextiles.example.com,net_30,SO-1502,8900.00,placed,2026-11-05,,Same amount as SO-1501 but a genuine repeat order - NOT a duplicate
+Bilal Saeed,Saeed Stationers,bilal@saeedstationers.example.com,net_15,SO-1601,210.00,delivered,2026-10-25,,Unpaid but NOT overdue yet - due 2026-11-09
+Rukhsana Baig,Baig Catering,rukhsana@baigcatering.example.com,net_30,SO-1701,640.00,delivered,2026-10-02,,Overdue since 2026-11-01. Customer says she already paid by bank transfer
+Rukhsana Baig,Baig Catering,rukhsana@baigcatering.example.com,net_30,SO-1702,640.00,shipped,2026-10-30,,Overdue invoice plus a new open order - should shipping be held?
+Salman Dar,Dar Hardware,salman@darhardware.example.com,net_30,SO-1801,560.00,delivered,2026-10-05,2026-10-30,
+Salman Dar,Dar Hardware,salman@darhardware.example.com,net_30,SO-1802,1320.00,delivered,2026-10-18,,Due 2026-11-17 - not overdue
+Madiha Anwar,Anwar Pharmacy,madiha@anwarpharmacy.example.com,net_15,SO-1901,2200.00,delivered,2026-10-01,,Overdue by 20 days - strong reminder case
+Madiha Anwar,Anwar Pharmacy,madiha@anwarpharmacy.example.com,net_15,SO-1902,2200.00,refunded,2026-10-12,,Refunded after a damaged delivery
+Fahim Ali,Ali Auto Care,fahim@aliautocare.example.com,net_30,SO-2101,75.00,delivered,2026-10-27,2026-10-28,"Tiny order, paid next day"
+Fahim Ali,Ali Auto Care,fahim@aliautocare.example.com,net_30,SO-2102,75.00,delivered,2026-10-27,2026-10-28,Same amount and date as SO-2101 - possible duplicate order
+Samreen Javed,Javed Fabrics,samreen@javedfabrics.example.com,net_60,SO-2201,15400.00,delivered,2026-09-10,2026-11-02,Large order paid late but inside terms
+Samreen Javed,Javed Fabrics,samreen@javedfabrics.example.com,net_60,SO-2202,9800.00,shipped,2026-11-01,,
+Rashid Mehmood,Mehmood Printers,rashid@mehmoodprinters.example.com,net_30,SO-2301,430.00,cancelled,2026-10-22,,Cancelled by customer before shipping
+Rashid Mehmood,Mehmood Printers,rashid@mehmoodprinters.example.com,net_30,SO-2302,430.00,placed,2026-11-05,,Re-placed after the cancellation - not a duplicate
+Tooba Khalid,Khalid Bakers,tooba@khalidbakers.example.com,net_15,SO-2401,310.00,delivered,2026-10-20,2026-11-04,
+Waqar Younis Jr.,Younis Auto Parts,waqar@younisauto.example.com,net_30,SO-2501,6100.00,delivered,2026-09-15,,Overdue by 22 days and customer has stopped replying
+Waqar Younis Jr.,Younis Auto Parts,waqar@younisauto.example.com,net_30,SO-2502,3900.00,placed,2026-11-03,,New order while an older invoice is still unpaid
+Nighat Perveen,Perveen Handicrafts,nighat@perveenhandicrafts.example.com,net_30,SO-2601,1750.00,shipped,2026-11-04,,
+Shabana Ghauri,Ghauri Marble,shabana@ghaurimarble.example.com,net_30,SO-3001,9300.00,delivered,2026-10-02,2026-10-27,
+Shabana Ghauri,Ghauri Marble,shabana@ghaurimarble.example.com,net_30,SO-3002,9300.00,placed,2026-11-05,,Same amount as the earlier order but a genuine repeat - NOT a duplicate
+Dilawar Qureshi,Qureshi Furniture,dilawar@qureshifurniture.example.com,net_30,SO-3003,2560.00,delivered,2026-08-03,2026-08-28,
+Dilawar Qureshi,Qureshi Furniture,dilawar@qureshifurniture.example.com,net_30,SO-3006,760.00,shipped,2026-08-08,,
+Dilawar Qureshi,Qureshi Furniture,dilawar@qureshifurniture.example.com,net_30,SO-3008,1800.00,delivered,2026-09-29,2026-10-22,
+Dilawar Qureshi,Qureshi Furniture,dilawar@qureshifurniture.example.com,net_30,SO-3010,1590.00,delivered,2026-10-08,,
+Gulnaz Jalal,Jalal Enterprises,gulnaz@jalalenterprises.example.com,net_60,SO-3011,300.00,delivered,2026-09-25,,Unpaid but NOT overdue - due 2026-11-24
+Noman Vohra,Vohra Traders,noman@vohratraders.example.com,net_15,SO-3013,3680.00,delivered,2026-08-14,2026-08-21,
+Noman Vohra,Vohra Traders,noman@vohratraders.example.com,net_15,SO-3015,2690.00,delivered,2026-10-08,2026-10-11,
+Falak Gondal,Gondal Chemicals,falak@gondalchemicals.example.com,net_30,SO-3018,1430.00,delivered,2026-08-31,,Overdue by 37 days
+Falak Gondal,Gondal Chemicals,falak@gondalchemicals.example.com,net_30,SO-3020,1070.00,placed,2026-11-04,,New open order while an older invoice is unpaid - hold shipment?
+Ahmar Sheikh,Sheikh Stationers,ahmar@sheikhstationers.example.com,net_15,SO-3022,4620.00,delivered,2026-10-13,,Unpaid and overdue by 9 days (due 2026-10-28) - reminder case
+Eman Kazmi,Kazmi Cables,eman@kazmicables.example.com,net_60,SO-3023,18500.00,delivered,2026-09-25,2026-11-22,
+Eman Kazmi,Kazmi Cables,eman@kazmicables.example.com,net_60,SO-3024,18500.00,placed,2026-11-04,,Same amount as the earlier order but a genuine repeat - NOT a duplicate
+Haroon Tiwana,Tiwana Agro,haroon@tiwanaagro.example.com,net_30,SO-3026,2380.00,delivered,2026-09-01,2026-09-10,
+Haroon Tiwana,Tiwana Agro,haroon@tiwanaagro.example.com,net_30,SO-3029,250.00,cancelled,2026-10-19,,Cancelled before payment - nothing to refund
+Faizan Zubairi,Zubairi Stationers,faizan@zubairistationers.example.com,net_60,SO-3031,390.00,delivered,2026-07-27,2026-08-18,
+Faizan Zubairi,Zubairi Stationers,faizan@zubairistationers.example.com,net_60,SO-3033,3260.00,delivered,2026-08-21,2026-09-29,
+Gulnaz Bugti,Bugti Stationers,gulnaz@bugtistationers.example.com,net_30,SO-3036,1990.00,refunded,2026-10-24,,Refunded after damaged goods
+Tabassum Jadoon,Jadoon Medical Supplies,tabassum@jadoonmedicalsupplies.example.com,net_30,SO-3037,1980.00,delivered,2026-09-14,2026-10-01,
+Tabassum Jadoon,Jadoon Medical Supplies,tabassum@jadoonmedicalsupplies.example.com,net_30,SO-3039,1640.00,cancelled,2026-10-28,,Cancelled before payment - nothing to refund
+Hamna Zafar,Zafar Stationers,hamna@zafarstationers.example.com,net_30,SO-3042,4190.00,delivered,2026-09-20,,Unpaid and overdue by 17 days (due 2026-10-20) - reminder case
+Faaiz Khokhar,Khokhar Electronics,faaiz@khokharelectronics.example.com,net_30,SO-3045,2500.00,delivered,2026-08-17,2026-09-04,
+Faaiz Khokhar,Khokhar Electronics,faaiz@khokharelectronics.example.com,net_30,SO-3047,860.00,delivered,2026-08-18,2026-09-15,
+Faaiz Khokhar,Khokhar Electronics,faaiz@khokharelectronics.example.com,net_30,SO-3048,1040.00,delivered,2026-09-13,2026-09-29,
+Nauman Farooqi,Farooqi Furniture,nauman@farooqifurniture.example.com,net_15,SO-3050,2650.00,delivered,2026-10-31,,Unpaid but NOT overdue - due 2026-11-15
+Khadija Chaudhry,Chaudhry Tiles,khadija@chaudhrytiles.example.com,net_30,SO-3051,5080.00,delivered,2026-09-20,,Unpaid and overdue by 17 days (due 2026-10-20) - reminder case
+Asfand Zafar,Zafar Cables,asfand@zafarcables.example.com,net_15,SO-3053,865.00,delivered,2026-10-20,2026-10-21,
+Asfand Zafar,Zafar Cables,asfand@zafarcables.example.com,net_15,SO-3056,865.00,delivered,2026-10-20,2026-10-21,Same amount and date as the previous order - possible duplicate
+Rashida Zafar,Zafar Motors,rashida@zafarmotors.example.com,net_60,SO-3059,3310.00,refunded,2026-10-14,,Refunded after wrong item shipped
+Sameer Orakzai,Orakzai Foods,sameer@orakzaifoods.example.com,net_30,SO-3061,870.00,delivered,2026-10-22,,Unpaid but NOT overdue - due 2026-11-21
+Palwasha Saeed,Saeed Plastics,palwasha@saeedplastics.example.com,net_30,SO-3063,770.00,shipped,2026-11-03,,In transit
+Palwasha Saeed,Saeed Plastics,palwasha@saeedplastics.example.com,net_30,SO-3064,3070.00,shipped,2026-11-05,,In transit
+Haroon Yousafzai,Yousafzai Furniture,haroon@yousafzaifurniture.example.com,net_30,SO-3065,1380.00,delivered,2026-08-05,2026-08-21,
+Haroon Yousafzai,Yousafzai Furniture,haroon@yousafzaifurniture.example.com,net_30,SO-3067,580.00,delivered,2026-09-06,2026-09-25,
+Haroon Yousafzai,Yousafzai Furniture,haroon@yousafzaifurniture.example.com,net_30,SO-3068,2700.00,delivered,2026-09-19,2026-10-17,
+Haroon Yousafzai,Yousafzai Furniture,haroon@yousafzaifurniture.example.com,net_30,SO-3069,2110.00,shipped,2026-10-03,,
+Adnan Yousafzai,Yousafzai Pharma,adnan@yousafzaipharma.example.com,net_30,SO-3072,1710.00,delivered,2026-09-03,,Overdue by 34 days
+Adnan Yousafzai,Yousafzai Pharma,adnan@yousafzaipharma.example.com,net_30,SO-3074,2780.00,placed,2026-11-02,,New open order while an older invoice is unpaid - hold shipment?
+Tabassum Suhail,Suhail Leather,tabassum@suhailleather.example.com,net_60,SO-3077,3070.00,delivered,2026-08-25,,Overdue by 13 days
+Tabassum Suhail,Suhail Leather,tabassum@suhailleather.example.com,net_60,SO-3078,1370.00,placed,2026-11-05,,New open order while an older invoice is unpaid - hold shipment?
+Najma Paracha,Paracha Electronics,najma@parachaelectronics.example.com,net_30,SO-3081,610.00,delivered,2026-08-06,2026-08-29,
+Najma Paracha,Paracha Electronics,najma@parachaelectronics.example.com,net_30,SO-3083,710.00,delivered,2026-09-17,2026-09-30,
+Najma Paracha,Paracha Electronics,najma@parachaelectronics.example.com,net_30,SO-3085,2160.00,delivered,2026-09-18,2026-09-23,
+Hadia Saeed,Saeed Logistics,hadia@saeedlogistics.example.com,net_30,SO-3087,595.00,delivered,2026-10-20,2026-10-21,
+Hadia Saeed,Saeed Logistics,hadia@saeedlogistics.example.com,net_30,SO-3090,595.00,delivered,2026-10-20,2026-10-21,Same amount and date as the previous order - possible duplicate
+Tabassum Orakzai,Orakzai Printers,tabassum@orakzaiprinters.example.com,net_30,SO-3093,4210.00,refunded,2026-10-22,,Refunded after damaged goods
+Ibrahim Bhatti,Bhatti Plastics,ibrahim@bhattiplastics.example.com,net_30,SO-3094,1890.00,delivered,2026-09-21,,Unpaid and overdue by 16 days (due 2026-10-21) - reminder case
+Ravi Jadoon,Jadoon Leather,ravi@jadoonleather.example.com,net_30,SO-3095,3170.00,shipped,2026-10-31,,In transit
+Ravi Jadoon,Jadoon Leather,ravi@jadoonleather.example.com,net_30,SO-3097,470.00,shipped,2026-11-01,,In transit
+Rafay Noorani,Noorani Electronics,rafay@nooranielectronics.example.com,net_30,SO-3100,5990.00,delivered,2026-10-01,,Unpaid and overdue by 6 days (due 2026-10-31) - reminder case

@@ -3,7 +3,7 @@ import { api } from "../api";
 import { when } from "../format";
 import type { CallRecord } from "../types";
 import { usePoll } from "../usePoll";
-import { Badge, ErrorNote, ghostButton, inputClass, primaryButton } from "./ui";
+import { Badge, ErrorNote, ghostButton, InjectionWarning, inputClass, primaryButton } from "./ui";
 import { WhyButton } from "./WhyDrawer";
 import { toast } from "../toast";
 
@@ -210,6 +210,8 @@ function CallCard({
           </div>
         </div>
       )}
+
+      <InjectionWarning lines={call.suspicious_text} />
 
       {!a && call.analysis_error && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-red-500/10 px-3 py-2">

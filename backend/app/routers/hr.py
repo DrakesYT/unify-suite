@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 
 from app.agents.runner import TaskContext
 from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX, UPLOAD_MAX_BYTES
@@ -9,6 +9,7 @@ from app.db import DbSession
 from app.deps import CurrentUser, require_department
 from app.llm import LLM
 from app.mailer import Mailer
+from app.models import Job
 from app.models.enums import Department, JobStatus
 from app.schemas.common import Page
 from app.schemas.hr import CandidateOut, JobCreate, JobOut, JobUpdate, ScoreOut, ScreenRequest
@@ -22,6 +23,13 @@ router = APIRouter(
 Limit = Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)]
 
 
+def _job_out(db: DbSession, job: Job) -> JobOut:
+    applicants, unscreened = hr.applicant_counts(db, job)
+    return JobOut.model_validate(job).model_copy(
+        update={"applicants": applicants, "unscreened": unscreened}
+    )
+
+
 @router.get("/jobs")
 def list_jobs(
     db: DbSession,
@@ -30,7 +38,7 @@ def list_jobs(
     status: JobStatus | None = None,
 ) -> Page[JobOut]:
     rows, next_cursor = hr.list_jobs(db, limit, cursor, status)
-    return Page(items=[JobOut.model_validate(r) for r in rows], next_cursor=next_cursor)
+    return Page(items=[_job_out(db, r) for r in rows], next_cursor=next_cursor)
 
 
 @router.post("/jobs", status_code=201)
@@ -40,7 +48,7 @@ def create_job(data: JobCreate, db: DbSession, user: CurrentUser) -> JobOut:
 
 @router.get("/jobs/{job_id}")
 def get_job(job_id: uuid.UUID, db: DbSession) -> JobOut:
-    return JobOut.model_validate(hr.get_job(db, job_id))
+    return _job_out(db, hr.get_job(db, job_id))
 
 
 @router.patch("/jobs/{job_id}")
@@ -62,13 +70,14 @@ def upload_resume(
     db: DbSession,
     user: CurrentUser,
     llm: LLM,
+    job_id: Annotated[uuid.UUID | None, Form(description="The job they applied for")] = None,
 ) -> CandidateOut:
     data = file.file.read(UPLOAD_MAX_BYTES + 1)
     upload = save_upload(
         db, filename=file.filename or "resume", data=data, department=Department.hr, actor=user
     )
     return CandidateOut.model_validate(
-        hr.add_candidate_from_resume(db, llm, upload, TaskContext(actor=user))
+        hr.add_candidate_from_resume(db, llm, upload, TaskContext(actor=user), job_id=job_id)
     )
 
 

@@ -80,7 +80,7 @@ def test_extracts_exact_fields_and_matches_po(
 
     assert res.status_code == 201, res.text
     body = res.json()
-    assert body["extracted"] == EXTRACTED
+    assert body["extracted"] == EXTRACTED | {"line_items": [], "document_type": "invoice"}
     assert body["match"] == {"status": "matched", "differences": []}
     assert body["anomalies"] == []
     invoice = body["invoice"]

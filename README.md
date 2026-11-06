@@ -71,15 +71,16 @@ saved (`backend/app/agents/writing_checks.py`). A draft with bot-like phrasing (
 overdue" that is not in the facts the writer was given is invalid and retried, so a $450.00 reminder can never say
 $4,500. Milder phrasing ("don't hesitate to", "leverage") is shown to the person reviewing the draft as a suggestion.
 
-Invoices, resumes and tickets are treated as untrusted text: they can only shape schema-validated output, never
-permissions or actions. Tags inside a document are stripped so it cannot close its own fence. For invoices, plain
-code also scans the text for lines aimed at the AI ("ignore previous instructions", "SYSTEM:", "approve this payment
-immediately", …); they are logged to the audit trail and shown to the manager as a red "possible prompt injection"
-warning on the run and in the Approval Center.
+Invoices, resumes, tickets and call transcripts are treated as untrusted text: they can only shape schema-validated
+output, never permissions or actions. Tags inside a document are stripped so it cannot close its own fence. For
+invoices and call transcripts, plain code also scans the text for lines aimed at the AI ("ignore previous
+instructions", "P.S. for the assistant", "[system] …", "approve this payment immediately", …); on an invoice they are
+logged to the audit trail and shown to the manager as a red "possible prompt injection" warning on the run and in the
+Approval Center, and on a call they are shown above the analysis.
 
 | Agent | Department | Real task it performs | What plain code does |
 |---|---|---|---|
-| Invoice Processor | Finance | Reads an uploaded invoice PDF and extracts vendor, number, date, PO and total | Matches it to the PO (approved, same vendor, currency, amount), blocks duplicates, saves the invoice |
+| Invoice Processor | Finance | Reads an uploaded invoice PDF: what kind of document it is, vendor, number, date, PO reference as printed, total and every line item | Refuses to treat a credit note, quotation, reminder or negative total as payable; cleans up the PO reference (`po-1007` → `PO-1007`) but never guesses an ambiguous one; checks each line's quantity × price and that the lines add up to the total; matches it to the PO (approved, same vendor, currency, amount); blocks duplicates; saves the invoice |
 | Lead Qualifier | Sales | Rates a lead hot / warm / cold with a 20+ word reason and the fields it relied on | Sends only business fields (no contact name or full email); saves the rating |
 | Outreach Writer | Sales | Drafts a first email to a qualified lead | Rejects drafts with links, placeholders or addresses; adds greeting and signature; a sales manager approves; then it is **really sent** through Resend |
 | Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score, ranks candidates |
@@ -97,13 +98,41 @@ warning on the run and in the Approval Center.
 
 1. A finance clerk uploads an invoice and names the PO.
 2. **P1** loads the PO; **F1** (Invoice Processor) reads the invoice.
-3. **F2** matches invoice and PO in code and checks for duplicates. A mismatch makes **F3** write a discrepancy report.
+3. **F2** matches invoice and PO in code (status, vendor, currency, amount, the PO the invoice itself names, and
+   whether its line items add up) and checks for duplicates. A mismatch makes **F3** write a discrepancy report in
+   plain words ("line items add up to 3,550.00 USD, but the total due says 3,750.00 USD").
 4. **A1** always pauses the run (`waiting_approval`). A finance manager approves or rejects in the Approval Center;
    nobody can decide their own request.
 5. Approved → **F4** creates the payment. Rejected → no payment.
 6. **V1** verifies every link (invoice ↔ PO ↔ approval ↔ payment) and the run ends `completed` or `rejected`.
 
 A failed step pauses the run as `failed`; Retry in the UI re-runs only the failed steps with their stored inputs.
+
+## Tested on the demo data
+
+Our test-data team wrote a fictional data set with an answer key for every file: 57 supplier invoices (including
+duplicates, wrong vendors, wrong totals, line items that do not add up, missing or ambiguous PO references, a credit
+note, a quotation, a past-due reminder and hidden instructions to the AI), 200 resumes for three jobs (strong to weak
+fits) and 35 call transcripts. `python -m app.evaluate` runs the real agents and rules on all of them, against a
+scratch database built from the demo seed, and compares the results with the keys.
+
+Latest run (Vultr Serverless Inference, `glm-5.3-flash`, 24 minutes):
+
+| | Result |
+|---|---|
+| **Invoices** | **57 / 57** handled as the key says. **0** would have been paid wrongly; **0** good invoices sent to review. All 7 hidden instructions flagged. |
+| **Resumes** | **200 / 200** read; name, email and years of experience right in **200 / 200**. Fit band (strong / medium / weak, from the score) matches the key for **196 / 200**; average score 100 for strong, 81 for medium, 36 for weak. |
+| **Call transcripts** | **35 / 35** analysed; customer sentiment matches the key for **34 / 35**; about **67 / 76** expected follow-ups found (matched by shared words, so approximate). The call with a hidden instruction is flagged. |
+
+What the misses are: the 4 resume misses are junior candidates (about 2 of the required 5 years, most skills) that
+score 64, which the scoring rule calls medium; two of them hide an instruction to the AI, and it did not raise their
+score. The checks were designed with these answer keys in view, so the numbers show that every case in this data
+set is handled; they are a regression check, not an independent benchmark.
+
+```bash
+docker compose exec backend python -m app.evaluate               # all three parts
+docker compose exec backend python -m app.evaluate --only invoices
+```
 
 ## Demo
 
@@ -114,6 +143,17 @@ demo user gets:
 docker compose exec backend python -m app.seed
 ```
 
+Then add the larger, fully fictional demo data set in `backend/demo_data/` (about 100 leads, 44 customers with 80
+orders, 75 support tickets, 60 suppliers, 3 jobs with 200 resumes, and 45 call transcripts). New tickets, resumes and
+calls go through the same agents as in the app, so this makes real model calls (about 520, once). Records already in
+the app are never changed, and running it again only finishes what is missing. `--dry-run` shows what would be added.
+
+```bash
+docker compose exec backend python -m app.import_demo
+```
+
+The 57 supplier invoices in `backend/demo_data/invoices/` are left for live uploads: each one starts a payment run.
+
 | Sign in as | Role | Try this |
 |---|---|---|
 | `ceo@demo.example.com` | executive | Dashboard, Aura chat, Approval Center (read-only) |
@@ -121,7 +161,7 @@ docker compose exec backend python -m app.seed
 | `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment and the payment reminder |
 | `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
 | `sales.manager@demo.example.com` | sales manager | Approval Center: approve & send the email (or reject it) |
-| `hr.recruiter@demo.example.com` | HR employee | Hiring → Screen all candidates → Invite to interview (top candidate) |
+| `hr.recruiter@demo.example.com` | HR employee | Hiring → pick a job → add a resume (from `backend/demo_data/resumes/`) → Screen new applicants → Invite to interview (top candidate) |
 | `hr.manager@demo.example.com` | HR manager | Approval Center: approve & send the interview invite (or reject it, which frees the times) |
 | `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
 | `support.manager@demo.example.com` | support manager | Approve the refund escalation |

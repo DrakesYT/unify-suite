@@ -87,7 +87,7 @@ function NewJob({ onCreated }: { onCreated: (job: Job) => void }) {
   );
 }
 
-function ResumeUpload({ onUploaded }: { onUploaded: () => void }) {
+function ResumeUpload({ job, onUploaded }: { job: Job | null; onUploaded: () => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -101,6 +101,7 @@ function ResumeUpload({ onUploaded }: { onUploaded: () => void }) {
     setMessage(null);
     const body = new FormData();
     body.append("file", file);
+    if (job) body.append("job_id", job.id); // they apply for the job being looked at
     try {
       const c = await api<Candidate>("/hr/candidates/upload", { method: "POST", body });
       setMessage(`Added ${c.name}: ${c.skills.length} skills, ${c.years_experience ?? 0} years`);
@@ -220,7 +221,6 @@ export function Hiring() {
   const { user } = useAuth();
   const editable = Boolean(user && canWrite(user, "hr"));
   const jobs = usePoll<Page<Job>>("/hr/jobs?status=open&limit=100");
-  const candidates = usePoll<Page<Candidate>>("/hr/candidates?limit=200");
   const [picked, setPicked] = useState<string | null>(null);
   const jobId = picked ?? jobs.data?.items[0]?.id ?? null;
   const job = jobs.data?.items.find((j) => j.id === jobId) ?? null;
@@ -235,7 +235,7 @@ export function Hiring() {
     setError(null);
     try {
       await api(`/hr/jobs/${jobId}/screen`, { method: "POST", body: JSON.stringify({}) });
-      await scores.reload();
+      await Promise.all([scores.reload(), jobs.reload()]);
       toast("Screening done: the ranking is updated");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Screening failed");
@@ -282,9 +282,11 @@ export function Hiring() {
                 <NewJob onCreated={(j) => (setPicked(j.id), void jobs.reload())} />
               </Card>
               <Card title="Add a candidate">
-                <ResumeUpload onUploaded={() => void candidates.reload()} />
+                <ResumeUpload job={job} onUploaded={() => void jobs.reload()} />
                 <p className="mt-3 text-xs text-slate-500">
-                  {candidates.data?.items.length ?? 0} candidates on file
+                  {job
+                    ? `Adds an applicant for ${job.title}. ${job.applicants} applicants, ${job.unscreened} not screened yet.`
+                    : "Pick a job first: the candidate applies for it."}
                 </p>
               </Card>
             </>
@@ -294,8 +296,13 @@ export function Hiring() {
           title={job ? `Ranking: ${job.title}` : "Ranking"}
           actions={
             editable && job ? (
-              <button onClick={screen} disabled={busy} className={ghostButton}>
-                {busy ? "Screening…" : "Screen all candidates"}
+              <button
+                onClick={screen}
+                disabled={busy || job.unscreened === 0}
+                className={ghostButton}
+                title={job.unscreened === 0 ? "Everyone who applied is screened" : undefined}
+              >
+                {busy ? "Screening…" : `Screen new applicants (${job.unscreened})`}
               </button>
             ) : undefined
           }
@@ -304,7 +311,7 @@ export function Hiring() {
           {!jobs.data && <Loading rows={3} />}
           {jobs.data && !job && <Empty>Add a job to start screening.</Empty>}
           {job && scores.data && ranked.length === 0 && (
-            <Empty hint="Upload resumes, then press “Screen all candidates”.">
+            <Empty hint="Add a candidate for this job, then press “Screen new applicants”.">
               No one screened for this job yet.
             </Empty>
           )}

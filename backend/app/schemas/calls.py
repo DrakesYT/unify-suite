@@ -67,4 +67,6 @@ class CallOut(BaseModel):
     analyzed_by_model: str | None
     analyzed_at: datetime | None
     analysis_error: str | None
+    # Lines that try to give the AI orders, found by code (shown as a warning, never obeyed).
+    suspicious_text: list[str] = []
     created_at: datetime

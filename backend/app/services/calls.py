@@ -21,6 +21,7 @@ from app.llm import LLMClient
 from app.models import CallTranscript, Lead, Ticket, Upload, User
 from app.models.base import utcnow
 from app.models.enums import Department
+from app.safety import find_instruction_text
 from app.schemas.calls import CallAnalysis, CallInput, CallOut, SpeakerShare
 from app.services import audit
 from app.services.authz import can_access
@@ -106,6 +107,7 @@ def to_out(db: Session, call: CallTranscript) -> CallOut:
         analyzed_by_model=call.analyzed_by_model,
         analyzed_at=call.analyzed_at,
         analysis_error=call.analysis_error,
+        suspicious_text=find_instruction_text(text),
         created_at=call.created_at,
     )
 

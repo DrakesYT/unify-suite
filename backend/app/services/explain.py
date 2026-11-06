@@ -401,7 +401,8 @@ def run(db: Session, user: User, execution_id: uuid.UUID) -> Explanation:
         )
     if f2:
         decided.append(
-            "Matched the invoice to the PO (approved PO, same vendor, currency and amount): "
+            "Matched the invoice to the PO (approved PO, same vendor, currency, amount and PO "
+            "reference) and checked that its line items add up to the total: "
             f"{f2['match_status']}."
         )
         decided += [f"Difference: {line}" for line in f3.get("lines", [])]
@@ -436,7 +437,12 @@ def run(db: Session, user: User, execution_id: uuid.UUID) -> Explanation:
                 "po_number",
             )
             if k in f1
-        ],
+        ]
+        + (
+            [Field(label="line items", value=f"{len(f1['line_items'])} read")]
+            if f1.get("line_items")
+            else []
+        ),
         calls=calls,
         code_decided=decided,
         people=_people(db, [("workflow_execution", execution.id), *_approval_people(db, approval)]),

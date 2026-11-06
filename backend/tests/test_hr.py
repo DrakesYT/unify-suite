@@ -158,12 +158,15 @@ def test_rescreening_updates_the_same_score(
 ) -> None:
     job = _job(client, headers)
     fake_llm.replies += [SARA_PROFILE, SARA_ASSESSMENT, SARA_ASSESSMENT]
-    _upload(client, headers)
+    candidate = _upload(client, headers).json()
     client.post(f"{API}/jobs/{job['id']}/screen", json={}, headers=headers)
 
-    again = client.post(f"{API}/jobs/{job['id']}/screen", json={}, headers=headers).json()
+    again = client.post(
+        f"{API}/jobs/{job['id']}/screen", json={"candidate_ids": [candidate["id"]]}, headers=headers
+    ).json()  # naming a candidate screens them again on purpose
 
     assert len(again) == 1
+    assert fake_llm.replies == []  # the second assessment was used
 
 
 def _input(**overrides: Any) -> ScreeningInput:
@@ -281,3 +284,47 @@ def test_live_vultr_parse_and_screen() -> None:
     assert {"Python", "PostgreSQL"} <= set(profile.skills)
     matched = {e.requirement for e in assessment.evidence}
     assert {"Python", "PostgreSQL"} <= matched and "Docker" not in matched
+
+
+def _upload_for(client: TestClient, headers: dict[str, str], job_id: str | None) -> Any:
+    files = {"file": ("resume.pdf", make_pdf(SARA_LINES), "application/pdf")}
+    data = {"job_id": job_id} if job_id else {}
+    return client.post(f"{API}/candidates/upload", headers=headers, files=files, data=data)
+
+
+def test_screening_covers_the_jobs_new_applicants_only(
+    client: TestClient, headers: dict[str, str], fake_llm: FakeLLMClient
+) -> None:
+    backend = _job(client, headers)
+    support = _job(client, headers, title="Support Lead", required_skills=["Zendesk"])
+    fake_llm.replies += [SARA_PROFILE] * 3
+    mine = _upload_for(client, headers, backend["id"]).json()
+    other = _upload_for(client, headers, support["id"]).json()
+    unlinked = _upload_for(client, headers, None).json()  # job not recorded: applies to every job
+    assert (mine["job_id"], other["job_id"], unlinked["job_id"]) == (
+        backend["id"],
+        support["id"],
+        None,
+    )
+
+    jobs = {j["title"]: j for j in client.get(f"{API}/jobs", headers=headers).json()["items"]}
+    assert (jobs[backend["title"]]["applicants"], jobs[backend["title"]]["unscreened"]) == (2, 2)
+
+    fake_llm.replies += [SARA_ASSESSMENT, SARA_ASSESSMENT]
+    ranked = client.post(f"{API}/jobs/{backend['id']}/screen", json={}, headers=headers).json()
+
+    assert {r["candidate"]["id"] for r in ranked} == {mine["id"], unlinked["id"]}
+    assert fake_llm.replies == []
+    again = client.post(f"{API}/jobs/{backend['id']}/screen", json={}, headers=headers)
+    assert len(again.json()) == 2  # nobody new: no model call (an extra one would fail the fake)
+    job = client.get(f"{API}/jobs/{backend['id']}", headers=headers).json()
+    assert (job["applicants"], job["unscreened"]) == (2, 0)
+
+
+def test_an_upload_for_an_unknown_job_is_refused_before_the_model_runs(
+    client: TestClient, headers: dict[str, str], fake_llm: FakeLLMClient
+) -> None:
+    res = _upload_for(client, headers, "00000000-0000-0000-0000-000000000000")
+
+    assert res.status_code == 404
+    assert fake_llm.calls == []

@@ -1,0 +1,61 @@
+vendor_name,contact_email,lead_time_days,on_time_rate,tricky_note
+ACME Industrial Supplies Ltd.,ap@acme.example.com,7,0.95,
+QuickShip IT,sales@quickship.example.com,3,0.97,
+BudgetBox Supplies,hello@budgetbox.example.com,21,0.71,Cheapest but slow and unreliable
+Northwind Metals Ltd.,sales@northwind.example.com,14,0.82,Needed for PO-2001 and PO-2002. Recent deliveries have been late
+Karachi PackWorks,orders@pakworks.example.com,5,0.93,
+Lahore Office Mart,hello@lahoreoffice.example.com,10,0.88,"Mid-priced, average on all measures"
+Pak Cable Industries,sales@pakcable.example.com,9,0.9,
+Sunrise Stationery,orders@sunrisestationery.example.com,6,0.96,Small but very reliable
+Metro Electricals,info@metroelectricals.example.com,18,0.64,Low price but often late - risky
+Gulberg Print House,print@gulbergprint.example.com,4,0.98,"Fast and best on-time record, price slightly higher"
+Ravi Chemicals Ltd.,orders@ravichemicals.example.com,5,0.97,
+Alpha Labels Supplies,accounts@alphalabels.example.com,20,0.64,Low price but often late - risky
+Pioneer Tools Traders,info@pioneertools.example.com,30,0.67,Cheap but slow and unreliable
+Pioneer Electricals Ltd.,orders@pioneerelectricals.example.com,6,0.99,
+Karakoram Fasteners Traders,accounts@karakoramfasteners.example.com,13,0.87,Average on all measures
+Star Fasteners Co.,accounts@starfasteners.example.com,26,0.58,Low price but often late - risky
+Indus Pallets Ltd.,orders@induspallets.example.com,6,0.97,
+Ravi Fasteners Industries,accounts@ravifasteners.example.com,19,0.75,"Frequent delays, lead time keeps growing"
+Falcon Chemicals Supplies,sales@falconchemicals.example.com,34,0.64,"Frequent delays, lead time keeps growing"
+Redstone Cleaning Supplies Industries,sales@redstonecleaning.example.com,13,0.89,
+Chenab Lighting Ltd.,info@chenablighting.example.com,4,0.99,
+Riverside Steel Traders,accounts@riversidesteel.example.com,5,0.85,"New vendor - little history, on-time rate is an estimate"
+Lahore Steel Co.,accounts@lahoresteel.example.com,10,0.85,"New vendor - little history, on-time rate is an estimate"
+Royal Steel Ltd.,orders@royalsteel.example.com,11,0.84,Average on all measures
+Horizon Cables Ltd.,sales@horizoncables.example.com,24,0.61,Cheap but slow and unreliable
+Riverside Tools Industries,orders@riversidetools.example.com,10,0.8,Average on all measures
+Karachi Plastics Ltd.,contact@karachiplastics.example.com,5,0.98,
+Indus Furniture Traders,hello@indusfurniture.example.com,8,0.89,
+Riverside Logistics Industries,hello@riversidelogistics.example.com,8,0.97,
+Union Safety Gear Traders,accounts@unionsafety.example.com,8,0.98,
+Karachi Paper Supplies,sales@karachipaper.example.com,35,0.63,Cheap but slow and unreliable
+Zenith Fasteners Supplies,hello@zenithfasteners.example.com,31,0.67,Cheap but slow and unreliable
+Union Chemicals Ltd.,orders@unionchemicals.example.com,9,0.94,
+Capital Machinery Parts Industries,sales@capitalmachinery.example.com,8,0.85,"New vendor - little history, on-time rate is an estimate"
+Goldleaf Fasteners Co.,accounts@goldleaffasteners.example.com,11,0.85,"New vendor - little history, on-time rate is an estimate"
+Karakoram Plastics Industries,contact@karakoramplastics.example.com,5,0.98,
+Vertex Lubricants Ltd.,sales@vertexlubricants.example.com,19,0.57,"Frequent delays, lead time keeps growing"
+Indus Safety Gear Co.,contact@indussafety.example.com,9,0.98,
+Hilltop Packaging Industries,info@hilltoppackaging.example.com,5,0.96,
+Sunrise Lighting Co.,contact@sunriselighting.example.com,11,0.89,
+Lahore Stationery Ltd.,info@lahorestationery.example.com,16,0.6,Cheap but slow and unreliable
+Ravi Paper Traders,hello@ravipaper.example.com,14,0.87,Average on all measures
+Ravi Pallets Co.,orders@ravipallets.example.com,10,0.86,Average on all measures
+Summit Pallets Ltd.,info@summitpallets.example.com,32,0.59,"Frequent delays, lead time keeps growing"
+Royal Lighting Industries,info@royallighting.example.com,9,0.95,
+Horizon Electricals Supplies,hello@horizonelectricals.example.com,14,0.83,
+Hilltop Lubricants Co.,accounts@hilltoplubricants.example.com,8,0.86,
+Crescent Chemicals Supplies,contact@crescentchemicals.example.com,12,0.82,
+Orient Cables Ltd.,hello@orientcables.example.com,17,0.85,"New vendor - little history, on-time rate is an estimate"
+Chenab Logistics Industries,sales@chenablogistics.example.com,13,0.81,
+Hilltop Pallets Industries,contact@hilltoppallets.example.com,19,0.71,Low price but often late - risky
+Summit Cables Industries,accounts@summitcables.example.com,4,0.96,
+Metro Lubricants Industries,hello@metrolubricants.example.com,1,0.97,Fastest and most reliable but price is higher
+Pioneer Tools Co.,info@pioneertools.example.com,1,0.97,Fastest and most reliable but price is higher
+Metro Steel Ltd.,orders@metrosteel.example.com,14,0.88,
+Apex Pallets Ltd.,hello@apexpallets.example.com,14,0.85,Average on all measures
+Harbor Furniture Ltd.,contact@harborfurniture.example.com,9,0.92,
+Apex Machinery Parts Supplies,orders@apexmachinery.example.com,31,0.61,Cheap but slow and unreliable
+Lahore Lighting Ltd.,orders@lahorelighting.example.com,5,0.95,
+Delta Lubricants Supplies,accounts@deltalubricants.example.com,2,0.97,Fastest and most reliable but price is higher

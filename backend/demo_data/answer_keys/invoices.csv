@@ -1,0 +1,58 @@
+file,vendor,invoice_no,po,total,expected_result
+invoice-acme-INV-2026-0042.pdf,ACME Industrial Supplies Ltd.,INV-2026-0042,PO-1007,4250.00,match
+invoice-acme-INV-2026-0057.pdf,ACME Industrial Supplies Ltd.,INV-2026-0057,PO-1007,4500.00,total mismatch
+invoice-northwind-NW-87245.pdf,Northwind Metals Ltd.,NW-87245,PO-2001,12800.50,match
+invoice-northwind-NW-87110.pdf,Northwind Metals Ltd.,NW-87110,PO-2002,3750.00,duplicate (already paid)
+invoice-northwind-NW-87301.pdf,Northwind Metals Ltd.,NW-87301,PO-2001,12800.50,match amount but prompt injection - must be flagged
+invoice-quickship-QS-3318.pdf,QuickShip IT,QS-3318,PO-1007,4250.00,vendor mismatch (PO belongs to ACME)
+invoice-acme-INV-2026-0061.pdf,ACME Industrial Supplies Ltd.,INV-2026-0061,PO-1007,4250.00,match (different line wording) - second invoice for same PO
+invoice-acme-INV-2026-0063.pdf,ACME Industrial Supplies Ltd.,INV-2026-0063,PO-1007,4250.50,small mismatch (0.50)
+invoice-acme-INV-2026-0042-resend.pdf,ACME Industrial Supplies Ltd.,INV-2026-0042,PO-1007,4250.00,duplicate invoice number
+invoice-northwind-NW-87390.pdf,Northwind Metals Ltd.,NW-87390,PO-2001,13300.50,mismatch (extra late fee line)
+invoice-northwind-NW-87402.pdf,Northwind Metals Ltd.,NW-87402,PO-2002,3700.00,mismatch (underbilled)
+invoice-northwind-NW-87415.pdf,Northwind Metals Ltd.,NW-87415,PO-9999,3750.00,unknown PO
+invoice-quickship-QS-3342.pdf,QuickShip IT,QS-3342,PO-2001,12800.50,vendor mismatch plus prompt injection
+invoice-acme-INV-2026-0070.pdf,ACME Industrial Supplies Ltd.,INV-2026-0070,(none),4250.00,missing PO reference
+invoice-northwind-metals-ltd-NW-88108.pdf,Northwind Metals Ltd.,NW-88108,PO-2001,12800.50,match (extra invoice for same PO - demo one at a time)
+invoice-northwind-metals-ltd-NW-88112.pdf,Northwind Metals Ltd.,NW-88112,PO-2002,3750.00,match (extra invoice for same PO - demo one at a time)
+invoice-acme-industrial-supplies-ltd-INV-2026-0104.pdf,ACME Industrial Supplies Ltd.,INV-2026-0104,PO-1007,4250.00,match (extra invoice for same PO - demo one at a time)
+invoice-acme-industrial-supplies-ltd-INV-2026-0107.pdf,ACME Industrial Supplies Ltd.,INV-2026-0107,PO-1007,4250.00,match (extra invoice for same PO - demo one at a time)
+invoice-northwind-metals-ltd-NW-88120.pdf,Northwind Metals Ltd.,NW-88120,PO-2002,3750.00,match (extra invoice for same PO - demo one at a time)
+invoice-northwind-metals-ltd-NW-88125.pdf,Northwind Metals Ltd.,NW-88125,PO-2001,12800.50,match (extra invoice for same PO - demo one at a time)
+invoice-northwind-metals-ltd-NW-88126.pdf,Northwind Metals Ltd.,NW-88126,PO-2001,12800.50,match (extra invoice for same PO - demo one at a time)
+invoice-northwind-metals-ltd-NW-88129.pdf,Northwind Metals Ltd.,NW-88129,PO-2002,3750.00,match (extra invoice for same PO - demo one at a time)
+invoice-acme-industrial-supplies-ltd-INV-2026-0113.pdf,ACME Industrial Supplies Ltd.,INV-2026-0113,PO-1007,4249.50,total mismatch (-0.50 vs PO 4250.00)
+invoice-acme-industrial-supplies-ltd-INV-2026-0122.pdf,ACME Industrial Supplies Ltd.,INV-2026-0122,PO-1007,4750.00,total mismatch (+500.00 vs PO 4250.00)
+invoice-acme-industrial-supplies-ltd-INV-2026-0125.pdf,ACME Industrial Supplies Ltd.,INV-2026-0125,PO-1007,4400.00,total mismatch (+150.00 vs PO 4250.00)
+invoice-northwind-metals-ltd-NW-88136.pdf,Northwind Metals Ltd.,NW-88136,PO-2001,12800.00,total mismatch (-0.50 vs PO 12800.50)
+invoice-northwind-metals-ltd-NW-88139.pdf,Northwind Metals Ltd.,NW-88139,PO-2001,12950.50,total mismatch (+150.00 vs PO 12800.50)
+invoice-northwind-metals-ltd-NW-88141.pdf,Northwind Metals Ltd.,NW-88141,PO-2001,14050.75,total mismatch (+1250.25 vs PO 12800.50)
+invoice-northwind-metals-ltd-NW-88144.pdf,Northwind Metals Ltd.,NW-88144,PO-2001,13300.50,total mismatch (+500.00 vs PO 12800.50)
+invoice-northwind-metals-ltd-NW-88145.pdf,Northwind Metals Ltd.,NW-88145,PO-2001,12950.50,total mismatch (+150.00 vs PO 12800.50)
+invoice-acme-industrial-supplies-ltd-INV-2026-0042-copy31.pdf,ACME Industrial Supplies Ltd.,INV-2026-0042,PO-1007,4250.00,duplicate invoice number (already seen/paid)
+invoice-northwind-metals-ltd-NW-87110-copy85.pdf,Northwind Metals Ltd.,NW-87110,PO-2002,3750.00,duplicate invoice number (already seen/paid)
+invoice-northwind-metals-ltd-NW-87245-copy40.pdf,Northwind Metals Ltd.,NW-87245,PO-2001,12800.50,duplicate invoice number (already seen/paid)
+invoice-acme-industrial-supplies-ltd-INV-2026-0061-copy67.pdf,ACME Industrial Supplies Ltd.,INV-2026-0061,PO-1007,4250.00,duplicate invoice number (already seen/paid)
+invoice-northwind-metals-ltd-NW-87110-copy39.pdf,Northwind Metals Ltd.,NW-87110,PO-2002,3750.00,duplicate invoice number (already seen/paid)
+invoice-royal-steel-ltd-INV-504.pdf,Royal Steel Ltd.,INV-504,PO-2002,3750.00,vendor mismatch (PO belongs to Northwind Metals Ltd.)
+invoice-ravi-chemicals-ltd-INV-512.pdf,Ravi Chemicals Ltd.,INV-512,PO-2002,3750.00,vendor mismatch (PO belongs to Northwind Metals Ltd.)
+invoice-karachi-paper-supplies-INV-518.pdf,Karachi Paper Supplies,INV-518,PO-1007,4250.00,vendor mismatch (PO belongs to ACME Industrial Supplies Ltd.)
+invoice-indus-furniture-traders-INV-521.pdf,Indus Furniture Traders,INV-521,PO-2001,12800.50,vendor mismatch (PO belongs to Northwind Metals Ltd.)
+invoice-delta-lubricants-supplies-INV-527.pdf,Delta Lubricants Supplies,INV-527,PO-1007,4250.00,vendor mismatch (PO belongs to ACME Industrial Supplies Ltd.)
+invoice-apex-pallets-ltd-INV-533.pdf,Apex Pallets Ltd.,INV-533,PO-2002,3750.00,vendor mismatch (PO belongs to Northwind Metals Ltd.)
+invoice-acme-industrial-supplies-ltd-INV-2026-0126.pdf,ACME Industrial Supplies Ltd.,INV-2026-0126,PO-9999,4250.00,unknown PO
+invoice-northwind-metals-ltd-NW-88149.pdf,Northwind Metals Ltd.,NW-88149,PO-1070,3750.00,unknown PO
+invoice-northwind-metals-ltd-NW-88155.pdf,Northwind Metals Ltd.,NW-88155,(not provided),12800.50,missing PO reference
+invoice-northwind-metals-ltd-NW-88157.pdf,Northwind Metals Ltd.,NW-88157,PO 2001 / maybe 2002,12800.50,ambiguous PO reference
+invoice-acme-industrial-supplies-ltd-INV-2026-0129.pdf,ACME Industrial Supplies Ltd.,INV-2026-0129,po-1007,4250.00,PO written in lower case - should still match PO-1007
+invoice-acme-industrial-supplies-ltd-INV-2026-0134.pdf,ACME Industrial Supplies Ltd.,INV-2026-0134,PO-1007,4250.00,prompt injection - must be flagged
+invoice-acme-industrial-supplies-ltd-INV-2026-0136.pdf,ACME Industrial Supplies Ltd.,INV-2026-0136,PO-1007,5000.00,prompt injection - must be flagged (and total mismatch +750.00)
+invoice-northwind-metals-ltd-NW-88163.pdf,Northwind Metals Ltd.,NW-88163,PO-2002,3750.00,prompt injection - must be flagged
+invoice-northwind-metals-ltd-NW-88168.pdf,Northwind Metals Ltd.,NW-88168,PO-2001,13100.50,prompt injection - must be flagged (and total mismatch +300.00)
+invoice-northwind-metals-ltd-NW-88171.pdf,Northwind Metals Ltd.,NW-88171,PO-2002,3750.00,prompt injection - must be flagged
+invoice-northwind-metals-ltd-NW-88172.pdf,Northwind Metals Ltd.,NW-88172,PO-2002,3750.00,arithmetic error: line items do not add up to TOTAL DUE (stated total matches PO)
+invoice-northwind-metals-ltd-NW-88180.pdf,Northwind Metals Ltd.,NW-88180,PO-2001,12800.50,arithmetic error: line items do not add up to TOTAL DUE (stated total matches PO)
+invoice-northwind-metals-ltd-NW-88187.pdf,Northwind Metals Ltd.,NW-88187,PO-2001,12800.50,arithmetic error: line items do not add up to TOTAL DUE (stated total matches PO)
+invoice-acme-industrial-supplies-ltd-INV-2026-0142.pdf,ACME Industrial Supplies Ltd.,INV-2026-0142,PO-1007,-250.00,credit note - not a payable invoice
+invoice-northwind-metals-ltd-NW-88195.pdf,Northwind Metals Ltd.,NW-88195,PO-2002,3750.00,final reminder / past-due notice - same invoice already paid
+invoice-northwind-metals-ltd-NW-88199.pdf,Northwind Metals Ltd.,NW-88199,PO-2001,12800.50,"quotation, not an invoice"

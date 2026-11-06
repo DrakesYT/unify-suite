@@ -153,6 +153,9 @@ export interface Job {
   min_years: number;
   status: "open" | "closed";
   created_at: string;
+  /** Candidates with a resume who applied for this job, and how many are not screened yet. */
+  applicants: number;
+  unscreened: number;
 }
 
 export interface Candidate {
@@ -163,6 +166,7 @@ export interface Candidate {
   years_experience: number | null;
   education: string[];
   file_id: string | null;
+  job_id: string | null;
   created_at: string;
 }
 
@@ -487,5 +491,6 @@ export interface CallRecord {
   analyzed_by_model: string | null;
   analyzed_at: string | null;
   analysis_error: string | null;
+  suspicious_text: string[];
   created_at: string;
 }

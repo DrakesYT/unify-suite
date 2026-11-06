@@ -19,7 +19,13 @@ customer or prospect. The context line says which lead or support ticket it is a
 {UNTRUSTED_TEXT_RULE}
 Rules:
 - summary: 2 or 3 plain sentences: what the customer needs and what was agreed.
-- sentiment: how the customer feels by the END of the call (positive, neutral, negative or mixed).
+- sentiment: the customer's feeling across the whole call, not only the polite goodbye:
+  positive = keen or pleased (wants to buy, praises us, happily agrees a next step);
+  neutral = matter-of-fact or businesslike, including a problem or request handled calmly, a
+  polite "not interested", or a voicemail;
+  negative = upset, angry, threatening (to leave, a lawyer, a bad review) or distrustful, even if
+  they calm down by the end;
+  mixed = clearly both at once, e.g. interested but pushing back on price or terms.
 - sentiment_quote: the customer's own words that best show it, copied exactly from the transcript.
 - concerns: worries or objections the customer raised, short phrases; empty if none.
 - action_items: every concrete follow-up someone committed to. owner is "us" when our company
