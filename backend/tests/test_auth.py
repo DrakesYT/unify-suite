@@ -1,5 +1,6 @@
 """FR-AUTH-01: email + password login returns a JWT valid for 8 hours."""
 
+import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
@@ -8,10 +9,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
+from app.config import SESSION_COOKIE, get_settings
 from app.models import AuditLog, User
 from app.models.enums import Department, Role
 from app.security import create_access_token
+from app.services import sessions
 from tests.conftest import TEST_PASSWORD
 
 MakeUser = Callable[..., User]
@@ -21,14 +23,16 @@ def _login(client: TestClient, email: str, password: str = TEST_PASSWORD):  # ty
     return client.post("/api/auth/login", json={"email": email, "password": password})
 
 
-def test_valid_login_returns_8_hour_token(client: TestClient, make_user: MakeUser) -> None:
+def test_valid_login_sets_an_8_hour_httponly_session_cookie(
+    client: TestClient, make_user: MakeUser
+) -> None:
     user = make_user(Role.manager, Department.finance)
 
     res = _login(client, user.email)
 
     assert res.status_code == 200
     body = res.json()
-    assert body["token_type"] == "bearer"
+    assert "access_token" not in body  # the token never reaches page scripts
     assert body["expires_in"] == 8 * 3600
     assert body["user"] == {
         "id": str(user.id),
@@ -37,11 +41,17 @@ def test_valid_login_returns_8_hour_token(client: TestClient, make_user: MakeUse
         "role": "manager",
         "department": "finance",
     }
+    cookie = res.headers["set-cookie"]
+    for flag in ("HttpOnly", "SameSite=strict", "Path=/api", "Max-Age=28800"):
+        assert flag.lower() in cookie.lower(), flag
     claims = jwt.decode(
-        body["access_token"], get_settings().jwt_secret.get_secret_value(), algorithms=["HS256"]
+        res.cookies[SESSION_COOKIE],
+        get_settings().jwt_secret.get_secret_value(),
+        algorithms=["HS256"],
     )
     assert claims["sub"] == str(user.id)
     assert claims["exp"] - claims["iat"] == 8 * 3600
+    assert claims["sid"]
 
 
 def test_wrong_password_returns_401(client: TestClient, make_user: MakeUser) -> None:
@@ -119,15 +129,22 @@ def test_me_rejects_bad_expired_and_disabled_tokens(
     client: TestClient, make_user: MakeUser, db: Session
 ) -> None:
     user = make_user()
-    expired = create_access_token(user.id, now=datetime.now(UTC) - timedelta(hours=9))
-    forged = jwt.encode({"sub": str(user.id), "iat": 0, "exp": 9999999999}, "x" * 32, "HS256")
+    old = datetime.now(UTC) - timedelta(hours=9)
+    expired = sessions.start(db, user, now=old)
+    unknown_session = create_access_token(user.id, uuid.uuid4())
+    forged = jwt.encode(
+        {"sub": str(user.id), "sid": str(uuid.uuid4()), "iat": 0, "exp": 9999999999},
+        "x" * 32,
+        "HS256",
+    )
+    db.commit()
 
-    for token in ("not-a-jwt", expired, forged):
+    for token in ("not-a-jwt", expired, unknown_session, forged):
         res = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert res.status_code == 401, token
         assert res.json()["error"]["code"] == "invalid_token"
 
-    valid = create_access_token(user.id)
+    valid = sessions.start(db, user)
     user.is_active = False
     db.commit()
     assert (

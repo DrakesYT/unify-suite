@@ -27,7 +27,8 @@ PER_KIND = 5
 MAX_HITS = 20
 
 
-def _like(term: str) -> str:
+def contains_pattern(term: str) -> str:
+    """A LIKE pattern matching `term` anywhere, with % and _ in the term taken literally."""
     escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     return f"%{escaped}%"
 
@@ -144,7 +145,7 @@ SOURCES: dict[Department, Callable[[Session, str], list[SearchHit]]] = {
 
 def search(db: Session, user: User, term: str) -> list[SearchHit]:
     """Same read rule as every page: an employee only finds their own department's records."""
-    pattern = _like(term.strip())
+    pattern = contains_pattern(term.strip())
     hits: list[SearchHit] = []
     for department, source in SOURCES.items():
         if can_access(user, department, write=False):

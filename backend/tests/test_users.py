@@ -39,10 +39,27 @@ def test_duplicate_email_is_409(db: Session) -> None:
     assert exc.value.status_code == 409
 
 
-@pytest.mark.parametrize("password", ["short", "é" * 40])
-def test_password_rules(password: str) -> None:
-    with pytest.raises(ValidationError):
+@pytest.mark.parametrize(
+    ("password", "reason"),
+    [
+        ("short", "at least 12"),
+        ("eleven-char", "at least 12"),
+        ("é" * 40, "at most 72 bytes"),
+        ("Password123!", "common"),
+        ("!!qwertyuiop2026", "common"),
+        ("aaaaaaaaaaaaaaaa", "common or very simple"),
+        ("dana-is-the-boss-2026", "your email name"),
+        ("my-unify-account-key", "product name"),
+    ],
+)
+def test_weak_passwords_are_refused_with_the_reason(password: str, reason: str) -> None:
+    with pytest.raises(ValidationError) as exc:
         _data(password=password)
+    assert reason in str(exc.value)
+
+
+def test_a_strong_passphrase_is_accepted() -> None:
+    assert _data(password="correct horse battery staple").password
 
 
 def test_unknown_role_is_rejected() -> None:

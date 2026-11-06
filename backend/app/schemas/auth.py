@@ -1,9 +1,9 @@
 import uuid
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, model_validator
 
-from app.config import PASSWORD_MAX_BYTES, PASSWORD_MIN_LEN
+from app import passwords
 from app.models.enums import Department, Role
 
 
@@ -11,14 +11,7 @@ def _lower(value: str) -> str:
     return value.lower()
 
 
-def _fits_bcrypt(value: str) -> str:
-    if len(value.encode()) > PASSWORD_MAX_BYTES:
-        raise ValueError(f"must be at most {PASSWORD_MAX_BYTES} bytes")
-    return value
-
-
 Email = Annotated[EmailStr, AfterValidator(_lower)]
-NewPassword = Annotated[str, Field(min_length=PASSWORD_MIN_LEN), AfterValidator(_fits_bcrypt)]
 
 
 class LoginRequest(BaseModel):
@@ -31,7 +24,14 @@ class UserCreate(BaseModel):
     full_name: Annotated[str, Field(min_length=1, max_length=120)]
     role: Role
     department: Department
-    password: NewPassword
+    password: str
+
+    @model_validator(mode="after")
+    def _strong_password(self) -> "UserCreate":
+        found = passwords.problems(self.password, self.email)
+        if found:
+            raise ValueError("Password rejected: " + "; ".join(found))
+        return self
 
 
 class UserOut(BaseModel):
@@ -44,9 +44,9 @@ class UserOut(BaseModel):
     department: Department
 
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class SessionOut(BaseModel):
+    """Sign-in result. The token itself travels only in the HttpOnly session cookie."""
+
     expires_in: int
     user: UserOut
 

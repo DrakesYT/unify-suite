@@ -208,3 +208,22 @@ def test_read_only_users_get_the_current_state(
     )
     assert body["reply"].startswith("Your access is read-only")  # not the model's promise to act
     assert len(fake_llm.calls) == 1  # no agent was run
+
+
+def test_wildcards_typed_to_aura_are_taken_literally(
+    client: TestClient,
+    db: Session,
+    fake_llm: FakeLLMClient,
+    make_user: Callable[..., User],
+    auth_header: AuthHeader,
+) -> None:
+    """ "%%%" must not match every lead (LIKE wildcards in a name are escaped)."""
+    rep = make_user(Role.employee, Department.sales)
+    db.add(Lead(name="Sara", company="Quetta Mining Co", email="s@qm.example.com", owner_id=rep.id))
+    db.commit()
+    fake_llm.replies += [_route("sales.qualify_lead", "%%%"), _route("none")]
+
+    reply = _chat(client, auth_header(rep), "qualify %%%")
+
+    assert reply["outcome"] != "done"
+    assert db.scalar(select(Lead)).rating is None

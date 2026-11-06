@@ -3,13 +3,52 @@
 {
 	admin off
 	auto_https off
+	servers {
+		# Only Coolify's proxy (on the private Docker network) may tell us who the visitor is.
+		# Strict mode reads X-Forwarded-For from the right and stops at the first address that is
+		# not one of those proxies, so a visitor can't fake their IP by sending the header themselves.
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+		client_ip_headers X-Forwarded-For
+	}
 }
 
 :80 {
 	encode gzip
 
+	# Uploads are capped at 10 MB by the API; anything far bigger is refused before it is stored.
+	request_body {
+		max_size 12MB
+	}
+
+	header {
+		-Server
+		# Browsers remember to use HTTPS only (this host and anything under it) for a year.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# Only our own files may run or load. No inline scripts, no other sites, no plugins, and no
+		# other site may show these pages in a frame. Even injected markup could not run a script.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Aura's voice input needs the microphone on this site; nothing needs the rest.
+		Permissions-Policy "microphone=(self), camera=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+	}
+
 	handle /api/* {
-		reverse_proxy backend:8000
+		reverse_proxy backend:8000 {
+			# Exactly one address reaches the backend: the visitor's, as worked out above.
+			header_up X-Forwarded-For {client_ip}
+			header_down -Server
+		}
+	}
+
+	# A body refused for size gets the API's usual error shape, so the page can show the reason.
+	handle_errors 413 {
+		header Content-Type application/json
+		respond `{"error":{"code":"file_too_large","message":"Files can be at most 10 MB"}}` 413
 	}
 
 	# Built files have a content hash in their name, so they can be cached for good.

@@ -218,6 +218,27 @@ def test_demo_redirect_sends_everything_to_one_inbox(
     assert _email(client, people["rep"], lead)["delivered_to"] == "demo-inbox@unify.example.com"
 
 
+def test_without_a_redirect_real_recipients_must_be_switched_on(
+    client: TestClient,
+    people: dict[str, Headers],
+    fake_llm: FakeLLMClient,
+    fake_mailer: FakeEmailSender,
+    lead: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fail closed: a missing EMAIL_REDIRECT_TO must not let the demo email strangers."""
+    monkeypatch.setattr(get_settings(), "email_redirect_to", None)
+    monkeypatch.setattr(get_settings(), "email_send_to_real_recipients", False)
+    _, approval_id = _pending_approval(client, people, fake_llm, lead)
+
+    _decide(client, people["manager"], approval_id, "approve")
+
+    assert fake_mailer.sent == []
+    email = _email(client, people["rep"], lead)
+    assert email["status"] == "failed"
+    assert "real recipients is switched off" in email["error"]
+
+
 def test_rejected_email_is_never_sent(
     client: TestClient,
     people: dict[str, Headers],

@@ -3,6 +3,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
+from typing import NamedTuple
 
 import bcrypt
 import jwt
@@ -31,21 +32,34 @@ def burn_password_check() -> None:
     verify_password("not-the-password", _dummy_hash())
 
 
-def create_access_token(user_id: uuid.UUID, now: datetime | None = None) -> str:
+class TokenClaims(NamedTuple):
+    user_id: uuid.UUID
+    session_id: uuid.UUID
+
+
+def create_access_token(
+    user_id: uuid.UUID, session_id: uuid.UUID, now: datetime | None = None
+) -> str:
     issued = now or datetime.now(UTC)
-    claims = {"sub": str(user_id), "iat": issued, "exp": issued + timedelta(seconds=JWT_TTL_S)}
+    claims = {
+        "sub": str(user_id),
+        "sid": str(session_id),
+        "iat": issued,
+        "exp": issued + timedelta(seconds=JWT_TTL_S),
+    }
     return jwt.encode(claims, get_settings().jwt_secret.get_secret_value(), JWT_ALGORITHM)
 
 
-def read_access_token(token: str) -> uuid.UUID | None:
-    """User ID from a valid, unexpired token; None for anything else."""
+def read_access_token(token: str) -> TokenClaims | None:
+    """User and session from a valid, unexpired token; None for anything else. Whether the session
+    is still open is checked against the database by the caller."""
     try:
         claims = jwt.decode(
             token,
             get_settings().jwt_secret.get_secret_value(),
             algorithms=[JWT_ALGORITHM],
-            options={"require": ["sub", "exp", "iat"]},
+            options={"require": ["sub", "sid", "exp", "iat"]},
         )
-        return uuid.UUID(claims["sub"])
-    except (jwt.PyJWTError, ValueError):
+        return TokenClaims(uuid.UUID(claims["sub"]), uuid.UUID(claims["sid"]))
+    except (jwt.PyJWTError, ValueError, TypeError):
         return None

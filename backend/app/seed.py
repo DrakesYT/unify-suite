@@ -18,7 +18,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import DEMO_DOMAIN, PASSWORD_MAX_BYTES, PASSWORD_MIN_LEN
+from app.config import DEMO_DOMAIN, DEMO_PASSWORD_MIN_LEN, PASSWORD_MAX_BYTES
 from app.db import session_factory
 from app.models import (
     Candidate,
@@ -607,8 +607,8 @@ def demo_invoice_lines(
 
 def main() -> int:
     password = getpass.getpass("Password for every demo user: ")
-    if not PASSWORD_MIN_LEN <= len(password.encode()) <= PASSWORD_MAX_BYTES:
-        print(f"Use {PASSWORD_MIN_LEN}-{PASSWORD_MAX_BYTES} characters.", file=sys.stderr)
+    if not DEMO_PASSWORD_MIN_LEN <= len(password.encode()) <= PASSWORD_MAX_BYTES:
+        print(f"Use {DEMO_PASSWORD_MIN_LEN}-{PASSWORD_MAX_BYTES} characters.", file=sys.stderr)
         return 1
     if getpass.getpass("Repeat password: ") != password:
         print("Passwords do not match.", file=sys.stderr)

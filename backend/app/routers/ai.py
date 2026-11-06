@@ -1,10 +1,10 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.db import DbSession
-from app.deps import CurrentUser, require_roles
-from app.llm import LLM, OptionalLLM
+from app.deps import CurrentUser, require_roles, spend_ai_run
+from app.llm import LLM, LLMClient, get_optional_llm
 from app.models.enums import Role
 from app.schemas.aura import AuraReply, AuraRequest
 from app.schemas.brief import Brief, QuickAction
@@ -23,11 +23,19 @@ def chat(body: AuraRequest, db: DbSession, user: CurrentUser, llm: LLM) -> AuraR
 
 @router.get("/brief", dependencies=LEADERS)
 def morning_brief(
-    db: DbSession, user: CurrentUser, llm: OptionalLLM, writer: Literal["model", "code"] = "model"
+    request: Request,
+    db: DbSession,
+    user: CurrentUser,
+    llm: Annotated[LLMClient | None, Depends(get_optional_llm)],
+    writer: Literal["model", "code"] = "model",
 ) -> Brief:
     """Facts gathered by code, worded by the Brief Writer, then checked by code.
-    `writer=code` returns the instant code-written version (shown while the model writes)."""
-    return brief.morning_brief(db, llm if writer == "model" else None, user)
+    `writer=code` returns the instant code-written version (shown while the model writes);
+    only the model-written one spends an AI run."""
+    model = llm if writer == "model" else None
+    if model is not None:
+        spend_ai_run(request, user)
+    return brief.morning_brief(db, model, user)
 
 
 @router.get("/quick-actions", dependencies=LEADERS)

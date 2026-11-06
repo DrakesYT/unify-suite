@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import SESSION_COOKIE
 from app.models import AuditLog, User
 from app.models.enums import Department, Role
 
@@ -34,7 +35,8 @@ def test_demo_user_lists_and_switches_to_another_demo_account(
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["user"]["email"] == clerk.email
-    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    new_token = res.cookies[SESSION_COOKIE]
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {new_token}"})
     assert me.json()["role"] == "employee"
 
     log = db.scalar(select(AuditLog).where(AuditLog.action == "auth.demo_switch"))

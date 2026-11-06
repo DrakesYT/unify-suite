@@ -3,9 +3,10 @@
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 
 from app.config import get_settings
+from app.deps import CurrentUser, spend_ai_run
 from app.errors import ApiError
 from app.llm.base import LLMClient, LLMError, LLMOutputError
 from app.llm.vultr import VultrLLMClient
@@ -38,7 +39,15 @@ def get_llm() -> LLMClient:
     return _vultr_client()
 
 
-LLM = Annotated[LLMClient, Depends(get_llm)]
+def _metered_llm(
+    llm: Annotated[LLMClient, Depends(get_llm)], request: Request, user: CurrentUser
+) -> LLMClient:
+    """Every request that gets the model spends one AI run from the caller's budget."""
+    spend_ai_run(request, user)
+    return llm
+
+
+LLM = Annotated[LLMClient, Depends(_metered_llm)]
 
 
 def get_optional_llm() -> LLMClient | None:
@@ -46,4 +55,12 @@ def get_optional_llm() -> LLMClient | None:
     return _vultr_client() if get_settings().llm_api_key is not None else None
 
 
-OptionalLLM = Annotated[LLMClient | None, Depends(get_optional_llm)]
+def _metered_optional_llm(
+    llm: Annotated[LLMClient | None, Depends(get_optional_llm)], request: Request, user: CurrentUser
+) -> LLMClient | None:
+    if llm is not None:
+        spend_ai_run(request, user)
+    return llm
+
+
+OptionalLLM = Annotated[LLMClient | None, Depends(_metered_optional_llm)]

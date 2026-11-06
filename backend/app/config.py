@@ -9,8 +9,24 @@ DB_CONNECT_TIMEOUT_S = 5
 
 JWT_ALGORITHM = "HS256"
 JWT_TTL_S = 8 * 60 * 60  # tokens are valid for 8 hours
+# Browsers carry the token in this cookie: HttpOnly (page scripts can't read it), SameSite=Strict,
+# and sent only to /api. A cookie-authenticated request that changes data must also carry the CSRF
+# header: another site can't add a custom header to a request without CORS, which this API
+# never allows.
+SESSION_COOKIE = "unify_session"
+SESSION_COOKIE_PATH = "/api"
+CSRF_HEADER = "X-Requested-With"
+CSRF_HEADER_VALUE = "unify"
+LOGIN_WINDOW_S = 15 * 60
+LOGIN_FAILURES_PER_ACCOUNT = 5  # wrong passwords for one email from one IP per window
+LOGIN_FAILURES_PER_IP = 20  # wrong passwords from one IP (any email) per window
+AI_WINDOW_S = 10 * 60
+AI_RUNS_PER_USER = 30  # model-backed requests per user per window
+AI_RUNS_PER_IP = 60  # ...and per IP, so switching demo roles doesn't multiply the budget
 BCRYPT_ROUNDS = 12
-PASSWORD_MIN_LEN = 8
+PASSWORD_MIN_LEN = 12  # real accounts (python -m app.cli create-user)
+# The one shared demo password is handed to judges; rate limits, not length, protect it.
+DEMO_PASSWORD_MIN_LEN = 8
 PASSWORD_MAX_BYTES = 72  # bcrypt ignores anything longer, so longer passwords are refused
 
 PAGE_LIMIT_DEFAULT = 50
@@ -43,6 +59,8 @@ class Settings(BaseSettings):
     database_url: str
     jwt_secret: SecretStr = Field(min_length=32)
     log_level: str = "INFO"
+    # Only ever false for the test client, which talks plain http to a fake host.
+    session_cookie_secure: bool = True
     upload_dir: str = "/data/uploads"
     llm_base_url: str = "https://api.vultrinference.com/v1"
     llm_model: str = "glm-5.3-flash"
@@ -52,6 +70,9 @@ class Settings(BaseSettings):
     email_from: str = "UNIFY SUITE <onboarding@resend.dev>"
     # Demo safety: when set, every email goes to this one address instead of the real recipient.
     email_redirect_to: str | None = None
+    # Without a redirect, approved emails are refused unless real recipients are switched on here:
+    # a missing setting must never turn the demo into a way to email strangers.
+    email_send_to_real_recipients: bool = False
     # Sales target shown on the dashboard gauge: whole units of the currency per quarter.
     sales_quarter_target: int = Field(default=250_000, ge=1)
     sales_target_currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")

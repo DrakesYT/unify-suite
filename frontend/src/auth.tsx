@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { api, getToken, setToken, SIGNED_OUT_EVENT } from "./api";
+import { api, hasSignedInHint, setSignedInHint, SIGNED_OUT_EVENT } from "./api";
 import { LogoLoader } from "./components/LogoLoader";
 import { AuthContext } from "./session";
 import type { User } from "./types";
@@ -18,18 +18,21 @@ interface Cover {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(Boolean(getToken()));
+  // The session cookie is invisible to scripts, so every load asks the server who is signed in.
+  // `restoring`: this browser signed in before, so show the logo while the server confirms it.
+  const [restoring] = useState(hasSignedInHint);
+  const [loading, setLoading] = useState(true);
   // Full-screen logo over the switch between the sign-in page and the app (both directions).
   const [cover, setCover] = useState<Cover | null>(null);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
-    if (getToken()) {
-      Promise.all([api<User>("/auth/me").catch(() => null), wait(HOLD_MS)]).then(([me]) => {
-        setUser(me);
-        setLoading(false);
-      });
-    }
+    const me = api<User>("/auth/me").catch(() => null);
+    Promise.all([me, restoring ? wait(HOLD_MS) : null]).then(([found]) => {
+      setSignedInHint(Boolean(found));
+      setUser(found);
+      setLoading(false);
+    });
     const onSignedOut = () => setUser(null);
     window.addEventListener(SIGNED_OUT_EVENT, onSignedOut);
     const pending = timers.current;
@@ -37,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener(SIGNED_OUT_EVENT, onSignedOut);
       pending.forEach(clearTimeout);
     };
-  }, []);
+  }, [restoring]);
 
   /** Show the logo, run `atEnd` when it has had its moment, then fade the cover away. */
   const showCover = useCallback((label: string, atEnd?: () => void) => {
@@ -53,35 +56,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const res = await api<{ access_token: string; user: User }>("/auth/login", {
+    const res = await api<{ user: User }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    setToken(res.access_token);
+    setSignedInHint(true);
     // The app opens behind the logo, so its first data is usually in by the time it fades.
     showCover("Opening your workspace…");
     setUser(res.user);
   };
 
   const switchTo = async (email: string) => {
-    const res = await api<{ access_token: string; user: User }>("/auth/demo-switch", {
+    const res = await api<{ user: User }>("/auth/demo-switch", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
-    setToken(res.access_token);
     setUser(res.user);
     return res.user;
   };
 
   const signOut = () => {
+    // End the session on the server straight away; the cover only paces what the user sees.
+    api("/auth/logout", { method: "POST" }).catch(() => undefined);
     showCover("Signing you out…", () => {
-      setToken(null);
+      setSignedInHint(false);
       setUser(null);
     });
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut, switchTo }}>
+    <AuthContext.Provider value={{ user, loading, restoring, signIn, signOut, switchTo }}>
       {children}
       {cover && (
         <div

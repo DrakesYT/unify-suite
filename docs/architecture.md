@@ -129,13 +129,20 @@ flowchart LR
 - Demo data: `python -m app.seed` creates the demo company idempotently (natural keys: email, vendor name, PO
   number, …). AI results are not pre-filled; they come from running the agents.
 - The frontend container serves `index.html` with `Cache-Control: no-cache` and hashed `/assets/*` as immutable, so a
-  new release is picked up on the next page load.
+  new release is picked up on the next page load. Its Caddy also sets the security headers (Content Security Policy,
+  HSTS, frame denial, `nosniff`, referrer and permissions policies), refuses bodies over 12 MB, and works out the
+  visitor's IP from `X-Forwarded-For` trusting only private-network proxies (Coolify's), passing that single address
+  to the backend.
 - Lists use cursor pagination: `?limit=&cursor=`, newest first.
 - Schema is managed by Alembic (`backend/alembic/`) and applied on backend start-up. `audit_logs` is
   append-only: a PostgreSQL trigger rejects `UPDATE` and `DELETE`.
-- Auth: `POST /api/auth/login` returns an HS256 JWT valid 8 h (bcrypt password hashes). Each user has one
-  role and one department. `POST /api/auth/demo-switch` lets a signed-in `@demo.example.com` account get a
-  token for another demo account (the guided tour and the "View as" menu use it). The demo accounts share
+- Auth: `POST /api/auth/login` opens a row in `user_sessions` and sets the HS256 JWT (valid 8 h, names the
+  session) as an `HttpOnly`, `Secure`, `SameSite=Strict` cookie on `/api`; bcrypt password hashes. Every request
+  checks that the session is still open, so `POST /api/auth/logout` ends the token at once. Cookie requests that
+  change data need the `X-Requested-With: unify` header (CSRF); Bearer tokens are accepted for API clients. Failed
+  sign-ins and model-backed requests are rate limited in memory (`app/ratelimit.py`; one backend process). Each
+  user has one role and one department. `POST /api/auth/demo-switch` lets a signed-in `@demo.example.com` account
+  switch to another demo account (closing the old session) (the guided tour and the "View as" menu use it). The demo accounts share
   one password, so this adds no access; admins and real accounts can neither switch nor be switched to,
   and every switch is audited. Department routers use one guard:
 

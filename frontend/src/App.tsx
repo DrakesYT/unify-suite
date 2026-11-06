@@ -28,8 +28,9 @@ const DEPARTMENT_HOME: Partial<Record<Department, string>> = {
 };
 
 function RequireUser({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return <LogoLoader label="Checking your sign-in…" fullScreen immediate />;
+  const { user, loading, restoring } = useAuth();
+  if (loading)
+    return <LogoLoader label="Checking your sign-in…" fullScreen immediate={restoring} />;
   return user ? children : <Navigate to="/login" replace />;
 }
 

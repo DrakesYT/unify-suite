@@ -38,7 +38,7 @@ flowchart LR
   workflow steps) runs as FastAPI background tasks; the UI polls every 5 s.
 - **db** — PostgreSQL 16, schema managed by Alembic. The audit log is append-only (a trigger rejects edits).
 - Auth is a JWT with one role (`admin`, `manager`, `employee`, `executive`) and one department per user; the backend
-  checks both on every endpoint and every tool call.
+  checks both on every endpoint and every tool call. See [Security](#security).
 
 More detail (agent time limits, ranking formulas, permission table): [docs/architecture.md](docs/architecture.md).
 
@@ -163,6 +163,33 @@ cd backend && uv run pytest && uv run ruff check . && uv run ruff format --check
 cd frontend && npm run lint && npm run format:check && npm run build
 ```
 
+## Security
+
+- **Sessions.** Signing in opens a server-side session and sets an `HttpOnly`, `Secure`, `SameSite=Strict` cookie
+  limited to `/api`, so no script on the page can read the token. Signing out (or switching demo role) closes the
+  session on the server, so the token stops working at once. Data-changing requests sent with the cookie must carry
+  an `X-Requested-With` header, which other sites cannot add (CSRF). API clients can send the token as a Bearer
+  header instead.
+- **Access.** Every endpoint except `/api/health` and `/api/auth/login` needs a session; role and department are
+  checked on each request and each agent tool call. Approvals check the approver's role and department and refuse
+  self-approval. Request schemas list the fields they accept, so statuses, owners and approvals cannot be set directly.
+- **Rate limits.** 5 wrong passwords per email and IP, and 20 per IP, every 15 minutes (there is no lock-out of an
+  account on its own, so nobody can lock others out of a shared demo account). Model-backed requests are limited to
+  30 per user and 60 per IP every 10 minutes.
+- **Passwords.** bcrypt hashes; new accounts need 12+ characters that are not a common password and do not contain
+  the email name or the product name. Wrong email and wrong password get the same answer in the same time.
+- **Input.** Every request body is a Pydantic model with types and lengths. Uploads: PDF, CSV or TXT only, checked by
+  content, 10 MB (the web server refuses bodies over 12 MB), stored under random names outside the web root and never
+  served back. All database queries are parameterised. Documents are untrusted: text that tries to instruct the AI is
+  flagged and can only influence schema-checked output.
+- **Browser.** A Content Security Policy allows only this site's own scripts, styles and API; pages cannot be framed;
+  HSTS, `nosniff`, a strict referrer policy and a permissions policy (microphone only, for Aura's voice input) are
+  set on every response. API answers are `Cache-Control: no-store`. Errors never include stack traces.
+- **Email.** Approved emails go to `EMAIL_REDIRECT_TO` when it is set; without it they are refused unless
+  `EMAIL_SEND_TO_REAL_RECIPIENTS=true`, so a missing setting can never email real people.
+- **Secrets.** Keys live only in environment variables (Coolify in production). Dependencies are checked with
+  `pip-audit` and `npm audit`.
+
 ## Deploy
 
 Coolify on the Vultr VM builds `docker-compose.yml` from this repository on every push. The public domain is
@@ -179,6 +206,7 @@ attached to the `frontend` service (port 80); no other service is exposed.
 | `RESEND_API_KEY` | backend | Optional. [Resend](https://resend.com) key for sending approved emails. Without it, approved emails are marked failed ("not configured"). |
 | `EMAIL_FROM` | backend | Optional, default `UNIFY SUITE <onboarding@resend.dev>`. |
 | `EMAIL_REDIRECT_TO` | backend | Optional demo safety: every email goes to this one inbox, with the real recipient noted at the top. |
+| `EMAIL_SEND_TO_REAL_RECIPIENTS` | backend | Optional, default `false`. Without a redirect, approved emails are only sent to their real recipients when this is `true`. |
 | `SALES_QUARTER_TARGET` | backend | Optional, default `250000`. Quarterly sales target (whole units) for the dashboard gauge. |
 | `SALES_TARGET_CURRENCY` | backend | Optional, default `USD`. Currency of the sales target. |
 | `LOG_LEVEL` | backend | Optional, default `INFO`. |

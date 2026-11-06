@@ -64,6 +64,8 @@ def add_request_context(app: FastAPI) -> None:
         try:
             response = await call_next(request)
             response.headers["X-Request-ID"] = request_id
+            # API answers carry business data: never keep them in a browser or proxy cache.
+            response.headers.setdefault("Cache-Control", "no-store")
             logger.info(
                 "request",
                 extra={

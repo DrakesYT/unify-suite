@@ -4,6 +4,8 @@ import type { Department, User } from "./types";
 export interface AuthState {
   user: User | null;
   loading: boolean;
+  /** This browser was signed in before: the load check is shown with the logo, on purpose. */
+  restoring: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
   /** Demo accounts only: become another seeded demo user (no password typed). */

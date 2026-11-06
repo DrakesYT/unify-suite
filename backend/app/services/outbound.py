@@ -176,9 +176,16 @@ def send(
     if redirect and redirect != email.to_address:
         text = f"[UNIFY SUITE demo: originally addressed to {email.to_address}]\n\n{text}"
 
+    real_recipients = get_settings().email_send_to_real_recipients
+
     def _send() -> dict[str, str]:
         if mailer is None:
             raise EmailError("email sending is not configured on this server")
+        if not redirect and not real_recipients:
+            raise EmailError(
+                "sending to real recipients is switched off on this server "
+                "(set EMAIL_REDIRECT_TO, or EMAIL_SEND_TO_REAL_RECIPIENTS=true)"
+            )
         message_id = mailer.send(OutgoingEmail(to=delivered_to, subject=email.subject, text=text))
         email.status = EmailStatus.sent
         email.delivered_to = delivered_to

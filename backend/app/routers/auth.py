@@ -1,16 +1,48 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Response
 
+from app.config import JWT_TTL_S, SESSION_COOKIE, SESSION_COOKIE_PATH, get_settings
 from app.db import DbSession
-from app.deps import CurrentUser
-from app.schemas.auth import DemoSwitchRequest, LoginRequest, TokenResponse, UserOut
+from app.deps import CurrentUser, client_ip
+from app.models import User
+from app.schemas.auth import DemoSwitchRequest, LoginRequest, SessionOut, UserOut
 from app.services import users
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+def _signed_in(response: Response, user: User, token: str) -> SessionOut:
+    """Hand the token to the browser as an HttpOnly cookie: page scripts can never read it."""
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=JWT_TTL_S,
+        path=SESSION_COOKIE_PATH,
+        secure=get_settings().session_cookie_secure,
+        httponly=True,
+        samesite="strict",
+    )
+    return SessionOut(expires_in=JWT_TTL_S, user=UserOut.model_validate(user))
+
+
 @router.post("/login")
-def login(data: LoginRequest, db: DbSession) -> TokenResponse:
-    return users.login(db, data)
+def login(data: LoginRequest, request: Request, db: DbSession, response: Response) -> SessionOut:
+    user, token = users.login(db, data, client_ip(request))
+    return _signed_in(response, user, token)
+
+
+@router.post("/logout", status_code=204)
+def logout(request: Request, db: DbSession, user: CurrentUser) -> Response:
+    """End this session on the server and remove the cookie."""
+    users.logout(db, user, request.state.session_id)
+    response = Response(status_code=204)
+    response.delete_cookie(
+        SESSION_COOKIE,
+        path=SESSION_COOKIE_PATH,
+        secure=get_settings().session_cookie_secure,
+        httponly=True,
+        samesite="strict",
+    )
+    return response
 
 
 @router.get("/me")
@@ -25,5 +57,8 @@ def demo_accounts(db: DbSession, user: CurrentUser) -> list[UserOut]:
 
 
 @router.post("/demo-switch")
-def demo_switch(data: DemoSwitchRequest, db: DbSession, user: CurrentUser) -> TokenResponse:
-    return users.switch_demo(db, user, data.email)
+def demo_switch(
+    data: DemoSwitchRequest, request: Request, db: DbSession, user: CurrentUser, response: Response
+) -> SessionOut:
+    target, token = users.switch_demo(db, user, data.email, request.state.session_id)
+    return _signed_in(response, target, token)

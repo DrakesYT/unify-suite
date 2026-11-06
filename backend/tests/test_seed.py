@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import SESSION_COOKIE
 from app.llm.fake import FakeLLMClient
 from app.models import Candidate, Lead, Payment, PurchaseOrder, User
 from app.seed import DEMO_DOMAIN, USERS, demo_invoice_lines, seed
@@ -17,7 +18,7 @@ def _login(client: TestClient, handle: str) -> dict[str, str]:
         "/api/auth/login", json={"email": f"{handle}@{DEMO_DOMAIN}", "password": PASSWORD}
     )
     assert res.status_code == 200, res.text
-    return {"Authorization": f"Bearer {res.json()['access_token']}"}
+    return {"Authorization": f"Bearer {res.cookies[SESSION_COOKIE]}"}
 
 
 def test_seed_is_complete_and_repeatable(db: Session) -> None:

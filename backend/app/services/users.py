@@ -1,15 +1,17 @@
 import logging
+import uuid
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import DEMO_DOMAIN, JWT_TTL_S
+from app import ratelimit
+from app.config import DEMO_DOMAIN
 from app.errors import ApiError
 from app.models import User
 from app.models.enums import Role
-from app.schemas.auth import LoginRequest, TokenResponse, UserCreate, UserOut
-from app.security import burn_password_check, create_access_token, hash_password, verify_password
-from app.services import audit
+from app.schemas.auth import LoginRequest, UserCreate
+from app.security import burn_password_check, hash_password, verify_password
+from app.services import audit, sessions
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +46,25 @@ def create_user(db: Session, data: UserCreate, actor: User | None = None) -> Use
     return user
 
 
-def login(db: Session, data: LoginRequest) -> TokenResponse:
+def login(db: Session, data: LoginRequest, client_ip: str) -> tuple[User, str]:
+    """Check the password and open a session: the user and their new access token.
+    Too many wrong passwords from one place are refused before the password is even checked."""
+    account_key = f"{data.email}|{client_ip}"
+    wait = max(
+        ratelimit.login_failures_by_ip.retry_after(client_ip),
+        ratelimit.login_failures_by_account.retry_after(account_key),
+    )
+    if wait:
+        audit.record(db, action="auth.login_throttled", entity="user", detail={"email": data.email})
+        db.commit()
+        raise ratelimit.too_many("Too many failed sign-in attempts.", wait)
+
     user = db.scalar(select(User).where(User.email == data.email))
     if user is None:
         burn_password_check()
     if user is None or not verify_password(data.password, user.password_hash):
+        ratelimit.login_failures_by_ip.hit(client_ip)
+        ratelimit.login_failures_by_account.hit(account_key)
         audit.record(db, action="auth.login_failed", entity="user", detail={"email": data.email})
         db.commit()
         logger.info("login_failed")
@@ -56,13 +72,17 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
     if not user.is_active:
         raise ApiError(403, "account_disabled", "This account is disabled")
 
+    ratelimit.login_failures_by_account.reset(account_key)
+    token = sessions.start(db, user)
     audit.record(db, action="auth.login", entity="user", entity_id=user.id, actor_id=user.id)
     db.commit()
-    return TokenResponse(
-        access_token=create_access_token(user.id),
-        expires_in=JWT_TTL_S,
-        user=UserOut.model_validate(user),
-    )
+    return user, token
+
+
+def logout(db: Session, user: User, session_id: uuid.UUID) -> None:
+    sessions.revoke(db, session_id)
+    audit.record(db, action="auth.logout", entity="user", entity_id=user.id, actor_id=user.id)
+    db.commit()
 
 
 # --- Demo accounts: judges can look at the app as any seeded role without re-typing a password ---
@@ -88,7 +108,7 @@ def demo_accounts(db: Session, user: User) -> list[User]:
     return [u for u in rows if is_demo(u)]
 
 
-def switch_demo(db: Session, user: User, email: str) -> TokenResponse:
+def switch_demo(db: Session, user: User, email: str, session_id: uuid.UUID) -> tuple[User, str]:
     """Sign in as another demo account. All demo accounts share one password, so this grants
     nothing a demo user could not already do; real accounts can neither switch nor be reached."""
     _require_demo(user)
@@ -103,9 +123,7 @@ def switch_demo(db: Session, user: User, email: str) -> TokenResponse:
         actor_id=user.id,
         detail={"from": user.email, "to": target.email},
     )
+    sessions.revoke(db, session_id)  # the old role's token stops working at once
+    token = sessions.start(db, target)
     db.commit()
-    return TokenResponse(
-        access_token=create_access_token(target.id),
-        expires_in=JWT_TTL_S,
-        user=UserOut.model_validate(target),
-    )
+    return target, token

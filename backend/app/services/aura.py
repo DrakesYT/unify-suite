@@ -14,6 +14,7 @@ from app.models.enums import Department, JobStatus
 from app.schemas.aura import ROUTES, AuraDecision, AuraReply, AuraRequest
 from app.services import hr, procurement, sales, support
 from app.services.authz import can_access
+from app.services.search import contains_pattern
 
 # route → (department agent, department, model, searchable column, app page)
 TARGETS = {
@@ -49,7 +50,7 @@ def _find(db: Session, model, column, target: str | None):  # type: ignore[no-un
     if target:
         words = [w for w in target.replace(",", " ").split() if len(w) > 2] or [target]
         for word in words:
-            stmt = stmt.where(column.ilike(f"%{word}%"))
+            stmt = stmt.where(column.ilike(contains_pattern(word), escape="\\"))
     if model is Job:
         stmt = stmt.where(Job.status == JobStatus.open)
     return db.scalar(stmt)

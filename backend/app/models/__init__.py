@@ -8,6 +8,7 @@ from app.models.finance import Invoice, InvoiceAnomaly, Payment, Transaction
 from app.models.hr import Candidate, CandidateScore, InterviewSlot, Job
 from app.models.procurement import PurchaseOrder, PurchaseRequest, Vendor, VendorQuote
 from app.models.sales import Customer, Lead, Order
+from app.models.sessions import UserSession
 from app.models.support import Ticket
 from app.models.uploads import Upload
 from app.models.users import User
@@ -42,6 +43,7 @@ __all__ = [
     "Transaction",
     "Upload",
     "User",
+    "UserSession",
     "Vendor",
     "VendorQuote",
     "WorkflowDefinition",
