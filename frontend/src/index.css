@@ -10,8 +10,184 @@
   --color-accent-soft: #c4b5fd;
 }
 
+/* One motion language for the whole app: three curves, durations as multiples of one base.
+   Arrivals ease out, exits accelerate away and take about two thirds of the time. */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-inout: cubic-bezier(0.87, 0, 0.13, 1);
+  --dur-fast: 160ms; /* menus, popovers, a badge that changed */
+  --dur-base: 260ms; /* pages, cards, list rows */
+  --dur-slow: 360ms; /* drawers, toasts, dialogs */
+  --rise: 8px;
+  --pop-scale: 0.97;
+  --slide: 100%;
+}
+
 body {
   @apply bg-navy-950 text-slate-100 antialiased;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise));
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--pop-scale));
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translateX(var(--slide));
+  }
+}
+@keyframes slide-out-right {
+  to {
+    transform: translateX(var(--slide));
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--rise) * 2));
+  }
+}
+@keyframes shake {
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+@keyframes value-changed {
+  from {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+}
+@keyframes grow-down {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes working {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Something arrived: a page, a card, a row, a message. */
+.anim-rise {
+  animation: rise-in var(--dur-base) var(--ease-out) var(--delay, 0ms) backwards;
+}
+/* A page or a large surface arriving once (sign-in card, hero). */
+.anim-rise-slow {
+  --rise: 14px;
+  animation: rise-in 520ms var(--ease-emphasized) var(--delay, 0ms) backwards;
+}
+/* A menu or popover opening from its trigger. */
+.anim-pop {
+  transform-origin: var(--origin, top right);
+  animation: pop-in var(--dur-fast) var(--ease-out) backwards;
+}
+.anim-fade {
+  animation: fade-in var(--dur-fast) var(--ease-out) backwards;
+}
+.anim-fade-out {
+  animation: fade-out 160ms var(--ease-exit) forwards;
+}
+.anim-drawer-in {
+  animation: slide-in-right var(--dur-slow) var(--ease-emphasized) backwards;
+}
+.anim-drawer-out {
+  animation: slide-out-right 220ms var(--ease-exit) forwards;
+}
+.anim-toast-in {
+  --rise: 12px;
+  --pop-scale: 0.98;
+  animation: rise-in var(--dur-slow) var(--ease-emphasized) backwards;
+}
+.anim-toast-out {
+  animation: toast-out 180ms var(--ease-exit) forwards;
+}
+/* A wrong answer (bad password): a short horizontal shake, never a bounce. */
+.anim-shake {
+  animation: shake 360ms var(--ease-inout);
+}
+/* A status that just changed under the user's eyes (a poll moved it on). */
+.anim-changed {
+  animation: value-changed var(--dur-fast) var(--ease-out);
+}
+/* A check mark drawing itself once. */
+.anim-draw path {
+  stroke-dasharray: 24;
+  animation: draw 280ms var(--ease-out) var(--delay, 0ms) backwards;
+}
+.anim-grow-down {
+  transform-origin: top;
+  animation: grow-down 320ms var(--ease-out) backwards;
+}
+.anim-working {
+  animation: working 1s linear infinite;
+}
+
+/* Children arrive one after another, 40 ms apart; after the eighth they all arrive together. */
+.stagger > * {
+  animation: rise-in var(--dur-base) var(--ease-out) backwards;
+}
+.stagger > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.stagger > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.stagger > :nth-child(4) {
+  animation-delay: 120ms;
+}
+.stagger > :nth-child(5) {
+  animation-delay: 160ms;
+}
+.stagger > :nth-child(6) {
+  animation-delay: 200ms;
+}
+.stagger > :nth-child(7) {
+  animation-delay: 240ms;
+}
+.stagger > :nth-child(n + 8) {
+  animation-delay: 280ms;
+}
+
+/* The sign-in panel's dotted backdrop. */
+.dot-grid {
+  background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1.2px);
+  background-size: 22px 22px;
 }
 
 /* A row someone jumped to (search result, dashboard link) is outlined for a moment. */
@@ -31,8 +207,114 @@ body {
   border-radius: 0.5rem;
 }
 
+/* Reduce, don't remove: nothing travels, scales or shakes; arrivals become short fades and every
+   state change keeps its colour, icon or label. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --rise: 0px;
+    --pop-scale: 1;
+    --slide: 0px;
+  }
+  .anim-rise-slow,
+  .anim-toast-in {
+    --rise: 0px;
+    --pop-scale: 1;
+  }
+  .anim-rise,
+  .anim-rise-slow,
+  .anim-pop,
+  .anim-toast-in,
+  .stagger > * {
+    animation-duration: 150ms;
+    animation-delay: 0ms;
+  }
+  .anim-drawer-in {
+    animation-name: fade-in;
+    animation-duration: 150ms;
+  }
+  .anim-drawer-out {
+    animation-name: fade-out;
+    animation-duration: 120ms;
+  }
+  .anim-shake,
+  .anim-changed,
+  .anim-grow-down,
+  .anim-working,
+  .anim-draw path,
   .flash-focus {
+    animation: none;
+  }
+}
+
+/* Logo loader: fades in only after 300 ms (a fast load never flashes it), the U draws itself, the
+   centre bar drops in, then the extruded mark swings slowly left and right like a coin on a stand. */
+.logo-loader {
+  animation: fade-in 200ms var(--ease-out) 300ms backwards;
+}
+.logo-loader-stage {
+  position: relative;
+  width: 88px;
+  height: 104px;
+  perspective: 480px;
+}
+.logo-loader-mark {
+  position: absolute;
+  inset: 0 0 16px;
+  transform-style: preserve-3d;
+  transform: rotateX(10deg) rotateY(-28deg);
+  animation: logo-swing 2.6s cubic-bezier(0.45, 0, 0.55, 1) 300ms infinite alternate;
+}
+.logo-loader-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: translateZ(var(--z));
+}
+.logo-loader-u {
+  stroke-dasharray: 40;
+  animation: logo-draw 700ms var(--ease-out) 300ms backwards;
+}
+.logo-loader-bar {
+  stroke-dasharray: 8;
+  animation: logo-draw-bar 280ms var(--ease-out) 850ms backwards;
+}
+.logo-loader-shadow {
+  position: absolute;
+  bottom: 0;
+  left: 18%;
+  width: 64%;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.45);
+  transform: scaleX(0.82);
+  animation: logo-shadow 1.3s cubic-bezier(0.45, 0, 0.55, 1) 300ms infinite alternate;
+}
+@keyframes logo-swing {
+  to {
+    transform: rotateX(10deg) rotateY(28deg);
+  }
+}
+@keyframes logo-shadow {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes logo-draw {
+  from {
+    stroke-dashoffset: 40;
+  }
+}
+@keyframes logo-draw-bar {
+  from {
+    stroke-dashoffset: 8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-loader-mark,
+  .logo-loader-shadow,
+  .logo-loader-u,
+  .logo-loader-bar {
     animation: none;
   }
 }

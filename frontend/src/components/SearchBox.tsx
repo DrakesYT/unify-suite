@@ -111,7 +111,7 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
         </kbd>
       </label>
       {open && query.length >= MIN_CHARS && (
-        <div className="absolute right-0 z-50 mt-2 w-full min-w-72 overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/50">
+        <div className="anim-pop absolute right-0 z-50 mt-2 w-full min-w-72 overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/50">
           {error && <p className="px-4 py-3 text-sm text-red-300">{error}</p>}
           {!error && shown === null && (
             <p className="px-4 py-3 text-sm text-slate-500">Searching…</p>

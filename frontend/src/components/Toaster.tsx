@@ -4,11 +4,13 @@ import { CheckIcon, CloseIcon, InfoIcon } from "./icons";
 
 const SHOW_MS = 4500;
 const MAX_SHOWN = 3;
+const EXIT_MS = 180; // matches .anim-toast-out
 
 interface Item {
   id: number;
   message: string;
   tone: ToastTone;
+  leaving?: boolean; // playing its exit; removed when that ends
 }
 
 const TONE: Record<ToastTone, { box: string; icon: ReactNode }> = {
@@ -31,9 +33,13 @@ export function Toaster({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Item[]>([]);
   const next = useRef(1);
 
+  const remove = useCallback((id: number) => setItems((all) => all.filter((t) => t.id !== id)), []);
   const dismiss = useCallback(
-    (id: number) => setItems((all) => all.filter((t) => t.id !== id)),
-    [],
+    (id: number) => {
+      setItems((all) => all.map((t) => (t.id === id ? { ...t, leaving: true } : t)));
+      setTimeout(() => remove(id), EXIT_MS);
+    },
+    [remove],
   );
   useEffect(() => {
     const onToast = (e: Event) => {
@@ -57,7 +63,7 @@ export function Toaster({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             role={t.tone === "error" ? "alert" : "status"}
-            className={`pointer-events-auto flex w-full items-start gap-2.5 rounded-xl border bg-navy-900/95 px-3.5 py-2.5 text-sm shadow-2xl shadow-black/50 backdrop-blur sm:w-96 ${TONE[t.tone].box}`}
+            className={`${t.leaving ? "anim-toast-out" : "anim-toast-in"} pointer-events-auto flex w-full items-start gap-2.5 rounded-xl border bg-navy-900/95 px-3.5 py-2.5 text-sm shadow-2xl shadow-black/50 backdrop-blur sm:w-96 ${TONE[t.tone].box}`}
           >
             <span className="mt-0.5 shrink-0">{TONE[t.tone].icon}</span>
             <span className="min-w-0 flex-1">{t.message}</span>

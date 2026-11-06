@@ -214,7 +214,7 @@ export function Approvals() {
         ))}
       </div>
       <ErrorNote message={error} />
-      <div className="space-y-4" data-tour="approvals">
+      <div className="stagger space-y-4" data-tour="approvals">
         {!data && !error && <Loading rows={3} />}
         {data?.items.length === 0 && (
           <Empty

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { label } from "../format";
 
 const TONES: Record<string, string> = {
@@ -44,8 +44,14 @@ const TONES: Record<string, string> = {
 
 export function Badge({ value }: { value: string }) {
   const tone = TONES[value] ?? "bg-slate-500/15 text-slate-300";
+  // A status that changes while on screen (a poll moved it on) pops once; a fresh page does not.
+  const [first] = useState(value);
+  const changed = value !== first;
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}>
+    <span
+      key={value}
+      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${tone} ${changed ? "anim-changed" : ""}`}
+    >
       {label(value)}
     </span>
   );
@@ -151,8 +157,9 @@ export function Loading({ rows = 3 }: { rows?: number }) {
   );
 }
 
+// Press feedback: a slight squeeze that lands faster than it lets go (tone stays the main cue).
 export const buttonClass =
-  "rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-lg px-4 py-2 text-sm font-medium transition duration-200 active:scale-[0.97] active:duration-75 motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
 export const primaryButton = `${buttonClass} bg-accent-purple text-white hover:bg-accent-purple/85`;
 export const ghostButton = `${buttonClass} border border-navy-800 text-slate-200 hover:bg-navy-800`;
 export const dangerButton = `${buttonClass} bg-red-500/80 text-white hover:bg-red-500`;

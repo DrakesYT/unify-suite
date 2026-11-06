@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider } from "./auth";
 import { canRead, useAuth } from "./session";
 import { Layout } from "./components/Layout";
+import { LogoLoader } from "./components/LogoLoader";
 import { Toaster } from "./components/Toaster";
 import { Activity } from "./pages/Activity";
 import { Approvals } from "./pages/Approvals";
@@ -28,7 +29,7 @@ const DEPARTMENT_HOME: Partial<Record<Department, string>> = {
 
 function RequireUser({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <p className="p-8 text-slate-500">Loading…</p>;
+  if (loading) return <LogoLoader label="Checking your sign-in…" fullScreen />;
   return user ? children : <Navigate to="/login" replace />;
 }
 
@@ -59,7 +60,7 @@ export default function App() {
               <Route
                 path="dashboard"
                 element={
-                  <Suspense fallback={<p className="text-slate-500">Loading…</p>}>
+                  <Suspense fallback={<LogoLoader label="Loading the dashboard…" />}>
                     <Dashboard />
                   </Suspense>
                 }

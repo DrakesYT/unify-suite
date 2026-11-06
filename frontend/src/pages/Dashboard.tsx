@@ -118,7 +118,7 @@ export function Dashboard() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_370px]">
         <div className="min-w-0 space-y-5">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-5">
+          <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-3 2xl:grid-cols-5">
             <Kpi
               title="Sales pipeline"
               value={k ? sumText(k.sales_pipeline) : "…"}
@@ -152,7 +152,8 @@ export function Dashboard() {
           </div>
 
           {o ? (
-            <>
+            // The boards arrive top to bottom once, when the first poll lands (later polls don't replay it).
+            <div className="stagger space-y-5">
               <AgentBoard agents={o.agents} charts={charts.data} feed={feed.data} />
               <div className="grid gap-5 lg:grid-cols-2">
                 <DealBoard crm={o.crm} />
@@ -163,7 +164,7 @@ export function Dashboard() {
                 <SupportBoard support={o.support} />
               </div>
               <MoneyBoard data={o.money} />
-            </>
+            </div>
           ) : (
             <div className="grid gap-5 lg:grid-cols-2">
               {[0, 1, 2, 3].map((n) => (

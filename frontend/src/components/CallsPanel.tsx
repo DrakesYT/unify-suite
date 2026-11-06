@@ -253,7 +253,7 @@ export function CallsPanel({
   const [adding, setAdding] = useState(false);
 
   return (
-    <div className="mt-4 rounded-lg border border-navy-800 bg-navy-950/40 p-3">
+    <div className="anim-rise mt-4 rounded-lg border border-navy-800 bg-navy-950/40 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-slate-300">
           Calls {data && data.length > 0 && <span className="text-slate-500">({data.length})</span>}

@@ -52,6 +52,8 @@ function Fields({ fields }: { fields: Explanation["ai_read"] }) {
   );
 }
 
+const EXIT_MS = 220; // matches .anim-drawer-out
+
 /** Side panel: what the AI read, what it said, what code decided, who was involved. */
 function WhyDrawer({
   path,
@@ -65,6 +67,13 @@ function WhyDrawer({
   const [data, setData] = useState<Explanation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null); // nothing AI-made to explain
+  // Closing plays the slide-out first; the drawer unmounts once it is over (a timer, so a tab that
+  // isn't painting still closes).
+  const [leaving, setLeaving] = useState(false);
+  const close = useCallback(() => {
+    setLeaving(true);
+    window.setTimeout(onClose, EXIT_MS);
+  }, [onClose]);
 
   useEffect(() => {
     let live = true;
@@ -75,25 +84,25 @@ function WhyDrawer({
         if (e instanceof ApiError && e.code === "no_ai_result") setNotice(e.message);
         else setError(e instanceof Error ? e.message : "Could not load");
       });
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     document.addEventListener("keydown", onKey);
     return () => {
       live = false;
       document.removeEventListener("keydown", onKey);
     };
-  }, [path, onClose]);
+  }, [path, close]);
 
   return (
     <div className="fixed inset-0 z-[70] flex justify-end">
       <button
         aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 bg-[#040712]/60 backdrop-blur-[2px]"
+        onClick={close}
+        className={`${leaving ? "anim-fade-out" : "anim-fade"} absolute inset-0 bg-[#040712]/60 backdrop-blur-[2px]`}
       />
       <aside
         role="dialog"
         aria-label="Why the AI said this"
-        className="relative flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-white/10 bg-navy-900 shadow-2xl shadow-black/60"
+        className={`${leaving ? "anim-drawer-out" : "anim-drawer-in"} relative flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-white/10 bg-navy-900 shadow-2xl shadow-black/60`}
       >
         <header className="flex items-start gap-3 border-b border-white/5 px-5 py-4">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent-purple/25 text-accent-soft">
@@ -111,7 +120,7 @@ function WhyDrawer({
               </p>
             )}
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-white">
+          <button onClick={close} aria-label="Close" className="text-slate-400 hover:text-white">
             <CloseIcon />
           </button>
         </header>
@@ -126,7 +135,7 @@ function WhyDrawer({
             </div>
           )}
           {data && (
-            <>
+            <div className="stagger">
               <Section
                 icon={<EyeIcon size={14} />}
                 title="What the AI read"
@@ -212,7 +221,7 @@ function WhyDrawer({
                   ))}
                 </ol>
               </Section>
-            </>
+            </div>
           )}
         </div>
       </aside>

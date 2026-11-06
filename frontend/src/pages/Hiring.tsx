@@ -185,7 +185,7 @@ function ScoreCard({
           : `Show evidence (${s.evidence.length} ${s.evidence.length === 1 ? "quote" : "quotes"} from the resume)`}
       </button>
       {open && (
-        <ul className="mt-2 space-y-2">
+        <ul className="stagger mt-2 space-y-2">
           {s.evidence.map((e) => (
             <li
               key={e.requirement + e.quote}

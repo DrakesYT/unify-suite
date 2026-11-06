@@ -136,7 +136,7 @@ function TourOverlay() {
       {rect ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed z-[60] rounded-2xl ring-2 ring-accent-purple transition-all duration-300"
+          className="pointer-events-none fixed z-[60] rounded-2xl ring-2 ring-accent-purple transition-all duration-300 ease-[var(--ease-out)] motion-reduce:transition-none"
           style={{
             top: rect.top - PAD,
             left: rect.left - PAD,
@@ -152,9 +152,10 @@ function TourOverlay() {
         />
       )}
       <div
+        key={index}
         role="dialog"
         aria-label={`Tour step ${index + 1} of ${TOUR_STEPS.length}`}
-        className="fixed z-[61] rounded-2xl border border-accent-soft/30 bg-navy-900 p-5 shadow-2xl shadow-black/60"
+        className="anim-pop fixed z-[61] rounded-2xl [--origin:center] border border-accent-soft/30 bg-navy-900 p-5 shadow-2xl shadow-black/60"
         style={cardPosition(rect)}
       >
         <div className="flex items-center gap-2">
@@ -235,7 +236,7 @@ export function TourInvite() {
     setSeen(true);
   };
   return (
-    <div className="fixed right-4 bottom-4 left-4 z-50 rounded-2xl border border-white/10 bg-navy-900/95 p-4 shadow-2xl shadow-black/50 backdrop-blur sm:left-auto sm:w-80">
+    <div className="anim-toast-in fixed right-4 bottom-4 left-4 z-50 rounded-2xl border border-white/10 bg-navy-900/95 p-4 shadow-2xl shadow-black/50 backdrop-blur sm:left-auto sm:w-80">
       <p className="flex items-center gap-2 text-sm font-semibold text-white">First time here?</p>
       <p className="mt-1 text-sm text-slate-300">
         Take the 2-minute guided tour. It switches between real demo roles so you can see the

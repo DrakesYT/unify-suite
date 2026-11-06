@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router";
+import { useState, type CSSProperties } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { canRead, useAuth } from "../session";
 import { CloseIcon, LogoMark, MenuIcon } from "./icons";
 import { SearchBox } from "./SearchBox";
@@ -17,6 +17,7 @@ const pill = ({ isActive }: { isActive: boolean }) =>
 export function Layout() {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
   useHashFocus();
   if (!user) return null;
 
@@ -68,7 +69,7 @@ export function Layout() {
             <UserMenu />
           </div>
           {menuOpen && (
-            <div className="border-t border-white/5 px-4 pt-3 pb-4 xl:hidden">
+            <div className="anim-rise border-t border-white/5 px-4 pt-3 pb-4 xl:hidden">
               <div className="mb-3 md:hidden">
                 <SearchBox onNavigate={closeMenu} />
               </div>
@@ -84,7 +85,10 @@ export function Layout() {
         </header>
         {/* Keyed by user: after a demo role switch every page reloads its data as the new user. */}
         <main key={user.id} className="mx-auto max-w-[1600px] px-4 py-6 md:px-6">
-          <Outlet />
+          {/* A new page settles in (keyed by path, so polling never replays it). */}
+          <div key={pathname} className="anim-rise" style={{ "--rise": "6px" } as CSSProperties}>
+            <Outlet />
+          </div>
         </main>
         <TourInvite />
       </div>

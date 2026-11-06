@@ -105,7 +105,7 @@ export function AuraBrief({ userId }: { userId: string }) {
           <>
             <p className="mt-1 font-semibold text-white">{brief.headline}</p>
             <p className="mt-1 text-slate-300">{brief.summary}</p>
-            <ul className="mt-2 space-y-1">
+            <ul className="stagger mt-2 space-y-1">
               {brief.items.map((item) => (
                 <li key={item.id}>
                   <Link

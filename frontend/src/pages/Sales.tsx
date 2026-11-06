@@ -226,7 +226,7 @@ function LeadRow({
           <td colSpan={6} className="pb-3">
             <ErrorNote message={error} />
             {open && lead.qualification && (
-              <div className="rounded-lg bg-navy-950/70 p-3 text-sm">
+              <div className="anim-rise rounded-lg bg-navy-950/70 p-3 text-sm">
                 <p className="text-slate-200">{lead.qualification.reason}</p>
                 <p className="mt-2 text-xs text-slate-500">
                   Based on: {lead.qualification.cited_fields.map(label).join(", ")} ·{" "}

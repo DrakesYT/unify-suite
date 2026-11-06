@@ -105,7 +105,7 @@ export function PaymentRun() {
             }
           >
             <ErrorNote message={retryError} />
-            <ol className="space-y-3">
+            <ol className="stagger space-y-3">
               {data.steps.map((step) => (
                 <li key={step.key} className="rounded-lg border border-navy-800 bg-navy-950/60 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">

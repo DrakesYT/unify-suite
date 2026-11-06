@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from "react";
 import { Link } from "react-router";
 import { api } from "../api";
 import { label } from "../format";
@@ -111,7 +118,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
         {user && <AuraBrief userId={user.id} />}
         {turns.map((turn, i) => (
           <div key={i} className="space-y-2">
-            <p className="ml-8 rounded-2xl rounded-tr-sm bg-accent-purple/25 px-3 py-2 text-slate-100">
+            <p className="anim-pop ml-8 rounded-2xl rounded-tr-sm bg-accent-purple/25 px-3 py-2 text-slate-100">
               {turn.question}
             </p>
             <div className="flex gap-2.5">
@@ -130,7 +137,10 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
                 )}
                 {turn.error && <p className="text-red-300">{turn.error}</p>}
                 {turn.answer && (
-                  <div className="space-y-1.5">
+                  <div
+                    className="anim-rise space-y-1.5"
+                    style={{ "--rise": "4px" } as CSSProperties}
+                  >
                     <p className="text-slate-200">{turn.answer.reply}</p>
                     <p className={OUTCOME_TONE[turn.answer.outcome]}>{turn.answer.summary}</p>
                     <p className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px]">

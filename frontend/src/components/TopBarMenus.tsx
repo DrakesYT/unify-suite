@@ -13,7 +13,7 @@ import { toast } from "../toast";
 const BELL_ITEMS = 6;
 
 const popover =
-  "absolute right-0 z-50 mt-2 overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/50";
+  "anim-pop absolute right-0 z-50 mt-2 overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/50";
 
 /** Bell with the number of decisions waiting (what this user may see in the Approval Center). */
 export function NotificationBell() {
