@@ -42,4 +42,4 @@ class PaymentReminderWriter(Agent[PaymentReminderInput, EmailDraft]):
             wrap_document(data.model_dump_json(indent=1)),
             timeout_s=self.timeout_s,
         )
-        return check_draft(reply, data.order_number)
+        return check_draft(reply, data.order_number, data)

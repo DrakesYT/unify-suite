@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 from typing import ClassVar
 
 from app.agents.base import UNTRUSTED_TEXT_RULE, Agent, wrap_document
+from app.agents.writing_checks import check_style
 from app.llm import LLMClient, LLMOutputError
 from app.models.enums import Department
 from app.schemas.brief import BriefDraft, BriefInput
@@ -50,6 +51,7 @@ def numbers_in(text: str) -> set[Decimal]:
 
 def check_brief(draft: BriefDraft, data: BriefInput) -> BriefDraft:
     """Reject drafts that state a number no fact contains, or rank facts that don't exist."""
+    check_style(f"{draft.headline}\n{draft.summary}")
     allowed = numbers_in(" ".join(f.text for f in data.facts))
     invented = numbers_in(f"{draft.headline} {draft.summary}") - allowed
     if invented:

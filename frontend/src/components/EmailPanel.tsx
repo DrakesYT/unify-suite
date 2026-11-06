@@ -15,6 +15,31 @@ const ACT_DONE: Record<string, string> = {
 };
 
 /** An AI-drafted email: the agent drafts, a person edits, a manager approves, then it is sent. */
+/** What code found in the saved text: bot-like phrasing a reviewer may want to change. */
+function StyleCheck({ notes }: { notes: OutboundEmail["style_notes"] }) {
+  if (notes.length === 0) {
+    return (
+      <p className="text-xs text-emerald-300/90">
+        Style check by code: no bot-like phrasing. Amounts, references and dates were checked
+        against the facts when the AI wrote it.
+      </p>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 text-xs">
+      <p className="mb-1 font-semibold text-amber-200">Style suggestions (checked by code)</p>
+      <ul className="space-y-1">
+        {notes.map((n, i) => (
+          <li key={`${n.rule}-${i}`} className="text-slate-300">
+            <span className="font-medium text-amber-100">“{n.text}”</span>{" "}
+            <span className="text-slate-500">({n.rule})</span>: {n.advice}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function EmailPanel({
   title,
   intro,
@@ -124,6 +149,9 @@ export function EmailPanel({
                 {email.body}
               </p>
             </>
+          )}
+          {(email.status === "draft" || email.status === "pending_approval") && (
+            <StyleCheck notes={email.style_notes} />
           )}
           {email.status === "pending_approval" && (
             <p className="text-amber-200">Waiting for {managerLabel} in the Approval Center.</p>

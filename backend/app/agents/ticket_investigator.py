@@ -8,6 +8,7 @@ from datetime import date
 from typing import ClassVar
 
 from app.agents.base import UNTRUSTED_TEXT_RULE, Agent, wrap_document
+from app.agents.writing_checks import check_writing
 from app.config import DOCUMENT_MAX_CHARS
 from app.llm import LLMClient, LLMOutputError
 from app.models.enums import Department
@@ -55,6 +56,7 @@ def verify(result: Investigation, data: InvestigationInput) -> Investigation:
         for c in result.likely_causes
     ]
     used = _check(result.order_numbers_used + [n for c in causes for n in c.order_numbers])
+    check_writing(result.draft_reply, data)  # the customer reads this reply
     return result.model_copy(update={"likely_causes": causes, "order_numbers_used": used})
 
 

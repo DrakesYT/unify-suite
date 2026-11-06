@@ -65,6 +65,12 @@ decided and who was involved (from the audit log). Agent calls store only a SHA-
 panel rebuilds the input and shows **Verified** when the hash matches the logged call, or says plainly that the
 record has changed since.
 
+**Email quality gate.** Every email or customer reply an agent drafts passes two checks in plain code before it is
+saved (`backend/app/agents/writing_checks.py`). A draft with bot-like phrasing ("I hope this email finds you well",
+"seamless", "circle back", a run of em dashes) or with any amount, reference (PO-2001, SO-1101), date or "N days
+overdue" that is not in the facts the writer was given is invalid and retried, so a $450.00 reminder can never say
+$4,500. Milder phrasing ("don't hesitate to", "leverage") is shown to the person reviewing the draft as a suggestion.
+
 Invoices, resumes and tickets are treated as untrusted text: they can only shape schema-validated output, never
 permissions or actions. Tags inside a document are stripped so it cannot close its own fence. For invoices, plain
 code also scans the text for lines aimed at the AI ("ignore previous instructions", "SYSTEM:", "approve this payment

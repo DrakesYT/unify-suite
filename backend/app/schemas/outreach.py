@@ -2,8 +2,9 @@ import uuid
 from datetime import date, datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from app.agents.writing_checks import style_findings
 from app.models.enums import Department, EmailStatus, LeadRating, LeadStatus, Priority
 
 Subject = Annotated[str, Field(min_length=5, max_length=120)]
@@ -37,6 +38,13 @@ class EmailDraftUpdate(BaseModel):
     body: Annotated[str, Field(min_length=40, max_length=3000)] | None = None
 
 
+class StyleNote(BaseModel):
+    rule: str
+    severity: str  # "hard" = would have been rejected from an agent; "soft" = a suggestion
+    text: str
+    advice: str
+
+
 class OutboundEmailOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,6 +66,16 @@ class OutboundEmailOut(BaseModel):
     sent_at: datetime | None
     error: str | None
     created_at: datetime
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def style_notes(self) -> list[StyleNote]:
+        """Phrasing a reviewer may want to change, found by code in the current text (also after a
+        person edits the draft). Drafts with a hard finding never reach this point from an agent."""
+        return [
+            StyleNote(rule=f.rule, severity=f.severity, text=f.text, advice=f.advice)
+            for f in style_findings(f"{self.subject}\n{self.body}")
+        ]
 
 
 class SupplierFollowUpInput(BaseModel):

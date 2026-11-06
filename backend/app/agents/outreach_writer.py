@@ -7,7 +7,10 @@ then does the mailer send it.
 import re
 from typing import ClassVar
 
+from pydantic import BaseModel
+
 from app.agents.base import UNTRUSTED_TEXT_RULE, Agent, wrap_document
+from app.agents.writing_checks import check_writing
 from app.llm import LLMClient, LLMOutputError
 from app.models.enums import Department
 from app.schemas.outreach import EmailDraft, OutreachInput
@@ -46,14 +49,17 @@ def company_core(company: str) -> str:
     return " ".join(words)
 
 
-def check_draft(draft: EmailDraft, must_mention: str) -> EmailDraft:
-    """Reject drafts that could embarrass us if sent as written (the runner retries)."""
+def check_draft(draft: EmailDraft, must_mention: str, facts: BaseModel) -> EmailDraft:
+    """Reject drafts that could embarrass us if sent as written (the runner retries): links,
+    placeholders, a missing name, bot-like phrasing, or any amount, reference, date or day
+    count that is not in the facts the writer was given (agents/writing_checks.py)."""
     text = f"{draft.subject}\n{draft.body}"
     for what, pattern in _FORBIDDEN.items():
         if pattern.search(text):
             raise LLMOutputError(f"draft contains a {what}")
     if must_mention.lower() not in text.lower():
         raise LLMOutputError(f"draft does not mention {must_mention!r}")
+    check_writing(text, facts)
     return EmailDraft(subject=draft.subject.strip(), body=draft.body.strip())
 
 
@@ -74,4 +80,4 @@ class OutreachWriter(Agent[OutreachInput, EmailDraft]):
             wrap_document(data.model_dump_json(indent=1)),
             timeout_s=self.timeout_s,
         )
-        return check_draft(reply, company_core(data.company))
+        return check_draft(reply, company_core(data.company), data)

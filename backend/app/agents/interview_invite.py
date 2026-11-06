@@ -55,4 +55,4 @@ class InterviewInviteWriter(Agent[InterviewInviteInput, EmailDraft]):
             wrap_document(data.model_dump_json(indent=1)),
             timeout_s=self.timeout_s,
         )
-        return check_slots(check_draft(reply, data.job_title), data)
+        return check_slots(check_draft(reply, data.job_title, data), data)

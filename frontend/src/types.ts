@@ -120,6 +120,7 @@ export interface OutboundEmail {
   sent_at: string | null;
   error: string | null;
   created_at: string;
+  style_notes: { rule: string; severity: "hard" | "soft"; text: string; advice: string }[];
 }
 
 export interface Lead {

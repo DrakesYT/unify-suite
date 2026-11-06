@@ -321,3 +321,34 @@ def test_live_vultr_writes_a_sendable_draft() -> None:
     draft = OutreachWriter().run(facts, llm)  # raises if the draft is not sendable
 
     assert "quetta mining" in (draft.subject + draft.body).lower()
+
+
+def test_a_bot_like_draft_is_retried(
+    client: TestClient, people: dict[str, Headers], fake_llm: FakeLLMClient, lead: str
+) -> None:
+    slop = DRAFT | {"body": "I hope this email finds you well.\n\n" + DRAFT["body"]}
+    fake_llm.replies += [slop, DRAFT]
+
+    res = _draft(client, people["rep"], lead)
+
+    assert res.status_code == 201, res.text
+    assert "finds you well" not in res.json()["body"]
+    assert res.json()["style_notes"] == []
+
+
+def test_a_persons_edit_gets_suggestions_not_a_block(
+    client: TestClient,
+    people: dict[str, Headers],
+    fake_llm: FakeLLMClient,
+    lead: str,
+) -> None:
+    fake_llm.replies.append(DRAFT)
+    email = _draft(client, people["rep"], lead).json()
+    body = DRAFT["body"] + "\n\nPlease don't hesitate to reach out!"
+
+    edited = client.patch(f"{EMAILS}/{email['id']}", json={"body": body}, headers=people["rep"])
+
+    assert edited.status_code == 200, edited.text
+    notes = {n["rule"]: n for n in edited.json()["style_notes"]}
+    assert notes["don't hesitate"]["severity"] == "soft"
+    assert "Reply to this email" in notes["don't hesitate"]["advice"]

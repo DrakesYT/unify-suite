@@ -102,6 +102,11 @@ flowchart LR
   read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
+- Email quality gate (`agents/writing_checks.py`): `check_draft` (all four email writers), the Ticket
+  Investigator's customer reply and the Brief Writer run plain-code checks. Hard style findings and any
+  amount, reference, date or day count not found in the writer's input facts raise `LLMOutputError`, so the
+  runner retries. Soft findings are returned on every email as `style_notes` (computed from the current
+  text, so they also cover a person's edits) and listed in the Why? panel.
 - Calls (`services/calls.py`, `/api/calls`, table `call_transcripts`, migration 0011): a transcript
   (pasted text or a TXT/PDF upload, same upload checks) belongs to exactly one lead or one ticket, and
   its department decides who may read or add it. The Call Analyzer returns summary, sentiment,

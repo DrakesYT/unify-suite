@@ -14,6 +14,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.agents.runner import input_hash
+from app.agents.writing_checks import style_findings
 from app.errors import ApiError
 from app.models import (
     AgentTask,
@@ -482,6 +483,15 @@ def email(db: Session, user: User, email_id: uuid.UUID) -> Explanation:
         code_decided=[
             "Rejected drafts with links, email addresses or placeholders, or that leave out the "
             "company or order they are about.",
+            "Rejected drafts with chatbot phrases or hype words (\u201cI hope this email finds you "
+            "well\u201d, \u201cseamless\u201d, a run of em dashes).",
+            "Rejected drafts stating any amount, reference, date or day count that is not in the "
+            "facts it was given (so $450.00 cannot become $4,500).",
+            *(
+                [f"Style suggestions in the current text: {', '.join(notes)}."]
+                if (notes := sorted({f.rule for f in style_findings(record.body)}))
+                else ["No style suggestions in the current text."]
+            ),
             "Added the greeting and signature itself.",
             status,
         ],

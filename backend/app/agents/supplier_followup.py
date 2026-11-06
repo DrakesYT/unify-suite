@@ -41,4 +41,4 @@ class SupplierFollowUpWriter(Agent[SupplierFollowUpInput, EmailDraft]):
             wrap_document(data.model_dump_json(indent=1)),
             timeout_s=self.timeout_s,
         )
-        return check_draft(reply, data.po_number)
+        return check_draft(reply, data.po_number, data)
