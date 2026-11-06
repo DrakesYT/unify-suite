@@ -116,8 +116,45 @@ export function InjectionWarning({ lines }: { lines?: string[] }) {
   );
 }
 
-export function Empty({ children }: { children: ReactNode }) {
-  return <p className="py-6 text-center text-sm text-slate-500">{children}</p>;
+export function Empty({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 px-4 py-8 text-center">
+      <span className="mb-1 grid h-10 w-10 place-items-center rounded-full bg-accent-purple/10 text-violet-300">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M4 7h16M4 12h10M4 17h7" />
+        </svg>
+      </span>
+      <p className="text-sm text-slate-300">{children}</p>
+      {hint && <p className="max-w-sm text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
+
+/** Placeholder rows while the first poll is on its way. */
+export function Loading({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className="space-y-2.5 py-2" aria-label="Loading" role="status">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex animate-pulse items-center gap-3">
+          <div className="h-8 w-8 shrink-0 rounded-lg bg-white/[0.05]" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3 rounded bg-white/[0.07]" style={{ width: `${70 - i * 12}%` }} />
+            <div className="h-2.5 w-1/3 rounded bg-white/[0.04]" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export const buttonClass =

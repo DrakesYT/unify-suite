@@ -9,6 +9,7 @@ import {
   ghostButton,
   inputClass,
   primaryButton,
+  Loading,
 } from "../components/ui";
 import { EmailPanel } from "../components/EmailPanel";
 import { label, money, when } from "../format";
@@ -17,6 +18,7 @@ import type { Lead, LeadStatus, Page, Priority } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
+import { toast } from "../toast";
 
 const STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "won", "lost"];
 const PRIORITIES: Priority[] = ["low", "medium", "high"];
@@ -53,6 +55,7 @@ function NewLead({ onCreated }: { onCreated: () => void }) {
           notes: form.notes,
         }),
       });
+      toast(`Lead added: ${form.company}`);
       setForm(EMPTY);
       onCreated();
     } catch (err) {
@@ -140,7 +143,8 @@ function LeadRow({
     setBusy(true);
     setError(null);
     try {
-      await api<Lead>(path, init);
+      const updated = await api<Lead>(path, init);
+      toast(`${updated.company} rated ${updated.rating ?? "(no rating)"}`);
       setOpen(true);
       onChange();
     } catch (err) {
@@ -280,7 +284,12 @@ export function Sales() {
           }
         >
           <ErrorNote message={error} />
-          {data?.items.length === 0 && <Empty>No leads yet.</Empty>}
+          {!data && !error && <Loading rows={5} />}
+          {data?.items.length === 0 && (
+            <Empty hint="Add one above. The Lead Qualifier can then rate it hot, warm or cold.">
+              No leads yet.
+            </Empty>
+          )}
           {data && data.items.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">

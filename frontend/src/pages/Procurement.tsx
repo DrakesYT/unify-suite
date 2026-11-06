@@ -11,6 +11,7 @@ import {
   ghostButton,
   inputClass,
   primaryButton,
+  Loading,
 } from "../components/ui";
 import { EmailPanel } from "../components/EmailPanel";
 import { money, when } from "../format";
@@ -25,6 +26,14 @@ import type {
 } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
+import { toast } from "../toast";
+
+const ACT_DONE: Record<string, string> = {
+  quote: "Quote saved",
+  compare: "Vendors ranked",
+  approve: "Request approved",
+  reject: "Request rejected",
+};
 
 const pct = (value: string) => `${(Number(value) * 100).toFixed(0)}%`;
 
@@ -46,6 +55,7 @@ function NewVendor({ onCreated }: { onCreated: () => void }) {
           on_time_rate: (Number(rate) / 100).toFixed(4),
         }),
       });
+      toast(`Vendor saved: ${name}`);
       setName("");
       onCreated();
     } catch (err) {
@@ -114,6 +124,7 @@ function NewRequest({ onCreated }: { onCreated: (r: PurchaseRequest) => void }) 
       });
       setItem("");
       setBudget("");
+      toast(`Purchase request added: ${request.item}`);
       onCreated(request);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the request");
@@ -252,6 +263,11 @@ function RequestDetail({
         setNote(
           `${res.order.po_number} created for ${money(res.order.amount_minor, res.order.currency)}`,
         );
+      toast(
+        res.order
+          ? `${res.order.po_number} created; it waits for a manager's approval`
+          : (ACT_DONE[what] ?? "Done"),
+      );
       if (what === "quote") {
         setPrice("");
         await quotes.reload();
@@ -423,6 +439,7 @@ function OrderRow({
     setError(null);
     try {
       await api(`/procurement/orders/${order.id}/delivered`, { method: "POST" });
+      toast(`${order.po_number} marked delivered`);
       onChange();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update the order");
@@ -503,7 +520,8 @@ export function Procurement() {
             </Card>
           )}
           <Card title="Requests">
-            {requests.data?.items.length === 0 && <Empty>No requests.</Empty>}
+            {!requests.data && !requests.error && <Loading rows={3} />}
+            {requests.data?.items.length === 0 && <Empty>No purchase requests yet.</Empty>}
             <ul className="space-y-1">
               {requests.data?.items.map((r) => (
                 <li key={r.id}>
@@ -548,11 +566,18 @@ export function Procurement() {
             />
           ) : (
             <Card>
-              <Empty>Create a purchase request to compare vendors.</Empty>
+              {requests.data ? (
+                <Empty hint="Add quotes from two or more vendors and the code ranks them.">
+                  Create a purchase request to compare vendors.
+                </Empty>
+              ) : (
+                <Loading rows={4} />
+              )}
             </Card>
           )}
           <Card title="Purchase orders">
-            {orders.data?.items.length === 0 && <Empty>No purchase orders.</Empty>}
+            {!orders.data && !orders.error && <Loading rows={2} />}
+            {orders.data?.items.length === 0 && <Empty>No purchase orders yet.</Empty>}
             <ul className="space-y-2 text-sm">
               {orders.data?.items.map((o) => (
                 <OrderRow

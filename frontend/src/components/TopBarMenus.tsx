@@ -8,6 +8,7 @@ import type { Approval, Page, User } from "../types";
 import { usePoll } from "../usePoll";
 import { BellIcon, ChevronDown, LogoutIcon } from "./icons";
 import { useDismiss } from "./useDismiss";
+import { toast } from "../toast";
 
 const BELL_ITEMS = 6;
 
@@ -116,7 +117,8 @@ function DemoSwitcher({ onDone }: { onDone: () => void }) {
     setBusy(email);
     setError(null);
     try {
-      await switchTo(email);
+      const now = await switchTo(email);
+      toast(`Now signed in as ${now.full_name} (${label(now.role)}, ${now.department})`, "info");
       onDone();
       navigate("/");
     } catch (e) {

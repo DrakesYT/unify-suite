@@ -10,11 +10,13 @@ import {
   PageHeader,
   inputClass,
   primaryButton,
+  Loading,
 } from "../components/ui";
 import { Receivables } from "../components/Receivables";
 import { when } from "../format";
 import type { Execution, ExecutionSummary, Page } from "../types";
 import { usePoll } from "../usePoll";
+import { toast } from "../toast";
 
 function StartForm() {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ function StartForm() {
         method: "POST",
         body,
       });
+      toast("Invoice uploaded. The agents are checking it now.", "info");
       navigate(`/payments/${run.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start");
@@ -95,7 +98,10 @@ export function Payments() {
         {user && canWrite(user, "finance") && <StartForm />}
         <Card title="Recent supplier payment runs">
           <ErrorNote message={error} />
-          {data && data.items.length === 0 && <Empty>No runs yet.</Empty>}
+          {!data && !error && <Loading rows={4} />}
+          {data && data.items.length === 0 && (
+            <Empty hint="Upload a supplier invoice above to start one.">No payment runs yet.</Empty>
+          )}
           {data && data.items.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">

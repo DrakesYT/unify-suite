@@ -4,7 +4,8 @@ import { money } from "../format";
 import type { Receivable } from "../types";
 import { usePoll } from "../usePoll";
 import { EmailPanel } from "./EmailPanel";
-import { Badge, Card, Empty, ErrorNote, ghostButton } from "./ui";
+import { Badge, Card, Empty, ErrorNote, ghostButton, Loading } from "./ui";
+import { toast } from "../toast";
 
 const day = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -27,6 +28,7 @@ function ReceivableRow({
     setError(null);
     try {
       await api(`/finance/receivables/${item.order_id}/paid`, { method: "POST" });
+      toast(`${item.order_number} marked paid`);
       onChange();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update the order");
@@ -90,6 +92,7 @@ export function Receivables({ editable }: { editable: boolean }) {
   return (
     <Card title="Customer payments due">
       <ErrorNote message={error} />
+      {!data && !error && <Loading rows={3} />}
       {data && data.length === 0 && <Empty>No unpaid customer orders.</Empty>}
       <ul className="space-y-2">
         {data?.map((item) => (

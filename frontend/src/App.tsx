@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AuthProvider } from "./auth";
 import { canRead, useAuth } from "./session";
 import { Layout } from "./components/Layout";
+import { Toaster } from "./components/Toaster";
 import { Activity } from "./pages/Activity";
 import { Approvals } from "./pages/Approvals";
 import { Hiring } from "./pages/Hiring";
@@ -43,37 +44,39 @@ function Home() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            element={
-              <RequireUser>
-                <Layout />
-              </RequireUser>
-            }
-          >
-            <Route index element={<Home />} />
+      <Toaster>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
             <Route
-              path="dashboard"
               element={
-                <Suspense fallback={<p className="text-slate-500">Loading…</p>}>
-                  <Dashboard />
-                </Suspense>
+                <RequireUser>
+                  <Layout />
+                </RequireUser>
               }
-            />
-            <Route path="payments" element={<Payments />} />
-            <Route path="payments/:id" element={<PaymentRun />} />
-            <Route path="sales" element={<Sales />} />
-            <Route path="hr" element={<Hiring />} />
-            <Route path="support" element={<Support />} />
-            <Route path="procurement" element={<Procurement />} />
-            <Route path="approvals" element={<Approvals />} />
-            <Route path="activity" element={<Activity />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            >
+              <Route index element={<Home />} />
+              <Route
+                path="dashboard"
+                element={
+                  <Suspense fallback={<p className="text-slate-500">Loading…</p>}>
+                    <Dashboard />
+                  </Suspense>
+                }
+              />
+              <Route path="payments" element={<Payments />} />
+              <Route path="payments/:id" element={<PaymentRun />} />
+              <Route path="sales" element={<Sales />} />
+              <Route path="hr" element={<Hiring />} />
+              <Route path="support" element={<Support />} />
+              <Route path="procurement" element={<Procurement />} />
+              <Route path="approvals" element={<Approvals />} />
+              <Route path="activity" element={<Activity />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </Toaster>
     </AuthProvider>
   );
 }

@@ -5,6 +5,7 @@ import type { CallRecord } from "../types";
 import { usePoll } from "../usePoll";
 import { Badge, ErrorNote, ghostButton, inputClass, primaryButton } from "./ui";
 import { WhyButton } from "./WhyDrawer";
+import { toast } from "../toast";
 
 const SPEAKER_COLORS = ["bg-accent-purple", "bg-accent-cyan", "bg-amber-400", "bg-emerald-400"];
 
@@ -31,7 +32,13 @@ function AddCall({
     setBusy(true);
     setError(null);
     try {
-      await api<CallRecord>("/calls", { method: "POST", body: form });
+      const call = await api<CallRecord>("/calls", { method: "POST", body: form });
+      toast(
+        call.analysis
+          ? `Call analysed: ${call.analysis.sentiment}, ${call.analysis.action_items.length} action items`
+          : "Transcript saved, but the analysis failed. You can analyse it again.",
+        call.analysis ? "success" : "error",
+      );
       setText("");
       setFile(null);
       setTitle("");
@@ -100,7 +107,11 @@ function CallCard({
     setBusy(true);
     setError(null);
     try {
-      await api(`/calls/${call.id}/analyze`, { method: "POST" });
+      const again = await api<CallRecord>(`/calls/${call.id}/analyze`, { method: "POST" });
+      toast(
+        again.analysis ? "Call analysed" : "The analysis failed again",
+        again.analysis ? "success" : "error",
+      );
       onChange();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not analyse");

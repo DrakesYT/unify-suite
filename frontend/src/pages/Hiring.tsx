@@ -8,6 +8,7 @@ import {
   ghostButton,
   inputClass,
   primaryButton,
+  Loading,
 } from "../components/ui";
 import { EmailPanel } from "../components/EmailPanel";
 import { when } from "../format";
@@ -15,6 +16,7 @@ import { canWrite, useAuth } from "../session";
 import type { Candidate, CandidateScore, Job, Page } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
+import { toast } from "../toast";
 
 const INTERVIEW_MIN_SCORE = 50; // mirrors the backend rule; the backend enforces it
 
@@ -42,6 +44,7 @@ function NewJob({ onCreated }: { onCreated: (job: Job) => void }) {
       setTitle("");
       setSkills("");
       setYears("0");
+      toast(`Job added: ${job.title}`);
       onCreated(job);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the job");
@@ -101,6 +104,7 @@ function ResumeUpload({ onUploaded }: { onUploaded: () => void }) {
     try {
       const c = await api<Candidate>("/hr/candidates/upload", { method: "POST", body });
       setMessage(`Added ${c.name}: ${c.skills.length} skills, ${c.years_experience ?? 0} years`);
+      toast(`Resume read: ${c.name}`);
       onUploaded();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -232,6 +236,7 @@ export function Hiring() {
     try {
       await api(`/hr/jobs/${jobId}/screen`, { method: "POST", body: JSON.stringify({}) });
       await scores.reload();
+      toast("Screening done: the ranking is updated");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Screening failed");
     } finally {
@@ -249,6 +254,7 @@ export function Hiring() {
         <div className="space-y-6">
           <Card title="Open jobs">
             <ErrorNote message={jobs.error} />
+            {!jobs.data && !jobs.error && <Loading rows={2} />}
             {jobs.data?.items.length === 0 && <Empty>No open jobs.</Empty>}
             <ul className="space-y-1">
               {jobs.data?.items.map((j) => (
@@ -295,8 +301,13 @@ export function Hiring() {
           }
         >
           <ErrorNote message={error} />
-          {!job && <Empty>Add a job to start screening.</Empty>}
-          {job && ranked.length === 0 && <Empty>No one screened for this job yet.</Empty>}
+          {!jobs.data && <Loading rows={3} />}
+          {jobs.data && !job && <Empty>Add a job to start screening.</Empty>}
+          {job && scores.data && ranked.length === 0 && (
+            <Empty hint="Upload resumes, then press “Screen all candidates”.">
+              No one screened for this job yet.
+            </Empty>
+          )}
           <ol className="space-y-3">
             {ranked.map((s) => (
               <ScoreCard key={s.candidate.id} s={s} jobId={job!.id} editable={editable} />

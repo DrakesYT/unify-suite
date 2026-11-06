@@ -9,11 +9,13 @@ import {
   InjectionWarning,
   PageHeader,
   ghostButton,
+  Loading,
 } from "../components/ui";
 import { label, money, when } from "../format";
 import type { AgentTask, Execution, Page, Step } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
+import { toast } from "../toast";
 
 function StepDetail({ step }: { step: Step }) {
   const out = step.output ?? {};
@@ -65,6 +67,7 @@ export function PaymentRun() {
     setRetryError(null);
     try {
       await api(`/workflows/${id}/retry`, { method: "POST" });
+      toast("Retry started", "info");
       await run.reload();
     } catch (e) {
       setRetryError(e instanceof Error ? e.message : "Retry failed");
@@ -85,6 +88,7 @@ export function PaymentRun() {
         </div>
       )}
       <ErrorNote message={run.error} />
+      {!data && !run.error && <Loading rows={6} />}
       {data && (
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
           <Card

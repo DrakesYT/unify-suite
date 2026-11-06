@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api";
-import { Badge, Card, Empty, ErrorNote, PageHeader, ghostButton } from "../components/ui";
+import { Badge, Card, Empty, ErrorNote, PageHeader, ghostButton, Loading } from "../components/ui";
 import { when } from "../format";
 import type { AgentTask, Page } from "../types";
 import { usePoll } from "../usePoll";
+import { toast } from "../toast";
 
 function Stat({ title, value }: { title: string; value: string | number }) {
   return (
@@ -35,6 +36,7 @@ export function Activity() {
     try {
       await api(`/workflows/${executionId}/retry`, { method: "POST" });
       setMessage("Retry started; the run continues in the background.");
+      toast("Retry started", "info");
       await reload();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Retry failed");
@@ -67,7 +69,12 @@ export function Activity() {
       >
         <ErrorNote message={error} />
         {message && <p className="mb-3 text-sm text-amber-200">{message}</p>}
-        {data && rows.length === 0 && <Empty>No agent activity yet.</Empty>}
+        {!data && !error && <Loading rows={6} />}
+        {data && rows.length === 0 && (
+          <Empty hint="Every agent call and tool call is listed here as it happens.">
+            No agent activity yet.
+          </Empty>
+        )}
         {rows.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">

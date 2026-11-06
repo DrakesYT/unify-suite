@@ -12,10 +12,13 @@ import {
   dangerButton,
   inputClass,
   primaryButton,
+  Loading,
 } from "../components/ui";
 import { label, money, when } from "../format";
 import type { Approval, Page, User } from "../types";
 import { usePoll } from "../usePoll";
+import { toast } from "../toast";
+import { approvalHeadline } from "../approvalText";
 
 function mayDecide(user: User, a: Approval): boolean {
   if (a.requested_by_id === user.id) return false;
@@ -42,6 +45,10 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
         method: "POST",
         body: JSON.stringify({ comment: comment || null }),
       });
+      toast(
+        `${verb === "approve" ? "Approved" : "Rejected"}: ${approvalHeadline(approval).title}`,
+        verb === "approve" ? "success" : "info",
+      );
       onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save the decision");
@@ -208,7 +215,18 @@ export function Approvals() {
       </div>
       <ErrorNote message={error} />
       <div className="space-y-4" data-tour="approvals">
-        {data?.items.length === 0 && <Empty>Nothing {tab}.</Empty>}
+        {!data && !error && <Loading rows={3} />}
+        {data?.items.length === 0 && (
+          <Empty
+            hint={
+              tab === "pending"
+                ? "Payments, purchase orders, escalations and emails wait here until a manager decides."
+                : undefined
+            }
+          >
+            {tab === "pending" ? "Nothing is waiting for a decision." : `Nothing ${tab} yet.`}
+          </Empty>
+        )}
         {data?.items.map((a) => (
           <ApprovalCard key={a.id} approval={a} onDone={reload} />
         ))}

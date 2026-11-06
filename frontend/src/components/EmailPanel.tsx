@@ -5,6 +5,14 @@ import type { OutboundEmail } from "../types";
 import { usePoll } from "../usePoll";
 import { Badge, ErrorNote, ghostButton, inputClass, primaryButton } from "./ui";
 import { WhyButton } from "./WhyDrawer";
+import { toast } from "../toast";
+
+const ACT_DONE: Record<string, string> = {
+  draft: "Draft written. Check it, then send it for approval.",
+  save: "Draft saved",
+  send: "Sent to a manager for approval. Nothing goes out before that.",
+  retry: "Trying to send again",
+};
 
 /** An AI-drafted email: the agent drafts, a person edits, a manager approves, then it is sent. */
 export function EmailPanel({
@@ -44,6 +52,7 @@ export function EmailPanel({
     setError(null);
     try {
       await api(path, init);
+      if (ACT_DONE[name]) toast(ACT_DONE[name]);
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");

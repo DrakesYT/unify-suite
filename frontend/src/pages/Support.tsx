@@ -10,6 +10,7 @@ import {
   ghostButton,
   inputClass,
   primaryButton,
+  Loading,
 } from "../components/ui";
 import { when } from "../format";
 import { canWrite, useAuth } from "../session";
@@ -17,6 +18,13 @@ import type { Approval, Customer, Page, Ticket } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
+import { toast } from "../toast";
+
+const RUN_DONE: Record<string, string> = {
+  classify: "Ticket classified",
+  investigate: "Investigation done: see the likely causes",
+  escalate: "Escalated",
+};
 
 const NEEDS_APPROVAL = new Set(["refund", "legal"]);
 
@@ -42,6 +50,11 @@ function NewTicket({
         method: "POST",
         body: JSON.stringify({ title, description, customer_id: customerId || null }),
       });
+      toast(
+        ticket.category
+          ? `Ticket saved and classified: ${ticket.category}, ${ticket.urgency}`
+          : "Ticket saved",
+      );
       setTitle("");
       setDescription("");
       onCreated(ticket);
@@ -117,6 +130,7 @@ function TicketDetail({
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       if (what === "escalate") setApproval(res.approval ?? null);
+      toast(RUN_DONE[what] ?? "Done");
       onChange();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -287,7 +301,8 @@ export function Support() {
           )}
           <Card title="Queue">
             <ErrorNote message={tickets.error} />
-            {tickets.data?.items.length === 0 && <Empty>No tickets.</Empty>}
+            {!tickets.data && !tickets.error && <Loading rows={4} />}
+            {tickets.data?.items.length === 0 && <Empty>No tickets yet.</Empty>}
             <ul className="space-y-1">
               {tickets.data?.items.map((t) => (
                 <li key={t.id} id={`ticket-${t.id}`}>
@@ -321,7 +336,13 @@ export function Support() {
           />
         ) : (
           <Card>
-            <Empty>Create a ticket to get started.</Empty>
+            {tickets.data ? (
+              <Empty hint="The AI classifies each new ticket and can investigate the customer's orders.">
+                Create a ticket to get started.
+              </Empty>
+            ) : (
+              <Loading rows={5} />
+            )}
           </Card>
         )}
       </div>
