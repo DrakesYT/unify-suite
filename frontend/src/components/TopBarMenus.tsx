@@ -36,14 +36,14 @@ export function NotificationBell() {
       >
         <BellIcon />
         {count && (
-          <span className="absolute -top-0.5 -right-0.5 grid min-w-[18px] place-items-center rounded-full bg-gradient-to-r from-accent-purple to-fuchsia-500 px-1 text-[10px] leading-[18px] font-semibold text-white shadow-[0_0_10px] shadow-accent-purple/60">
+          <span className="absolute -top-0.5 -right-0.5 grid min-w-[18px] place-items-center rounded-full bg-accent-purple px-1 text-[10px] leading-[18px] font-semibold text-white">
             {count}
           </span>
         )}
       </button>
       {open && (
         <div className={`${popover} w-80 max-w-[calc(100vw-2rem)]`}>
-          <p className="border-b border-white/5 px-4 py-3 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+          <p className="border-b border-white/5 px-4 py-3 text-xs font-semibold text-slate-400">
             Waiting for a decision
           </p>
           {items.length === 0 && (
@@ -74,7 +74,7 @@ export function NotificationBell() {
           <Link
             to="/approvals"
             onClick={close}
-            className="block border-t border-white/5 px-4 py-2.5 text-center text-sm text-accent-cyan hover:bg-white/5"
+            className="block border-t border-white/5 px-4 py-2.5 text-center text-sm text-accent-soft hover:bg-white/5"
           >
             Open the Approval Center
           </Link>
@@ -88,7 +88,7 @@ export function Avatar({ name, size = 32 }: { name: string; size?: number }) {
   return (
     <span
       style={{ width: size, height: size, fontSize: size * 0.38 }}
-      className="grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent-purple to-accent-cyan font-semibold text-white"
+      className="grid shrink-0 place-items-center rounded-full bg-accent-purple/25 font-semibold text-accent-soft"
     >
       {initials(name)}
     </span>
@@ -130,9 +130,7 @@ function DemoSwitcher({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="border-b border-white/5 py-2">
-      <p className="px-4 pb-1 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-        View as (demo roles)
-      </p>
+      <p className="px-4 pb-1 text-[11px] font-semibold text-slate-500">View as (demo roles)</p>
       {error && <p className="px-4 py-1 text-xs text-red-300">{error}</p>}
       {!accounts && !error && <p className="px-4 py-1 text-xs text-slate-500">Loading…</p>}
       <ul className="max-h-64 overflow-y-auto">
@@ -154,7 +152,7 @@ function DemoSwitcher({ onDone }: { onDone: () => void }) {
                     {label(a.role)} · {a.department}
                   </span>
                 </span>
-                {current && <span className="text-[11px] text-accent-cyan">you</span>}
+                {current && <span className="text-[11px] text-accent-soft">you</span>}
                 {busy === a.email && <span className="text-[11px] text-slate-400">…</span>}
               </button>
             </li>
@@ -197,7 +195,7 @@ export function UserMenu() {
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-white">{user.full_name}</p>
               <p className="truncate text-xs text-slate-500">{user.email}</p>
-              <p className="mt-1 text-xs text-accent-cyan capitalize">
+              <p className="mt-1 text-xs text-accent-soft capitalize">
                 {label(user.role)} · {user.department}
               </p>
             </div>

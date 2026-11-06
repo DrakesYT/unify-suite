@@ -10,7 +10,7 @@ import { toast } from "../toast";
 function Stat({ title, value }: { title: string; value: string | number }) {
   return (
     <div className="rounded-xl border border-navy-800 bg-navy-900 p-4">
-      <p className="text-xs tracking-wide text-slate-400 uppercase">{title}</p>
+      <p className="text-xs text-slate-400">{title}</p>
       <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
     </div>
   );
@@ -78,7 +78,7 @@ export function Activity() {
         {rows.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs text-slate-500 uppercase">
+              <thead className="text-xs text-slate-500">
                 <tr>
                   <th className="py-2 pr-4">When</th>
                   <th className="py-2 pr-4">Agent → tool</th>
@@ -115,7 +115,7 @@ export function Activity() {
                         <span className="flex items-center gap-2">
                           <Link
                             to={`/payments/${t.execution_id}`}
-                            className="text-accent-cyan hover:underline"
+                            className="text-accent-soft hover:underline"
                           >
                             open
                           </Link>

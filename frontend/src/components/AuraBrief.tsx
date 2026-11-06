@@ -10,7 +10,7 @@ const TONE: Record<Brief["items"][number]["tone"], string> = {
   alert: "bg-red-400",
   warn: "bg-amber-400",
   good: "bg-emerald-400",
-  info: "bg-accent-cyan",
+  info: "bg-accent-soft",
 };
 
 function readCache(userId: string): Brief | null {
@@ -83,9 +83,7 @@ export function AuraBrief({ userId }: { userId: string }) {
       <Orb size={26} />
       <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-navy-800/80 px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <p className="flex-1 text-[11px] font-semibold tracking-wide text-accent-cyan uppercase">
-            {title()}
-          </p>
+          <p className="flex-1 text-[11px] font-semibold text-accent-soft">{title()}</p>
           <button
             onClick={refresh}
             disabled={writing}

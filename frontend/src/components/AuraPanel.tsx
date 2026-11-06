@@ -30,18 +30,9 @@ function SystemStatus({ agents }: { agents?: Overview["agents"] }) {
   const rate = agents?.calls ? Math.round((100 * agents.succeeded) / agents.calls) : null;
   return (
     <div className="flex items-center gap-3 border-t border-white/5 px-4 py-3">
-      <span className="relative flex h-2.5 w-2.5">
-        <span
-          className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${
-            healthy ? "bg-emerald-400" : "bg-amber-400"
-          }`}
-        />
-        <span
-          className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
-            healthy ? "bg-emerald-400" : "bg-amber-400"
-          }`}
-        />
-      </span>
+      <span
+        className={`h-2 w-2 shrink-0 rounded-full ${healthy ? "bg-emerald-400" : "bg-amber-400"}`}
+      />
       <div className="min-w-0 text-xs leading-snug">
         <p className="text-slate-200">AI system status: {healthy ? "active" : "degraded"}</p>
         <p className="truncate text-slate-500">
@@ -97,15 +88,14 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
   return (
     <aside
       data-tour="aura"
-      className="flex flex-col self-start overflow-hidden rounded-2xl border border-accent-purple/30 bg-navy-900/90 shadow-[0_0_40px] shadow-accent-purple/10 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)]"
+      className="flex flex-col self-start overflow-hidden rounded-2xl border border-white/[0.07] bg-navy-900/75 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)]"
     >
-      <div className="relative overflow-hidden bg-gradient-to-br from-accent-purple via-fuchsia-600/80 to-accent-cyan px-5 py-4">
-        <div className="absolute -top-10 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative flex items-center gap-3">
-          <Orb />
+      <div className="border-b border-white/5 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <Orb size={34} />
           <div>
             <h2 className="text-base font-semibold text-white">Aura</h2>
-            <p className="text-xs text-white/80">
+            <p className="text-xs text-slate-400">
               AI assistant · hands your request to the right agent
             </p>
           </div>
@@ -121,7 +111,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
         {user && <AuraBrief userId={user.id} />}
         {turns.map((turn, i) => (
           <div key={i} className="space-y-2">
-            <p className="ml-8 rounded-2xl rounded-tr-sm bg-gradient-to-r from-accent-purple/40 to-accent-purple/25 px-3 py-2 text-slate-100">
+            <p className="ml-8 rounded-2xl rounded-tr-sm bg-accent-purple/25 px-3 py-2 text-slate-100">
               {turn.question}
             </p>
             <div className="flex gap-2.5">
@@ -132,7 +122,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
                     {[0, 150, 300].map((d) => (
                       <span
                         key={d}
-                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent-cyan"
+                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent-soft"
                         style={{ animationDelay: `${d}ms` }}
                       />
                     ))}
@@ -144,13 +134,13 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
                     <p className="text-slate-200">{turn.answer.reply}</p>
                     <p className={OUTCOME_TONE[turn.answer.outcome]}>{turn.answer.summary}</p>
                     <p className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px]">
-                      <span className="rounded-full bg-accent-cyan/10 px-2 py-0.5 text-accent-cyan">
+                      <span className="rounded-full bg-accent-soft/10 px-2 py-0.5 text-accent-soft">
                         {turn.answer.agent ? label(turn.answer.agent) : "no agent"}
                       </span>
                       {turn.answer.link && (
                         <Link
                           to={turn.answer.link}
-                          className="flex items-center gap-1 text-slate-400 hover:text-accent-cyan"
+                          className="flex items-center gap-1 text-slate-400 hover:text-accent-soft"
                         >
                           Open <ArrowRight size={12} />
                         </Link>
@@ -166,7 +156,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
 
       <form onSubmit={submit} className="flex gap-2 border-t border-white/5 px-4 py-3">
         <input
-          className="w-full rounded-full border border-white/10 bg-navy-950 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent-cyan/60 focus:outline-none"
+          className="w-full rounded-full border border-white/10 bg-navy-950 px-4 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent-soft/60 focus:outline-none"
           placeholder={voice.listening ? "Listening…" : "Ask Aura…"}
           aria-label="Message to Aura"
           value={message}
@@ -183,7 +173,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
             className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border transition ${
               voice.listening
                 ? "animate-pulse border-red-400/60 bg-red-500/20 text-red-200"
-                : "border-white/10 text-slate-300 hover:border-accent-cyan/50 hover:text-white"
+                : "border-white/10 text-slate-300 hover:border-accent-soft/50 hover:text-white"
             }`}
           >
             <MicIcon size={16} />
@@ -193,7 +183,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
           type="submit"
           disabled={busy || !message.trim()}
           aria-label="Send"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent-purple to-accent-cyan text-white transition hover:opacity-90 disabled:opacity-40"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent-purple text-white transition-colors hover:bg-accent-purple/85 disabled:opacity-40"
         >
           <SendIcon size={16} />
         </button>

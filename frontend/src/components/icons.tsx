@@ -139,25 +139,18 @@ export const LogoutIcon = (p: IconProps) => (
   </Icon>
 );
 
-/** The UNIFY mark: a "U" drawn in the purple-to-cyan brand gradient. */
+/** The UNIFY mark: a "U" with a centre stroke, drawn flat in the accent colour. */
 export function LogoMark({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <defs>
-        <linearGradient id="unify-mark" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#22d3ee" />
-        </linearGradient>
-      </defs>
-      <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#unify-mark)" opacity="0.18" />
       <path
         d="M9 8v8.5a7 7 0 0 0 14 0V8"
         fill="none"
-        stroke="url(#unify-mark)"
+        stroke="#8b5cf6"
         strokeWidth="3.2"
         strokeLinecap="round"
       />
-      <path d="M16 8v8" stroke="#22d3ee" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M16 8v8" stroke="#c4b5fd" strokeWidth="3.2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -199,5 +192,18 @@ export const EyeIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
     <circle cx="12" cy="12" r="3" />
+  </Icon>
+);
+
+export const InfoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5M12 8h.01" />
+  </Icon>
+);
+
+export const PlayIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 5v14l11-7Z" />
   </Icon>
 );

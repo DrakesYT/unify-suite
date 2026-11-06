@@ -20,9 +20,7 @@ export function QuickActions({ onAsk, busy }: { onAsk: (prompt: string) => void;
 
   return (
     <div className="border-t border-white/5 px-4 py-3">
-      <p className="mb-2 text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-        Quick actions
-      </p>
+      <p className="mb-2 text-[11px] font-semibold text-slate-500">Quick actions</p>
       <div className="grid grid-cols-2 gap-2">
         {data.map((a) => (
           <button
@@ -32,9 +30,9 @@ export function QuickActions({ onAsk, busy }: { onAsk: (prompt: string) => void;
             }
             disabled={busy && a.kind === "ask"}
             title={a.prompt ?? a.label}
-            className="group flex min-w-0 flex-col items-start gap-1.5 rounded-xl bg-navy-950/70 p-2.5 text-left ring-1 ring-white/[0.07] transition hover:bg-accent-purple/10 hover:ring-accent-purple/40 disabled:opacity-50"
+            className="group flex min-w-0 flex-col items-start gap-1.5 rounded-xl bg-navy-950/70 p-2.5 text-left ring-1 ring-white/[0.07] transition-colors hover:bg-white/[0.04] hover:ring-white/15 disabled:opacity-50"
           >
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-accent-purple/30 to-accent-cyan/20 text-accent-cyan">
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 text-slate-300">
               {ICONS[a.icon]}
             </span>
             <span className="w-full min-w-0">

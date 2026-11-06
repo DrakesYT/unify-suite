@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { TOAST_EVENT, type ToastMessage, type ToastTone } from "../toast";
-import { CheckIcon, CloseIcon, SparkleIcon } from "./icons";
+import { CheckIcon, CloseIcon, InfoIcon } from "./icons";
 
 const SHOW_MS = 4500;
 const MAX_SHOWN = 3;
@@ -21,8 +21,8 @@ const TONE: Record<ToastTone, { box: string; icon: ReactNode }> = {
     icon: <CloseIcon size={16} className="text-red-300" />,
   },
   info: {
-    box: "border-accent-cyan/30 text-slate-100",
-    icon: <SparkleIcon size={16} className="text-accent-cyan" />,
+    box: "border-white/10 text-slate-100",
+    icon: <InfoIcon size={16} className="text-accent-soft" />,
   },
 };
 

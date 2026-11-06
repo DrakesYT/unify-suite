@@ -60,7 +60,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-slate-500 uppercase">
+          <p className="text-xs text-slate-500 first-letter:uppercase">
             {label(approval.action)} · {approval.department} {approval.required_role}
           </p>
           {isPayment ? (
@@ -128,7 +128,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
       )}
       {p.discrepancies && p.discrepancies.length > 0 && (
         <div className="mt-4 rounded-lg bg-amber-500/10 p-3">
-          <p className="text-xs font-semibold text-amber-200 uppercase">Discrepancies</p>
+          <p className="text-xs font-semibold text-amber-200">Discrepancies</p>
           <ul className="mt-1 list-disc pl-5 text-sm text-amber-100">
             {p.discrepancies.map((d) => (
               <li key={d}>{d}</li>

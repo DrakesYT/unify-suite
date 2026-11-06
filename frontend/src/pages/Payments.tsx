@@ -105,7 +105,7 @@ export function Payments() {
           {data && data.items.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-xs text-slate-500 uppercase">
+                <thead className="text-xs text-slate-500">
                   <tr>
                     <th className="py-2 pr-4">Started</th>
                     <th className="py-2 pr-4">Invoice file</th>

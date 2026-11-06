@@ -10,7 +10,7 @@ import { useNavigate } from "react-router";
 import { label } from "../format";
 import { isDemo, useAuth } from "../session";
 import { demoEmail, TOUR_STEPS, TourContext, useTour } from "../tourSteps";
-import { CloseIcon, SparkleIcon } from "./icons";
+import { CloseIcon, PlayIcon } from "./icons";
 
 const SEEN_KEY = "unify.tour-offered";
 const CARD_W = 360;
@@ -136,13 +136,13 @@ function TourOverlay() {
       {rect ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed z-[60] rounded-2xl ring-2 ring-accent-cyan/80 transition-all duration-300"
+          className="pointer-events-none fixed z-[60] rounded-2xl ring-2 ring-accent-purple transition-all duration-300"
           style={{
             top: rect.top - PAD,
             left: rect.left - PAD,
             width: rect.width + 2 * PAD,
             height: rect.height + 2 * PAD,
-            boxShadow: "0 0 0 9999px rgb(4 7 18 / 0.68), 0 0 30px rgb(34 211 238 / 0.35)",
+            boxShadow: "0 0 0 9999px rgb(4 7 18 / 0.68)",
           }}
         />
       ) : (
@@ -154,18 +154,18 @@ function TourOverlay() {
       <div
         role="dialog"
         aria-label={`Tour step ${index + 1} of ${TOUR_STEPS.length}`}
-        className="fixed z-[61] rounded-2xl border border-accent-cyan/30 bg-navy-900 p-5 shadow-2xl shadow-black/60"
+        className="fixed z-[61] rounded-2xl border border-accent-soft/30 bg-navy-900 p-5 shadow-2xl shadow-black/60"
         style={cardPosition(rect)}
       >
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold tracking-wide text-accent-cyan uppercase">
+          <span className="text-[11px] font-semibold text-accent-soft">
             Step {index + 1} of {TOUR_STEPS.length}
           </span>
           <span className="flex flex-1 gap-1">
             {TOUR_STEPS.map((s, i) => (
               <span
                 key={s.title}
-                className={`h-1 flex-1 rounded-full ${i <= index ? "bg-accent-cyan" : "bg-white/10"}`}
+                className={`h-1 flex-1 rounded-full ${i <= index ? "bg-accent-soft" : "bg-white/10"}`}
               />
             ))}
           </span>
@@ -197,7 +197,7 @@ function TourOverlay() {
           <button
             onClick={() => (last ? end() : goTo(index + 1))}
             disabled={busy}
-            className="rounded-lg bg-gradient-to-r from-accent-purple to-accent-cyan px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-accent-purple px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-purple/85 disabled:opacity-50"
           >
             {busy ? "Switching…" : last ? "Finish" : "Next"}
           </button>
@@ -216,9 +216,9 @@ export function TourButton() {
     <button
       onClick={start}
       disabled={busy}
-      className="flex h-9 items-center gap-1.5 rounded-full border border-accent-cyan/30 px-3 text-sm text-accent-cyan hover:bg-accent-cyan/10"
+      className="flex h-9 items-center gap-1.5 rounded-full border border-white/10 px-3 text-sm text-slate-200 hover:bg-white/5"
     >
-      <SparkleIcon size={15} />
+      <PlayIcon size={14} />
       <span className="hidden sm:inline">Tour</span>
     </button>
   );
@@ -235,10 +235,8 @@ export function TourInvite() {
     setSeen(true);
   };
   return (
-    <div className="fixed right-4 bottom-4 left-4 z-50 rounded-2xl border border-accent-cyan/30 bg-navy-900/95 p-4 shadow-2xl shadow-black/50 backdrop-blur sm:left-auto sm:w-80">
-      <p className="flex items-center gap-2 text-sm font-semibold text-white">
-        <SparkleIcon size={16} className="text-accent-cyan" /> First time here?
-      </p>
+    <div className="fixed right-4 bottom-4 left-4 z-50 rounded-2xl border border-white/10 bg-navy-900/95 p-4 shadow-2xl shadow-black/50 backdrop-blur sm:left-auto sm:w-80">
+      <p className="flex items-center gap-2 text-sm font-semibold text-white">First time here?</p>
       <p className="mt-1 text-sm text-slate-300">
         Take the 2-minute guided tour. It switches between real demo roles so you can see the
         approval flow from both sides.
@@ -249,7 +247,7 @@ export function TourInvite() {
             dismiss();
             start();
           }}
-          className="rounded-lg bg-gradient-to-r from-accent-purple to-accent-cyan px-3 py-1.5 text-sm font-medium text-white"
+          className="rounded-lg bg-accent-purple px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-purple/85"
         >
           Start the tour
         </button>

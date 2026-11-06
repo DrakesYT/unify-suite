@@ -1,14 +1,8 @@
 /** Shared look for the dashboard charts and urgency colours. */
 
-export const PALETTE = [
-  "#8b5cf6",
-  "#22d3ee",
-  "#f59e0b",
-  "#34d399",
-  "#f472b6",
-  "#94a3b8",
-  "#60a5fa",
-];
+export const ACCENT = "#8b5cf6"; // the one accent; charts use it for the series that matters
+export const FAILED = "#f87171";
+export const QUIET = "#64748b"; // secondary series and small trend lines
 export const AXIS = { stroke: "#475569", fontSize: 11, tickLine: false, axisLine: false };
 export const TOOLTIP = {
   contentStyle: {

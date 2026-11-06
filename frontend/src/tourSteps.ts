@@ -16,7 +16,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/dashboard",
     target: '[data-tour="insights"]',
     title: "Five departments, one screen",
-    body: "You are Zara, the CEO. Every number on this dashboard is live from the database. The Insights line is written by code from those numbers, not by the AI, so it cannot invent anything.",
+    body: 'You are Zara, the CEO. Every number on this dashboard is live from the database. The "Needs a look" line is written by code from those numbers, not by the AI, so it cannot invent anything.',
   },
   {
     as: "finance.clerk",

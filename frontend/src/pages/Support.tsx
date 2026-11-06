@@ -191,7 +191,7 @@ function TicketDetail({
 
       {inv && (
         <div className="mt-5 space-y-3">
-          <h4 className="text-xs font-semibold text-slate-400 uppercase">Likely causes</h4>
+          <h4 className="text-xs font-semibold text-slate-400">Likely causes</h4>
           <ul className="space-y-2">
             {inv.likely_causes.map((c) => (
               <li key={c.cause} className="rounded-lg bg-navy-950/70 p-3 text-sm text-slate-200">
@@ -200,7 +200,7 @@ function TicketDetail({
                   {c.order_numbers.map((n) => (
                     <span
                       key={n}
-                      className="rounded bg-navy-800 px-1.5 py-0.5 font-mono text-xs text-accent-cyan"
+                      className="rounded bg-navy-800 px-1.5 py-0.5 font-mono text-xs text-accent-soft"
                     >
                       {n}
                     </span>
@@ -214,9 +214,7 @@ function TicketDetail({
             {inv.next_step}
           </p>
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase">
-              Draft reply (not sent)
-            </h4>
+            <h4 className="text-xs font-semibold text-slate-400">Draft reply (not sent)</h4>
             <p className="mt-1 rounded-lg border border-navy-800 p-3 text-sm whitespace-pre-wrap text-slate-300">
               {inv.draft_reply}
             </p>

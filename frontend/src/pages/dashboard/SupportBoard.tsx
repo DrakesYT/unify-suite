@@ -1,10 +1,9 @@
 import { Link } from "react-router";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Badge } from "../../components/ui";
 import { TicketIcon } from "../../components/icons";
 import { ago, label } from "../../format";
 import type { Overview } from "../../types";
-import { PALETTE, TOOLTIP, URGENCY_TONE } from "./chartStyle";
+import { URGENCY_TONE } from "./chartStyle";
 import { Panel, Quiet } from "./parts";
 
 export function SupportBoard({ support }: { support: Overview["support"] }) {
@@ -54,42 +53,26 @@ export function SupportBoard({ support }: { support: Overview["support"] }) {
             ))}
           </ul>
           {support.by_category.length > 0 && (
-            <div className="flex flex-col items-center">
-              <p className="self-start text-[11px] tracking-wide text-slate-500 uppercase">
-                By category
-              </p>
-              <ResponsiveContainer width="100%" height={120}>
-                <PieChart>
-                  <Pie
-                    data={support.by_category}
-                    dataKey="value"
-                    nameKey="label"
-                    innerRadius={34}
-                    outerRadius={54}
-                    paddingAngle={2}
-                    stroke="none"
-                  >
-                    {support.by_category.map((d, i) => (
-                      <Cell key={d.label} fill={PALETTE[i % PALETTE.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip {...TOOLTIP} formatter={(v: number, n: string) => [v, label(n)]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <ul className="w-full space-y-0.5">
-                {support.by_category.map((d, i) => (
-                  <li
-                    key={d.label}
-                    className="flex items-center gap-1.5 text-[11px] text-slate-400"
-                  >
-                    <span
-                      className="h-2 w-2 rounded-sm"
-                      style={{ background: PALETTE[i % PALETTE.length] }}
-                    />
-                    <span className="flex-1 capitalize">{label(d.label)}</span>
-                    <span className="text-slate-300">{d.value}</span>
-                  </li>
-                ))}
+            <div>
+              <p className="mb-2 text-xs text-slate-500">Open by category</p>
+              <ul className="space-y-2">
+                {support.by_category.map((d) => {
+                  const top = support.by_category[0].value || 1;
+                  return (
+                    <li key={d.label} className="text-xs">
+                      <span className="flex justify-between text-slate-300">
+                        <span className="capitalize">{label(d.label)}</span>
+                        <span className="tabular-nums">{d.value}</span>
+                      </span>
+                      <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/[0.06]">
+                        <span
+                          className="block h-full rounded-full bg-slate-400"
+                          style={{ width: `${(100 * d.value) / top}%` }}
+                        />
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

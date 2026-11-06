@@ -178,7 +178,7 @@ function ScoreCard({
       </div>
       <button
         onClick={() => setOpen(!open)}
-        className="mt-2 text-xs text-accent-cyan hover:underline"
+        className="mt-2 text-xs text-accent-soft hover:underline"
       >
         {open
           ? "Hide evidence"
@@ -191,7 +191,7 @@ function ScoreCard({
               key={e.requirement + e.quote}
               className="border-l-2 border-accent-purple pl-3 text-sm"
             >
-              <span className="text-xs text-slate-500 uppercase">{e.requirement}</span>
+              <span className="text-xs text-slate-500">{e.requirement}</span>
               <p className="text-slate-200 italic">“{e.quote}”</p>
             </li>
           ))}

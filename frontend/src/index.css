@@ -1,29 +1,25 @@
 @import "tailwindcss";
 
-/* Palette from the wireframe reference: dark navy, purple + cyan accents. */
+/* Dark navy surfaces and one purple accent (with a lighter tint of the same hue for text and
+   secondary marks). No glows or colour washes: colour is for what matters. */
 @theme {
   --color-navy-950: #070b1a;
   --color-navy-900: #0c1229;
   --color-navy-800: #141c3a;
   --color-accent-purple: #8b5cf6;
-  --color-accent-cyan: #22d3ee;
+  --color-accent-soft: #c4b5fd;
 }
 
 body {
   @apply bg-navy-950 text-slate-100 antialiased;
-  /* Soft purple and cyan glow behind the content, as in the wireframe. */
-  background-image:
-    radial-gradient(60rem 30rem at 15% -10%, rgb(139 92 246 / 0.12), transparent 70%),
-    radial-gradient(50rem 30rem at 95% 0%, rgb(34 211 238 / 0.08), transparent 70%);
-  background-attachment: fixed;
 }
 
-/* A row someone jumped to (search result, dashboard link) glows for a moment. */
+/* A row someone jumped to (search result, dashboard link) is outlined for a moment. */
 @keyframes flash-focus {
   0%,
   60% {
-    box-shadow: 0 0 0 2px rgb(34 211 238 / 0.8);
-    background-color: rgb(34 211 238 / 0.08);
+    box-shadow: 0 0 0 2px rgb(139 92 246 / 0.8);
+    background-color: rgb(139 92 246 / 0.08);
   }
   100% {
     box-shadow: 0 0 0 2px transparent;
@@ -35,24 +31,7 @@ body {
   border-radius: 0.5rem;
 }
 
-@keyframes aura-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 1;
-  }
-}
-
-.aura-orb {
-  animation: aura-pulse 3.2s ease-in-out infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .aura-orb,
   .flash-focus {
     animation: none;
   }

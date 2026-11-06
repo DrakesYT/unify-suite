@@ -10,7 +10,7 @@ import { useHashFocus } from "./useHashFocus";
 const pill = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3.5 py-1.5 text-sm whitespace-nowrap transition ${
     isActive
-      ? "bg-gradient-to-r from-accent-purple/35 to-accent-cyan/20 text-white ring-1 ring-accent-cyan/40 shadow-[0_0_18px] shadow-accent-purple/25"
+      ? "bg-accent-purple/20 text-white"
       : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
   }`;
 
@@ -48,7 +48,7 @@ export function Layout() {
             </button>
             <Link to="/" className="flex shrink-0 items-center gap-2" onClick={closeMenu}>
               <LogoMark />
-              <span className="text-[15px] font-bold tracking-wide text-white">
+              <span className="text-[15px] font-bold text-white">
                 UNIFY <span className="font-medium text-slate-400">SUITE</span>
               </span>
             </Link>

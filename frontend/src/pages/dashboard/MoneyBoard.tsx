@@ -70,9 +70,7 @@ export function MoneyBoard({ data }: { data: Overview["money"] }) {
       </div>
       {attention > 0 && (
         <>
-          <p className="mt-4 mb-1 text-[11px] tracking-wide text-slate-500 uppercase">
-            Needs attention
-          </p>
+          <p className="mt-4 mb-1 text-[11px] text-slate-500">Needs attention</p>
           <ul className="divide-y divide-white/5">
             {data.late_deliveries.map((d) => (
               <Row
@@ -103,9 +101,7 @@ export function MoneyBoard({ data }: { data: Overview["money"] }) {
           </ul>
         </>
       )}
-      <p className="mt-4 mb-1 text-[11px] tracking-wide text-slate-500 uppercase">
-        Latest supplier invoices
-      </p>
+      <p className="mt-4 mb-1 text-[11px] text-slate-500">Latest supplier invoices</p>
       <ul className="divide-y divide-white/5">
         {data.recent_invoices.map((inv) => (
           <Row

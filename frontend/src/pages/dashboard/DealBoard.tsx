@@ -19,52 +19,34 @@ function sumText(values: Money[]): string {
     : "—";
 }
 
-/** Half-circle gauge: won this quarter against the quarterly target. */
-function TargetGauge({ target }: { target: Overview["crm"]["target"] }) {
+/** Won this quarter against the quarterly target: one progress bar. */
+function TargetBar({ target }: { target: Overview["crm"]["target"] }) {
   const share = target.target_minor ? target.won_minor / target.target_minor : 0;
   const pct = Math.round(share * 100);
-  const r = 62;
-  const arc = Math.PI * r;
-  const filled = arc * Math.min(share, 1);
   return (
-    <div className="flex flex-col items-center rounded-xl bg-navy-950/60 px-3 pt-3 pb-2 ring-1 ring-white/5">
-      <svg
-        viewBox="0 0 150 86"
-        className="w-full max-w-[170px]"
-        role="img"
+    <div className="flex min-w-0 flex-col justify-center rounded-xl bg-navy-950/60 px-3.5 py-3 ring-1 ring-white/5">
+      <p className="truncate text-xs text-slate-400">Won in {target.quarter}</p>
+      <p className="mt-1 truncate text-xl font-semibold text-white tabular-nums">
+        {compactMoney(target.won_minor, target.currency)}{" "}
+        <span className="text-xs font-normal text-slate-500">
+          of {compactMoney(target.target_minor, target.currency)}
+        </span>
+      </p>
+      <div
+        className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
         aria-label={`${pct}% of target`}
       >
-        <defs>
-          <linearGradient id="gauge-fill" x1="0" x2="1">
-            <stop offset="0" stopColor="#8b5cf6" />
-            <stop offset="1" stopColor="#22d3ee" />
-          </linearGradient>
-        </defs>
-        <path
-          d={`M ${75 - r} 78 A ${r} ${r} 0 0 1 ${75 + r} 78`}
-          fill="none"
-          stroke="rgb(255 255 255 / 0.07)"
-          strokeWidth="11"
-          strokeLinecap="round"
+        <div
+          className="h-full rounded-full bg-accent-purple"
+          style={{ width: `${Math.min(pct, 100)}%` }}
         />
-        <path
-          d={`M ${75 - r} 78 A ${r} ${r} 0 0 1 ${75 + r} 78`}
-          fill="none"
-          stroke="url(#gauge-fill)"
-          strokeWidth="11"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${arc}`}
-        />
-        <text x="75" y="62" textAnchor="middle" className="fill-white text-[19px] font-semibold">
-          {compactMoney(target.won_minor, target.currency)}
-        </text>
-        <text x="75" y="78" textAnchor="middle" className="fill-slate-400 text-[10px]">
-          {pct}% of target
-        </text>
-      </svg>
-      <p className="mt-1 text-center text-[11px] text-slate-500">
-        Won in {target.quarter} · target {compactMoney(target.target_minor, target.currency)}
-        <span className="block text-slate-600">(company setting)</span>
+      </div>
+      <p className="mt-1 truncate text-xs text-slate-500">
+        {pct}% of the quarterly target (company setting)
       </p>
     </div>
   );
@@ -96,13 +78,11 @@ export function DealBoard({ crm }: { crm: Overview["crm"] }) {
           label="Win rate"
           value={crm.win_rate === null ? "—" : `${crm.win_rate}%`}
           hint={crm.won + crm.lost ? `${crm.won} won · ${crm.lost} lost` : "no deals closed yet"}
-          tone="text-accent-cyan"
+          tone="text-accent-soft"
         />
-        <TargetGauge target={crm.target} />
+        <TargetBar target={crm.target} />
       </div>
-      <p className="mt-4 mb-1.5 text-[11px] tracking-wide text-slate-500 uppercase">
-        Biggest open deals
-      </p>
+      <p className="mt-4 mb-1.5 text-[11px] text-slate-500">Biggest open deals</p>
       <ul className="divide-y divide-white/5">
         {crm.top_deals.slice(0, 4).map((d) => (
           <li key={d.lead_id}>

@@ -8,7 +8,7 @@ const TONES: Record<string, string> = {
   matched: "bg-emerald-500/15 text-emerald-300",
   waiting_approval: "bg-amber-500/15 text-amber-300",
   pending: "bg-slate-500/15 text-slate-300",
-  running: "bg-accent-cyan/15 text-accent-cyan",
+  running: "bg-accent-soft/15 text-accent-soft",
   mismatch: "bg-amber-500/15 text-amber-300",
   no_po: "bg-amber-500/15 text-amber-300",
   skipped: "bg-slate-500/10 text-slate-500",
@@ -21,7 +21,7 @@ const TONES: Record<string, string> = {
   lost: "bg-slate-500/15 text-slate-400",
   critical: "bg-red-500/20 text-red-300",
   high: "bg-amber-500/15 text-amber-300",
-  open: "bg-accent-cyan/15 text-accent-cyan",
+  open: "bg-accent-soft/15 text-accent-soft",
   investigating: "bg-accent-purple/20 text-violet-200",
   escalated: "bg-amber-500/15 text-amber-300",
   resolved: "bg-emerald-500/15 text-emerald-300",
@@ -66,11 +66,7 @@ export function Card({
     <section data-tour={tour} className="rounded-xl border border-navy-800 bg-navy-900 p-5">
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          {title && (
-            <h2 className="text-sm font-semibold tracking-wide text-slate-300 uppercase">
-              {title}
-            </h2>
-          )}
+          {title && <h2 className="text-sm font-semibold text-slate-300">{title}</h2>}
           {actions}
         </div>
       )}
@@ -98,9 +94,7 @@ export function InjectionWarning({ lines }: { lines?: string[] }) {
   if (!lines || lines.length === 0) return null;
   return (
     <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 p-3">
-      <p className="text-xs font-semibold text-red-200 uppercase">
-        Possible prompt injection — ignored
-      </p>
+      <p className="text-xs font-semibold text-red-200">Possible prompt injection — ignored</p>
       <p className="mt-1 text-sm text-red-100">
         This document contains text addressed to the AI. The agent did not follow it; check the
         document before approving.

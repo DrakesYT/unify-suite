@@ -89,7 +89,7 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div ref={box} className="relative w-full">
-      <label className="flex items-center gap-2 rounded-full border border-white/10 bg-navy-900/80 px-3 py-1.5 text-slate-400 focus-within:border-accent-cyan/60 focus-within:text-slate-200">
+      <label className="flex items-center gap-2 rounded-full border border-white/10 bg-navy-900/80 px-3 py-1.5 text-slate-400 focus-within:border-accent-soft/60 focus-within:text-slate-200">
         <SearchIcon size={16} />
         <input
           ref={input}
@@ -133,7 +133,7 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
                     i === active ? "bg-accent-purple/15" : ""
                   }`}
                 >
-                  <span className="w-16 shrink-0 text-[10px] font-semibold tracking-wide text-accent-cyan uppercase">
+                  <span className="w-16 shrink-0 text-[10px] font-semibold text-accent-soft">
                     {KIND_LABEL[hit.kind] ?? hit.kind}
                   </span>
                   <span className="min-w-0">

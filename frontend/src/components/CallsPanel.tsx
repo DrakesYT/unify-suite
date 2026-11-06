@@ -7,7 +7,7 @@ import { Badge, ErrorNote, ghostButton, inputClass, primaryButton } from "./ui";
 import { WhyButton } from "./WhyDrawer";
 import { toast } from "../toast";
 
-const SPEAKER_COLORS = ["bg-accent-purple", "bg-accent-cyan", "bg-amber-400", "bg-emerald-400"];
+const SPEAKER_COLORS = ["bg-accent-purple", "bg-accent-soft", "bg-amber-400", "bg-emerald-400"];
 
 function AddCall({
   target,
@@ -180,7 +180,7 @@ function CallCard({
             </div>
           )}
           <div>
-            <p className="mb-1 text-xs font-semibold text-slate-400 uppercase">Action items</p>
+            <p className="mb-1 text-xs font-semibold text-slate-400">Action items</p>
             {a.action_items.length === 0 && (
               <p className="text-xs text-slate-500">No one committed to a follow-up.</p>
             )}
@@ -188,10 +188,10 @@ function CallCard({
               {a.action_items.map((item) => (
                 <li key={item.quote + item.task} className="flex gap-2">
                   <span
-                    className={`mt-0.5 h-fit shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+                    className={`mt-0.5 h-fit shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                       item.owner === "us"
                         ? "bg-accent-purple/20 text-violet-200"
-                        : "bg-accent-cyan/15 text-accent-cyan"
+                        : "bg-accent-soft/15 text-accent-soft"
                     }`}
                   >
                     {item.owner === "us" ? "We" : "Customer"}
@@ -255,7 +255,7 @@ export function CallsPanel({
   return (
     <div className="mt-4 rounded-lg border border-navy-800 bg-navy-950/40 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-300 uppercase">
+        <p className="text-xs font-semibold text-slate-300">
           Calls {data && data.length > 0 && <span className="text-slate-500">({data.length})</span>}
         </p>
         {editable && (

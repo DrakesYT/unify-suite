@@ -42,7 +42,7 @@ function Fields({ fields }: { fields: Explanation["ai_read"] }) {
     <dl className="space-y-2 text-sm">
       {fields.map((f, i) => (
         <div key={`${f.label}-${i}`}>
-          <dt className="text-[11px] tracking-wide text-slate-500 uppercase">{f.label}</dt>
+          <dt className="text-[11px] text-slate-500 first-letter:uppercase">{f.label}</dt>
           <dd className="mt-0.5 break-words whitespace-pre-wrap text-slate-200">
             {f.value || "—"}
           </dd>
@@ -93,16 +93,14 @@ function WhyDrawer({
       <aside
         role="dialog"
         aria-label="Why the AI said this"
-        className="relative flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-accent-purple/30 bg-navy-900 shadow-2xl shadow-black/60"
+        className="relative flex h-full w-full max-w-lg flex-col overflow-hidden border-l border-white/10 bg-navy-900 shadow-2xl shadow-black/60"
       >
-        <header className="flex items-start gap-3 bg-gradient-to-br from-accent-purple/25 to-accent-cyan/10 px-5 py-4">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent-purple/25 text-accent-cyan">
+        <header className="flex items-start gap-3 border-b border-white/5 px-5 py-4">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent-purple/25 text-accent-soft">
             <QuestionIcon />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold tracking-wide text-accent-cyan uppercase">
-              Why?
-            </p>
+            <p className="text-[11px] font-semibold text-accent-soft">Why?</p>
             <h2 className="text-base font-semibold text-white">
               {data?.title ?? (notice ? "Nothing from the AI here" : "Loading…")}
             </h2>
@@ -166,7 +164,7 @@ function WhyDrawer({
                 <ul className="space-y-1.5 text-sm text-slate-200">
                   {data.code_decided.map((line) => (
                     <li key={line} className="flex gap-2">
-                      <CheckIcon size={15} className="mt-0.5 shrink-0 text-accent-cyan" />
+                      <CheckIcon size={15} className="mt-0.5 shrink-0 text-accent-soft" />
                       {line}
                     </li>
                   ))}
@@ -231,7 +229,7 @@ export function WhyButton({ path, verifiable = true }: { path: string; verifiabl
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 rounded-full border border-accent-cyan/30 px-2 py-0.5 text-xs text-accent-cyan hover:bg-accent-cyan/10"
+        className="inline-flex items-center gap-1 rounded-full border border-accent-soft/30 px-2 py-0.5 text-xs text-accent-soft hover:bg-accent-soft/10"
       >
         <QuestionIcon size={13} /> Why?
       </button>

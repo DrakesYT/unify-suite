@@ -177,7 +177,7 @@ function Ranking({ comparison }: { comparison: VendorComparison }) {
     <div className="space-y-3">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="text-xs text-slate-500 uppercase">
+          <thead className="text-xs text-slate-500">
             <tr>
               <th className="py-2 pr-3">#</th>
               <th className="py-2 pr-3">Vendor</th>
@@ -204,7 +204,7 @@ function Ranking({ comparison }: { comparison: VendorComparison }) {
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-16 rounded-full bg-navy-800">
                       <div
-                        className="h-1.5 rounded-full bg-accent-cyan"
+                        className="h-1.5 rounded-full bg-accent-soft"
                         style={{ width: `${r.score}%` }}
                       />
                     </div>
@@ -294,7 +294,7 @@ function RequestDetail({
         <Badge value={request.status} />
       </div>
 
-      <h4 className="mt-5 mb-2 text-xs font-semibold text-slate-400 uppercase">Quotes</h4>
+      <h4 className="mt-5 mb-2 text-xs font-semibold text-slate-400">Quotes</h4>
       {(quotes.data ?? []).length === 0 && <p className="text-sm text-slate-500">No quotes yet.</p>}
       <ul className="space-y-1 text-sm">
         {(quotes.data ?? []).map((q) => (
@@ -401,7 +401,7 @@ function RequestDetail({
       {request.comparison && (
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase">
+            <h4 className="text-xs font-semibold text-slate-400">
               Vendor ranking · {when(request.comparison.compared_at)}
             </h4>
             <WhyButton path={`purchase-request/${request.id}`} />

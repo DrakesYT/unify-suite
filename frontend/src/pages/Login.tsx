@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Navigate } from "react-router";
 import { useAuth } from "../session";
 import { ErrorNote, inputClass, primaryButton } from "../components/ui";
+import { LogoMark } from "../components/icons";
 
 export function Login() {
   const { user, signIn } = useAuth();
@@ -32,8 +33,9 @@ export function Login() {
         className="w-full max-w-sm space-y-4 rounded-2xl border border-navy-800 bg-navy-900 p-8"
       >
         <div className="text-center">
-          <h1 className="bg-gradient-to-r from-accent-purple to-accent-cyan bg-clip-text text-3xl font-bold tracking-tight text-transparent">
-            UNIFY SUITE
+          <h1 className="flex items-center justify-center gap-2 text-2xl font-semibold tracking-tight text-white">
+            <LogoMark size={30} />
+            UNIFY <span className="font-medium text-slate-400">SUITE</span>
           </h1>
           <p className="mt-2 text-sm text-slate-400">AI workforce platform, powered by Vultr</p>
         </div>

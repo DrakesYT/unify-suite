@@ -98,7 +98,7 @@ export function EmailPanel({
   return (
     <div className="mt-3 rounded-lg border border-navy-800 bg-navy-950/40 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-slate-300 uppercase">
+        <p className="text-xs font-semibold text-slate-300">
           {title} {email && <Badge value={email.status} />}{" "}
           {email && <WhyButton path={`email/${email.id}`} verifiable={false} />}
         </p>
