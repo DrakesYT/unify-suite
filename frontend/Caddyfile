@@ -13,16 +13,13 @@
 	}
 }
 
-:80 {
-	encode gzip
-
-	# Uploads are capped at 10 MB by the API; anything far bigger is refused before it is stored.
-	request_body {
-		max_size 12MB
-	}
-
+# Security headers for every response, error pages included. `defer` applies them as the response
+# goes out, after the proxy has added its own headers, so the server-naming ones can be removed.
+(security_headers) {
 	header {
+		defer
 		-Server
+		-Via
 		# Browsers remember to use HTTPS only (this host and anything under it) for a year.
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		# Only our own files may run or load. No inline scripts, no other sites, no plugins, and no
@@ -36,19 +33,22 @@
 		Cross-Origin-Opener-Policy "same-origin"
 		Cross-Origin-Resource-Policy "same-origin"
 	}
+}
+
+:80 {
+	encode gzip
+	import security_headers
+
+	# Uploads are capped at 10 MB by the API; anything far bigger is refused before it is stored.
+	request_body {
+		max_size 12MB
+	}
 
 	handle /api/* {
 		reverse_proxy backend:8000 {
 			# Exactly one address reaches the backend: the visitor's, as worked out above.
 			header_up X-Forwarded-For {client_ip}
-			header_down -Server
 		}
-	}
-
-	# A body refused for size gets the API's usual error shape, so the page can show the reason.
-	handle_errors 413 {
-		header Content-Type application/json
-		respond `{"error":{"code":"file_too_large","message":"Files can be at most 10 MB"}}` 413
 	}
 
 	# Built files have a content hash in their name, so they can be cached for good.
@@ -64,5 +64,21 @@
 		header Cache-Control "no-cache"
 		try_files {path} /index.html
 		file_server
+	}
+
+	# Errors Caddy answers itself (a missing file, a body too big) get the same headers, and a body
+	# refused for size gets the API's usual error shape so the page can show the reason.
+	handle_errors {
+		import security_headers
+		# Never cache an error (a 404 for a script must not stick for a year like a real file).
+		header Cache-Control "no-store"
+		@too_big expression {err.status_code} == 413
+		handle @too_big {
+			header Content-Type application/json
+			respond `{"error":{"code":"file_too_large","message":"Files can be at most 10 MB"}}` 413
+		}
+		handle {
+			respond "{err.status_code} {err.status_text}"
+		}
 	}
 }
