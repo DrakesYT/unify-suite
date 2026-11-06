@@ -40,18 +40,18 @@ export function Login() {
       <div className="anim-rise-slow grid w-full max-w-[1120px] gap-2 rounded-3xl border border-white/5 bg-navy-900 p-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         {/* Left: the form */}
         <section className="flex flex-col px-5 py-8 sm:px-10 lg:px-14 lg:py-12">
-          <div className="anim-rise flex items-center gap-2" style={at(80)}>
-            <LogoMark size={30} />
-            <span className="text-[15px] font-bold text-white">
-              UNIFY <span className="font-medium text-slate-400">SUITE</span>
+          <div className="anim-rise flex items-center gap-3" style={at(80)}>
+            <LogoMark size={44} />
+            <span className="text-2xl font-bold tracking-tight text-white sm:text-[28px]">
+              UNIFY <span className="font-medium text-accent-soft">SUITE</span>
             </span>
           </div>
 
           <form onSubmit={submit} className="my-auto w-full max-w-sm space-y-5 py-10 lg:py-14">
             <div className="anim-rise" style={at(120)}>
-              <h1 className="text-3xl font-semibold tracking-tight text-white">Welcome back</h1>
+              <h1 className="text-3xl font-semibold tracking-tight text-white">Sign in to UNIFY</h1>
               <p className="mt-2 text-sm text-slate-400">
-                Sign in to your workspace. Your agents kept working while you were away.
+                Your AI workforce for sales, finance, hiring, support and procurement.
               </p>
             </div>
 
