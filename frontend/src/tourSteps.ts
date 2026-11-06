@@ -30,7 +30,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/approvals",
     target: '[data-tour="approvals"] > :first-child',
     title: "Nothing is paid without a human",
-    body: "Now you are Maryam, the finance manager. The workflow has stopped and waits for you. Approve or reject: a price mismatch or a prompt-injection attempt in the document is shown before you decide.",
+    body: "Now you are Maryam, the finance manager. Payments, purchase orders and emails stop here until a manager approves or rejects them; if you uploaded an invoice in step 2, it is waiting at the top. A price mismatch or a prompt-injection attempt in the document is shown before you decide.",
   },
   {
     as: "ceo",
