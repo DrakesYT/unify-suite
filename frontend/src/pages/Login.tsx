@@ -49,7 +49,7 @@ export function Login() {
 
           <form onSubmit={submit} className="my-auto w-full max-w-sm space-y-5 py-10 lg:py-14">
             <div className="anim-rise" style={at(120)}>
-              <h1 className="text-3xl font-semibold tracking-tight text-white">Sign in to UNIFY</h1>
+              <h1 className="text-xl font-semibold text-white">Sign in to UNIFY</h1>
               <p className="mt-2 text-sm text-slate-400">
                 Your AI workforce for sales, finance, hiring, support and procurement.
               </p>
