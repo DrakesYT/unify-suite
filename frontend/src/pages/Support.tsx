@@ -103,6 +103,60 @@ function NewTicket({
   );
 }
 
+function InsightsPanel({ ticket, customer }: { ticket: Ticket; customer: Customer | undefined }) {
+  const inv = ticket.investigation;
+  return (
+    <aside className="h-fit rounded-lg border border-navy-800 bg-navy-950/60 p-4">
+      <h4 className="text-xs font-semibold text-slate-400">AI insights</h4>
+      <dl className="mt-3 space-y-3 text-sm">
+        <div>
+          <dt className="text-xs text-slate-500">Summary</dt>
+          <dd className="mt-0.5 text-slate-200">
+            {inv
+              ? (inv.likely_causes[0]?.cause ?? inv.next_step)
+              : "Not investigated yet. Run “Investigate orders” to get one."}
+          </dd>
+        </div>
+        {inv && (
+          <div>
+            <dt className="text-xs text-slate-500">Next step</dt>
+            <dd className="mt-0.5 text-slate-200">{inv.next_step}</dd>
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <dt className="text-xs text-slate-500">Category</dt>
+          <dd>{ticket.category ? <Badge value={ticket.category} /> : "Not set"}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-xs text-slate-500">Priority</dt>
+          <dd>{ticket.urgency ? <Badge value={ticket.urgency} /> : "Not set"}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-xs text-slate-500">Status</dt>
+          <dd>
+            <Badge value={ticket.status} />
+          </dd>
+        </div>
+        {customer && (
+          <div className="flex items-center justify-between gap-2">
+            <dt className="text-xs text-slate-500">Customer</dt>
+            <dd className="truncate text-slate-300">{customer.name}</dd>
+          </div>
+        )}
+        {inv && (
+          <div className="flex items-center justify-between">
+            <dt className="text-xs text-slate-500">Orders checked</dt>
+            <dd className="text-slate-300">{inv.order_numbers_used.length}</dd>
+          </div>
+        )}
+      </dl>
+      {inv && (
+        <p className="mt-3 text-xs text-slate-500">Investigated {when(inv.investigated_at)}</p>
+      )}
+    </aside>
+  );
+}
+
 function TicketDetail({
   ticket,
   customer,
@@ -139,8 +193,8 @@ function TicketDetail({
     }
   };
 
-  return (
-    <Card title="Ticket">
+  const main = (
+    <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-white">{ticket.title}</h3>
@@ -258,6 +312,17 @@ function TicketDetail({
         </p>
       )}
       <CallsPanel ticketId={ticket.id} editable={editable} />
+    </>
+  );
+
+  return (
+    <Card title="Ticket">
+      <div className="@container">
+        <div className="grid gap-5 @3xl:grid-cols-[1fr_250px]">
+          <div className="min-w-0">{main}</div>
+          <InsightsPanel ticket={ticket} customer={customer} />
+        </div>
+      </div>
     </Card>
   );
 }

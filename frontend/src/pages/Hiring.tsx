@@ -132,6 +132,81 @@ function ResumeUpload({ job, onUploaded }: { job: Job | null; onUploaded: () => 
   );
 }
 
+const STRONG_MIN_SCORE = 75; // same band as the green score bar
+
+/** Stages come from the screening scores that already exist: nothing is invented. */
+function JobFunnel({ job, scores }: { job: Job; scores: CandidateScore[] }) {
+  const screened = scores.length;
+  const qualified = scores.filter((s) => s.score >= INTERVIEW_MIN_SCORE).length;
+  const strong = scores.filter((s) => s.score >= STRONG_MIN_SCORE).length;
+  const stages = [
+    { name: "Applied", n: job.applicants, of: job.applicants },
+    { name: "Screened", n: screened, of: job.applicants },
+    { name: `Score ${INTERVIEW_MIN_SCORE}+`, n: qualified, of: screened },
+    { name: `Score ${STRONG_MIN_SCORE}+`, n: strong, of: qualified },
+  ];
+  const pct = (n: number, of: number) => (of > 0 ? Math.round((n / of) * 100) : 0);
+  const done = pct(screened, job.applicants);
+  const r = 44;
+  const circ = 2 * Math.PI * r;
+  return (
+    <div className="mb-5 grid gap-4 md:grid-cols-[200px_1fr]">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-navy-800 bg-navy-950/60 p-4">
+        <svg
+          width="112"
+          height="112"
+          viewBox="0 0 112 112"
+          role="img"
+          aria-label={`${done}% of applicants screened`}
+        >
+          <circle cx="56" cy="56" r={r} fill="none" strokeWidth="9" className="stroke-navy-800" />
+          <circle
+            cx="56"
+            cy="56"
+            r={r}
+            fill="none"
+            strokeWidth="9"
+            strokeLinecap="round"
+            className="stroke-accent-purple"
+            strokeDasharray={circ}
+            strokeDashoffset={circ * (1 - done / 100)}
+            transform="rotate(-90 56 56)"
+          />
+          <text x="56" y="56" textAnchor="middle" className="fill-white text-xl font-semibold">
+            {done}%
+          </text>
+          <text x="56" y="73" textAnchor="middle" className="fill-slate-500 text-[10px]">
+            screened
+          </text>
+        </svg>
+        <p className="mt-2 text-xs text-slate-500">Pipeline progress</p>
+      </div>
+      <div className="rounded-lg border border-navy-800 bg-navy-950/60 p-4">
+        <h3 className="mb-3 text-xs font-semibold text-slate-400">Conversion funnel</h3>
+        <ul className="space-y-2.5">
+          {stages.map((st, i) => (
+            <li key={st.name}>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-300">{st.name}</span>
+                <span className="text-slate-400">
+                  {st.n}
+                  {i > 0 && ` (${pct(st.n, st.of)}%)`}
+                </span>
+              </div>
+              <div className="mt-1 h-2 rounded-full bg-navy-800">
+                <div
+                  className="h-2 rounded-full bg-accent-purple"
+                  style={{ width: `${pct(st.n, job.applicants)}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function ScoreCard({
   s,
   jobId,
@@ -149,7 +224,12 @@ function ScoreCard({
     <li className="rounded-lg border border-navy-800 bg-navy-950/60 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-medium text-slate-100">{s.candidate.name}</p>
+          <p className="flex items-center gap-2 font-medium text-slate-100">
+            {s.candidate.name}
+            <span className="rounded-full bg-accent-purple/20 px-2 py-0.5 text-xs font-medium text-accent-soft">
+              {s.score}% match
+            </span>
+          </p>
           <p className="text-xs text-slate-500">
             {s.candidate.years_experience ?? 0} years · {s.candidate.email ?? "no email"}
           </p>
@@ -315,6 +395,7 @@ export function Hiring() {
               No one screened for this job yet.
             </Empty>
           )}
+          {job && scores.data && <JobFunnel job={job} scores={ranked} />}
           <ol className="space-y-3">
             {ranked.map((s) => (
               <ScoreCard key={s.candidate.id} s={s} jobId={job!.id} editable={editable} />
