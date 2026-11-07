@@ -17,12 +17,20 @@ class InvoiceText(BaseModel):
 
 
 class InvoiceLine(BaseModel):
-    """One printed line. Figures may be negative (a discount line, a credit note)."""
+    """One printed line. Figures may be negative (a discount line, a credit note). A figure the
+    line does not print is null ("Steel brackets x 400" has no unit price or line amount), and
+    code only checks the arithmetic it can see."""
 
     description: Annotated[str, Field(max_length=200)] = ""
-    quantity: Annotated[Decimal, Field(description="Quantity as a decimal string")]
-    unit_price: Annotated[Decimal, Field(description="Unit price as a decimal string")]
-    amount: Annotated[Decimal, Field(description="Line amount as printed")]
+    quantity: Decimal | None = Field(
+        default=None, description="Quantity as a decimal string, or null if not printed"
+    )
+    unit_price: Decimal | None = Field(
+        default=None, description="Unit price as a decimal string, or null if not printed"
+    )
+    amount: Decimal | None = Field(
+        default=None, description="Line amount as printed, or null if not printed"
+    )
 
 
 DocumentType = Literal["invoice", "credit_note", "quotation", "reminder", "other"]

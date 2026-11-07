@@ -43,31 +43,39 @@ def _round(value: Decimal, currency: str) -> Decimal:
 
 def line_item_differences(fields: InvoiceFields) -> list[FieldDifference]:
     """Lines whose quantity x price is not their amount, and lines that don't add up to the total.
+    Only figures that are printed are checked: a line without a unit price or amount has no
+    arithmetic to check, and the lines are summed only when every line prints its amount.
     Nothing to check when the invoice lists no lines."""
     if not fields.line_items:
         return []
     cur = fields.currency
-    differences = [
-        FieldDifference(
-            field="line_math",
-            invoice={
-                "description": line.description,
-                "quantity": str(line.quantity),
-                "unit_price": str(line.unit_price),
-                "amount": str(line.amount),
-            },
-            po=str(_round(line.quantity * line.unit_price, cur)),
-        )
-        for line in fields.line_items
-        if _round(line.quantity * line.unit_price, cur) != _round(line.amount, cur)
-    ]
-    lines_total = sum((_round(line.amount, cur) for line in fields.line_items), Decimal(0))
-    if lines_total != _round(fields.total_amount, cur):
-        differences.append(
-            FieldDifference(
-                field="line_items_total",
-                invoice=fields.amount_minor,
-                po=to_minor(lines_total, cur),
+    differences = []
+    for line in fields.line_items:
+        if line.quantity is None or line.unit_price is None or line.amount is None:
+            continue
+        expected = _round(line.quantity * line.unit_price, cur)
+        if expected != _round(line.amount, cur):
+            differences.append(
+                FieldDifference(
+                    field="line_math",
+                    invoice={
+                        "description": line.description,
+                        "quantity": str(line.quantity),
+                        "unit_price": str(line.unit_price),
+                        "amount": str(line.amount),
+                    },
+                    po=str(expected),
+                )
             )
-        )
+    amounts = [line.amount for line in fields.line_items]
+    if all(a is not None for a in amounts):
+        lines_total = sum((_round(a, cur) for a in amounts if a is not None), Decimal(0))
+        if lines_total != _round(fields.total_amount, cur):
+            differences.append(
+                FieldDifference(
+                    field="line_items_total",
+                    invoice=fields.amount_minor,
+                    po=to_minor(lines_total, cur),
+                )
+            )
     return differences

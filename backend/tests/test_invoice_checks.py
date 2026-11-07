@@ -79,6 +79,43 @@ def test_no_lines_means_nothing_to_check() -> None:
     assert line_item_differences(InvoiceFields.model_validate(EXTRACTED)) == []
 
 
+# "Steel brackets x 400" and nothing else: the line prints no unit price and no amount.
+UNPRICED_LINE = [
+    {"description": "Steel brackets", "quantity": "400", "unit_price": None, "amount": None}
+]
+
+
+def test_figures_a_line_does_not_print_are_null_and_not_checked() -> None:
+    fields = InvoiceFields.model_validate(EXTRACTED | {"line_items": UNPRICED_LINE})
+
+    assert fields.line_items[0].unit_price is None
+    assert line_item_differences(fields) == []
+
+
+def test_lines_are_summed_only_when_every_line_prints_an_amount() -> None:
+    mixed = [GOOD_LINES[0] | {"amount": "4100.00"}, UNPRICED_LINE[0]]
+    fields = InvoiceFields.model_validate(EXTRACTED | {"line_items": mixed})
+
+    # The priced line's own arithmetic is still checked; no total check with a line missing.
+    assert [d.field for d in line_item_differences(fields)] == ["line_math"]
+
+
+def test_an_invoice_with_an_unpriced_line_still_matches_its_po(
+    client: TestClient,
+    headers: dict[str, str],  # noqa: F811
+    fake_llm: FakeLLMClient,
+    po: None,  # noqa: F811
+) -> None:
+    """Before, the schema demanded a unit price on every line, so such an invoice failed
+    extraction three times and its payment run stopped at F1."""
+    fake_llm.replies.append(EXTRACTED | {"line_items": UNPRICED_LINE})
+
+    body = _upload(client, headers).json()
+
+    assert body["match"]["status"] == "matched"
+    assert body["match"]["differences"] == []
+
+
 def test_an_invoice_whose_lines_do_not_add_up_is_not_matched(
     client: TestClient,
     headers: dict[str, str],  # noqa: F811

@@ -28,7 +28,8 @@ Rules:
   words around it (e.g. "PO 2001 / maybe 2002"), or null if there is none. Do not tidy it up.
 - line_items: every line item as printed, in order: description, quantity, unit_price and the
   line amount, digits and a decimal point only. Copy the printed figures even if they look wrong;
-  do not recalculate them. An empty list if the invoice has no line items."""
+  do not recalculate them. Use null for a figure the line does not print (e.g. a unit price on
+  "Steel brackets x 400"). An empty list if the invoice has no line items."""
 
 
 class InvoiceProcessor(Agent[InvoiceText, InvoiceFields]):
