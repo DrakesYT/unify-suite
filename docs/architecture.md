@@ -3,7 +3,7 @@
 ```mermaid
 flowchart LR
     user([Browser]) -->|HTTPS| proxy[Coolify proxy<br/>TLS + domain]
-    subgraph vm[Vultr Cloud Compute VM — docker-compose.yml]
+    subgraph vm[Vultr Cloud Compute VM: docker-compose.yml]
         proxy --> fe[frontend<br/>Caddy: React build + /api pass-through]
         fe -->|/api/*| be[backend<br/>FastAPI + uvicorn<br/>named volume uploads]
         be -->|SQLAlchemy| db[(db<br/>PostgreSQL 16<br/>named volume pgdata)]
@@ -19,6 +19,8 @@ flowchart LR
 - Agents (`backend/app/agents/`) get typed input, return typed output and never touch the database.
   The runner checks the caller's permission, retries invalid or timed-out model replies twice (2 s, 8 s),
   and writes an `agent_tasks` + `audit_logs` row for every agent call and every tool call.
+  A connection that fails before any reply (a stale keep-alive) is retried at once inside the LLM
+  client, within the agent's time limit, so it never counts as a failed task.
 
   | Agent | Department | Uses the LLM to | Time limit |
   |---|---|---|---|
@@ -33,7 +35,7 @@ flowchart LR
   | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
   | Payment Reminder Writer | finance | draft a reminder for an overdue customer order | 30 s |
   | Supplier Follow-up Writer | procurement | draft a chase email for a late purchase order | 30 s |
-  | Verification Agent | finance | — (rules only) | 5 s |
+  | Verification Agent | finance | nothing (rules only) | 5 s |
 - Uploads (`services/uploads.py`) are refused before anything is stored if the agents could not read
   them: only PDF, CSV and TXT up to 10 MB, type checked by content (magic bytes), images and Word files
   get a message saying what to do, and a PDF with no text layer (a scan) is refused with its reason, so
@@ -108,7 +110,10 @@ flowchart LR
   `SALES_QUARTER_TARGET` applies), open
   tickets by urgency, money stuck in invoices / customer payments / late deliveries, and an insights line
   worded by code from those numbers (no model). The top-bar search (`/api/search`) applies the same
-  read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call and retries failed workflow runs.
+  read rule as every page, so an employee only finds their own department's records. The Command Center lists every agent/tool call (`/api/agents/activity`), retries failed
+  workflow runs, and draws the latest supplier-payment run as a hand-off graph
+  (`/api/agents/handoff`, read-only). The Sales page's funnel and weekly trend lines come from
+  `/api/sales/summary` (read-only SQL aggregates; weeks are counted in UTC).
 - Aura chat: the Aura Router picks one route from a fixed list and names the target; code finds the record,
   checks the user's rights and runs the department agent, so Aura can never do more than the user can.
 - Email quality gate (`agents/writing_checks.py`): `check_draft` (all four email writers), the Ticket
