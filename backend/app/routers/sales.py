@@ -12,7 +12,7 @@ from app.mailer import Mailer
 from app.models.enums import Department, LeadRating, LeadStatus
 from app.schemas.common import Page
 from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
-from app.schemas.sales import LeadCreate, LeadOut, LeadUpdate
+from app.schemas.sales import LeadCreate, LeadOut, LeadUpdate, SalesSummary
 from app.services import outbound, outreach, sales
 
 router = APIRouter(
@@ -21,6 +21,12 @@ router = APIRouter(
     dependencies=[Depends(require_department(Department.sales))],
 )
 Limit = Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)]
+
+
+@router.get("/summary")
+def sales_summary(db: DbSession) -> SalesSummary:
+    """Funnel stage totals and weekly trend lines for the Sales page (read-only)."""
+    return sales.summary(db)
 
 
 @router.get("/leads")

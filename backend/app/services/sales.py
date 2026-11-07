@@ -1,8 +1,9 @@
 """Leads (FR-SAL-01) and their qualification (FR-SAL-02)."""
 
 import uuid
+from datetime import UTC, date, datetime, time, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.agents.lead_qualifier import LeadQualifier
@@ -13,11 +14,20 @@ from app.models import Lead, User
 from app.models.base import utcnow
 from app.models.enums import LeadRating, LeadStatus
 from app.money import format_minor
-from app.schemas.sales import LeadCreate, LeadForQualification, LeadUpdate, QualificationResult
+from app.schemas.sales import (
+    LeadCreate,
+    LeadForQualification,
+    LeadUpdate,
+    QualificationResult,
+    SalesSummary,
+    StageSummary,
+    WeekSummary,
+)
 from app.services import audit
 from app.services.pagination import paginate
 
 AGENT = LeadQualifier()
+SUMMARY_WEEKS = 8
 
 
 def list_leads(
@@ -33,6 +43,60 @@ def list_leads(
     if rating:
         stmt = stmt.where(Lead.rating == rating)
     return paginate(db, stmt, Lead, limit, cursor)
+
+
+def _week_start(day: date) -> date:
+    return day - timedelta(days=day.weekday())
+
+
+def summary(db: Session, today: date | None = None) -> SalesSummary:
+    """Funnel stages plus eight weeks of new and won leads (status has no history: 'won' uses the
+    lead's last update). Values are summed in the most common lead currency, USD when empty."""
+    today = today or utcnow().date()
+    first = _week_start(today) - timedelta(weeks=SUMMARY_WEEKS - 1)
+    since = datetime.combine(first, time.min, tzinfo=UTC)
+
+    currency = (
+        db.scalar(
+            select(Lead.currency).group_by(Lead.currency).order_by(func.count().desc()).limit(1)
+        )
+        or "USD"
+    )
+    counts = {s: 0 for s in LeadStatus}
+    values = {s: 0 for s in LeadStatus}
+    for status, cur, n, total in db.execute(
+        select(
+            Lead.status, Lead.currency, func.count(), func.coalesce(func.sum(Lead.value_minor), 0)
+        ).group_by(Lead.status, Lead.currency)
+    ):
+        counts[status] += n
+        if cur == currency:
+            values[status] += int(total)
+
+    weeks = {first + timedelta(weeks=i): [0, 0, 0, 0] for i in range(SUMMARY_WEEKS)}
+    recent = select(Lead.status, Lead.currency, Lead.value_minor, Lead.created_at, Lead.updated_at)
+    for status, cur, value, created, updated in db.execute(
+        recent.where(or_(Lead.created_at >= since, Lead.updated_at >= since))
+    ):
+        in_currency = cur == currency
+        if created >= since:
+            row = weeks[_week_start(created.date())]
+            row[0] += 1
+            row[1] += value if in_currency else 0
+        if status == LeadStatus.won and updated >= since:
+            row = weeks[_week_start(updated.date())]
+            row[2] += 1
+            row[3] += value if in_currency else 0
+    return SalesSummary(
+        currency=currency,
+        stages=[StageSummary(stage=s, count=counts[s], value_minor=values[s]) for s in LeadStatus],
+        weeks=[
+            WeekSummary(
+                week_start=start, new_leads=r[0], new_value_minor=r[1], won=r[2], won_minor=r[3]
+            )
+            for start, r in weeks.items()
+        ],
+    )
 
 
 def get_lead(db: Session, lead_id: uuid.UUID) -> Lead:

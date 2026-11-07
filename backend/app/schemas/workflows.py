@@ -81,6 +81,31 @@ class ExecutionOut(ExecutionSummary):
     result: dict[str, Any] | None
 
 
+class HandoffNode(BaseModel):
+    """One stop on the supplier-payment hand-off, coloured by the real status of its step."""
+
+    key: str
+    label: str
+    kind: str  # agent | rules | human | tool
+    status: StepStatus
+    attempts: int
+    duration_ms: int | None
+
+
+class Handoff(BaseModel):
+    """The most recent supplier-payment run, reduced to the hand-off the Command Center draws."""
+
+    execution_id: uuid.UUID
+    status: ExecutionStatus
+    file_name: str | None
+    updated_at: datetime
+    nodes: list[HandoffNode]
+
+
+class LatestHandoff(BaseModel):
+    run: Handoff | None  # None until a supplier-payment run exists
+
+
 class DecisionIn(BaseModel):
     comment: Annotated[str, Field(max_length=1000)] | None = None
 

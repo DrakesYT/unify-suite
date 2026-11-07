@@ -324,3 +324,27 @@ def test_payment_needs_an_approved_request(
     with pytest.raises(ApiError) as exc:
         finance.submit_payment(db, invoice_id, approval.id, approval.requested_by_id)  # type: ignore[arg-type]
     assert exc.value.code == "not_approved"
+
+
+def test_handoff_follows_the_latest_run_and_its_real_step_status(
+    client: TestClient, people: dict[str, dict[str, str]], fake_llm: FakeLLMClient
+) -> None:
+    assert client.get("/api/agents/handoff", headers=people["clerk"]).json() == {"run": None}
+    fake_llm.replies.append(EXTRACTED)
+    run = _start(client, people["clerk"])
+
+    waiting = client.get("/api/agents/handoff", headers=people["clerk"]).json()["run"]
+    assert waiting["execution_id"] == run["id"] and waiting["status"] == "waiting_approval"
+    assert [(n["key"], n["status"]) for n in waiting["nodes"]] == [
+        ("F1", "succeeded"),
+        ("F2", "succeeded"),
+        ("A1", "waiting_approval"),
+        ("F4", "pending"),
+        ("V1", "pending"),
+    ]
+
+    _decide(client, people["manager"], run["approval"]["id"], "approve", None)
+    done = client.get("/api/agents/handoff", headers=people["manager"]).json()["run"]
+    assert {n["key"]: n["status"] for n in done["nodes"]}["V1"] == "succeeded"
+    # An employee only sees runs they started.
+    assert client.get("/api/agents/handoff", headers=people["sales_clerk"]).json() == {"run": None}

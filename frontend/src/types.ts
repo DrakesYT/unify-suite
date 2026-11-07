@@ -502,3 +502,37 @@ export interface CallRecord {
   suspicious_text: string[];
   created_at: string;
 }
+
+export interface HandoffNode {
+  key: string;
+  label: string;
+  kind: "agent" | "rules" | "human" | "tool";
+  status: StepStatus;
+  attempts: number;
+  duration_ms: number | null;
+}
+
+/** The newest supplier-payment run, one node per hand-off stop (null: no run yet). */
+export interface Handoff {
+  execution_id: string;
+  status: ExecutionStatus;
+  file_name: string | null;
+  updated_at: string;
+  nodes: HandoffNode[];
+}
+
+export interface LatestHandoff {
+  run: Handoff | null;
+}
+
+export interface SalesSummary {
+  currency: string;
+  stages: { stage: LeadStatus; count: number; value_minor: number }[];
+  weeks: {
+    week_start: string;
+    new_leads: number;
+    new_value_minor: number;
+    won: number;
+    won_minor: number;
+  }[];
+}

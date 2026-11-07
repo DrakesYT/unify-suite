@@ -8,11 +8,17 @@ from app.db import DbSession
 from app.deps import CurrentUser
 from app.models.enums import TaskStatus
 from app.schemas.common import Page
-from app.schemas.workflows import AgentTaskOut
+from app.schemas.workflows import AgentTaskOut, LatestHandoff
 from app.services import activity
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
 Limit = Annotated[int, Query(ge=1, le=PAGE_LIMIT_MAX)]
+
+
+@router.get("/handoff")
+def agent_handoff(db: DbSession, user: CurrentUser) -> LatestHandoff:
+    """The newest supplier-payment run as a hand-off between agents, rules, a human and a tool."""
+    return LatestHandoff(run=activity.latest_handoff(db, user))
 
 
 @router.get("/activity")

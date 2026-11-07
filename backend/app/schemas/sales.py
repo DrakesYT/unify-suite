@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -53,6 +53,28 @@ class LeadOut(BaseModel):
     owner_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+
+
+class StageSummary(BaseModel):
+    stage: LeadStatus
+    count: int
+    value_minor: int  # in SalesSummary.currency; leads in other currencies are counted, not summed
+
+
+class WeekSummary(BaseModel):
+    week_start: date  # a Monday (UTC)
+    new_leads: int
+    new_value_minor: int
+    won: int  # leads now won whose last update fell in this week
+    won_minor: int
+
+
+class SalesSummary(BaseModel):
+    """Read-only numbers behind the Sales page: funnel stages and eight weeks of trend lines."""
+
+    currency: str
+    stages: list[StageSummary]
+    weeks: list[WeekSummary]
 
 
 # --- Lead Qualifier ------------------------------------------------------------------------

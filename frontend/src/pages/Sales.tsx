@@ -14,7 +14,8 @@ import {
 import { EmailPanel } from "../components/EmailPanel";
 import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
-import type { Lead, LeadStatus, Page, Priority } from "../types";
+import type { Lead, LeadStatus, Page, Priority, SalesSummary } from "../types";
+import { SalesInsights } from "../components/SalesInsights";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
@@ -258,6 +259,7 @@ export function Sales() {
   const { data, error, reload } = usePoll<Page<Lead>>(
     `/sales/leads?limit=100${rating ? `&rating=${rating}` : ""}`,
   );
+  const summary = usePoll<SalesSummary>("/sales/summary");
   const editable = Boolean(user && canWrite(user, "sales"));
 
   return (
@@ -266,6 +268,7 @@ export function Sales() {
         title="Sales leads"
         subtitle="The Lead Qualifier rates each lead hot, warm or cold and explains why."
       />
+      {summary.data && <SalesInsights summary={summary.data} />}
       <div className="space-y-6">
         {editable && <NewLead onCreated={reload} />}
         <Card

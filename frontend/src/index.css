@@ -321,3 +321,20 @@ body {
     animation: none;
   }
 }
+
+/* Command Center hand-off: dashes travel along the connector that feeds the stop being worked on,
+   and an active stop breathes. Reduced motion: dashes stand still, nothing pulses. */
+@keyframes flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.flow-dash {
+  stroke-dasharray: 5 5;
+  animation: flow 900ms linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-dash {
+    animation: none;
+  }
+}

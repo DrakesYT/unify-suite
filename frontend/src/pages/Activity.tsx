@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "../api";
 import { Badge, Card, Empty, ErrorNote, PageHeader, ghostButton, Loading } from "../components/ui";
-import { when } from "../format";
-import type { AgentTask, Page } from "../types";
+import { HandoffGraph } from "../components/HandoffGraph";
+import { ago, when } from "../format";
+import type { AgentTask, LatestHandoff, Page } from "../types";
 import { usePoll } from "../usePoll";
 import { toast } from "../toast";
 
@@ -16,12 +17,47 @@ function Stat({ title, value }: { title: string; value: string | number }) {
   );
 }
 
+const FEED_DOT: Record<AgentTask["status"], string> = {
+  succeeded: "bg-emerald-400",
+  running: "bg-accent-purple anim-working",
+  failed: "bg-red-400",
+};
+
+/** The newest calls, unfiltered, as a short live feed beside the hand-off graph. */
+function LiveFeed({ items }: { items: AgentTask[] | undefined }) {
+  if (!items) return <Loading rows={5} />;
+  if (items.length === 0) return <p className="text-sm text-slate-500">Nothing yet.</p>;
+  return (
+    <ul className="divide-y divide-navy-800" aria-live="off">
+      {items.map((t) => (
+        <li key={t.id} className="flex items-start gap-2.5 py-2">
+          <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${FEED_DOT[t.status]}`} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm text-slate-200">
+              {t.agent}
+              {t.tool && <span className="text-slate-500"> → {t.tool}</span>}
+            </span>
+            <span className="block truncate text-xs text-slate-500">
+              {t.error ?? `${t.status}${t.duration_ms !== null ? ` · ${t.duration_ms} ms` : ""}`}
+            </span>
+          </span>
+          <span className="shrink-0 text-xs whitespace-nowrap text-slate-500">
+            {ago(t.created_at)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Command Center: every agent and tool call, with Retry for failed workflow steps. */
 export function Activity() {
   const [onlyFailed, setOnlyFailed] = useState(false);
   const { data, error, reload } = usePoll<Page<AgentTask>>(
     `/agents/activity?limit=200${onlyFailed ? "&status=failed" : ""}`,
   );
+  const handoff = usePoll<LatestHandoff>("/agents/handoff");
+  const feed = usePoll<Page<AgentTask>>("/agents/activity?limit=8");
   const [message, setMessage] = useState<string | null>(null);
   const rows = data?.items ?? [];
   const agentRows = rows.filter((t) => !t.tool);
@@ -54,6 +90,19 @@ export function Activity() {
         <Stat title="Agent calls" value={agentRows.length} />
         <Stat title="Failed" value={failed} />
         <Stat title="Avg agent time" value={`${avg} ms`} />
+      </div>
+      <div className="mb-6 grid gap-4 items-start lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <Card title="Agent hand-off">
+          <ErrorNote message={handoff.error} />
+          {handoff.data ? (
+            <HandoffGraph run={handoff.data.run} />
+          ) : (
+            !handoff.error && <Loading rows={3} />
+          )}
+        </Card>
+        <Card title="Live activity">
+          <LiveFeed items={feed.data?.items} />
+        </Card>
       </div>
       <Card
         actions={

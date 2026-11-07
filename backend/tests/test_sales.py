@@ -191,3 +191,33 @@ def test_live_vultr_qualification() -> None:
 
     assert hot_result.rating == "hot" and "notes" in hot_result.cited_fields
     assert cold_result.rating == "cold"
+
+
+def test_summary_counts_stages_and_weekly_trend(
+    client: TestClient, headers: dict[str, str]
+) -> None:
+    won = _create(client, headers, value_minor=1000000)
+    _create(client, headers, value_minor=250000, status="new")
+    client.patch(f"{API}/{won['id']}", json={"status": "won"}, headers=headers)
+
+    res = client.get("/api/sales/summary", headers=headers)
+
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["currency"] == "USD"
+    stages = {s["stage"]: (s["count"], s["value_minor"]) for s in body["stages"]}
+    assert stages["won"] == (1, 1000000) and stages["new"] == (1, 250000)
+    assert stages["lost"] == (0, 0)
+    assert len(body["weeks"]) == 8
+    this_week = body["weeks"][-1]
+    assert (this_week["new_leads"], this_week["new_value_minor"]) == (2, 1250000)
+    assert (this_week["won"], this_week["won_minor"]) == (1, 1000000)
+
+
+def test_summary_is_for_the_sales_department_only(
+    client: TestClient,
+    make_user: Callable[..., User],
+    auth_header: Callable[[User], dict[str, str]],
+) -> None:
+    finance = auth_header(make_user(Role.employee, Department.finance))
+    assert client.get("/api/sales/summary", headers=finance).status_code == 403
