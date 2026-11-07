@@ -212,6 +212,10 @@ def test_summary_counts_stages_and_weekly_trend(
     this_week = body["weeks"][-1]
     assert (this_week["new_leads"], this_week["new_value_minor"]) == (2, 1250000)
     assert (this_week["won"], this_week["won_minor"]) == (1, 1000000)
+    # The quarterly target travels with it, so the Sales page shows (and the CEO edits) it too.
+    target = body["target"]
+    assert (target["won_minor"], target["currency"], target["set_by"]) == (1000000, "USD", None)
+    assert target["target_minor"] == 250_000_00 and target["quarter"].startswith("Q")
 
 
 def test_weeks_are_counted_in_utc() -> None:

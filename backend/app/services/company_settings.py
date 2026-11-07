@@ -6,16 +6,18 @@ audited with the old and new value.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.errors import ApiError
-from app.models import AppSetting, User
-from app.models.enums import Role
+from app.models import AppSetting, Lead, User
+from app.models.enums import LeadStatus, Role
 from app.money import minor_unit_exponent, to_minor
+from app.schemas.dashboard import SalesTarget as QuarterTarget
 from app.services import audit
 
 SALES_TARGET = "sales_quarter_target"
@@ -74,3 +76,31 @@ def set_sales_target(db: Session, user: User, amount: Decimal, currency: str) ->
     )
     db.commit()
     return sales_target(db)
+
+
+def quarter_of(day: date) -> tuple[str, date]:
+    """("Q4 2026", first day of that quarter)."""
+    quarter = (day.month - 1) // 3 + 1
+    return f"Q{quarter} {day.year}", date(day.year, 3 * (quarter - 1) + 1, 1)
+
+
+def quarter_target(db: Session, today: date) -> QuarterTarget:
+    """Won this quarter against the target, for the dashboard and the Sales page alike ("won"
+    uses the lead's last update, since status changes have no history)."""
+    target = sales_target(db)
+    label, quarter_start = quarter_of(today)
+    won_minor = db.scalar(
+        select(func.coalesce(func.sum(Lead.value_minor), 0)).where(
+            Lead.status == LeadStatus.won,
+            Lead.currency == target.currency,
+            Lead.updated_at >= datetime.combine(quarter_start, time.min, tzinfo=UTC),
+        )
+    )
+    return QuarterTarget(
+        quarter=label,
+        target_minor=target.amount_minor,
+        won_minor=int(won_minor or 0),
+        currency=target.currency,
+        set_by=target.set_by,
+        set_at=target.set_at,
+    )

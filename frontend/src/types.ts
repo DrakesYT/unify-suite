@@ -382,15 +382,7 @@ export interface Overview {
     win_rate: number | null;
     won: number;
     lost: number;
-    target: {
-      quarter: string;
-      target_minor: number;
-      won_minor: number;
-      currency: string;
-      /** Who set the target in the app; null while the deployment default applies. */
-      set_by: string | null;
-      set_at: string | null;
-    };
+    target: QuarterTarget;
     top_deals: {
       lead_id: string;
       company: string;
@@ -545,7 +537,19 @@ export interface LatestHandoff {
   run: Handoff | null;
 }
 
+/** Won this quarter against the quarterly sales target (a company setting). */
+export interface QuarterTarget {
+  quarter: string;
+  target_minor: number;
+  won_minor: number;
+  currency: string;
+  /** Who set the target in the app; null while the deployment default applies. */
+  set_by: string | null;
+  set_at: string | null;
+}
+
 export interface SalesSummary {
+  target: QuarterTarget;
   currency: string;
   stages: { stage: LeadStatus; count: number; value_minor: number }[];
   weeks: {

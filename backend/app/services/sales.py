@@ -23,7 +23,7 @@ from app.schemas.sales import (
     StageSummary,
     WeekSummary,
 )
-from app.services import audit
+from app.services import audit, company_settings
 from app.services.pagination import paginate
 
 AGENT = LeadQualifier()
@@ -102,6 +102,7 @@ def summary(db: Session, today: date | None = None) -> SalesSummary:
             )
             for start, r in weeks.items()
         ],
+        target=company_settings.quarter_target(db, today),
     )
 
 

@@ -2,6 +2,7 @@ import { Line, LineChart, ResponsiveContainer } from "recharts";
 import { compactMoney } from "../format";
 import type { LeadStatus, SalesSummary } from "../types";
 import { ACCENT } from "../pages/dashboard/chartStyle";
+import { TargetBar } from "./SalesTarget";
 import { Card } from "./ui";
 
 type Week = SalesSummary["weeks"][number];
@@ -133,7 +134,13 @@ function Funnel({ summary }: { summary: SalesSummary }) {
 }
 
 /** KPI cards with trend lines and a funnel, built only from real lead rows. */
-export function SalesInsights({ summary }: { summary: SalesSummary }) {
+export function SalesInsights({
+  summary,
+  onTargetChanged,
+}: {
+  summary: SalesSummary;
+  onTargetChanged: () => void;
+}) {
   const { weeks, stages, currency } = summary;
   const last = weeks[weeks.length - 1];
   const prev: Week | undefined = weeks[weeks.length - 2];
@@ -192,6 +199,7 @@ export function SalesInsights({ summary }: { summary: SalesSummary }) {
         Trend lines show the last 8 weeks: leads and value by the week they were added, wins by the
         week of the lead&apos;s last update.
       </p>
+      <TargetBar target={summary.target} onTargetChanged={onTargetChanged} />
       <Card title="Sales funnel">
         <div className="grid items-center gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <Funnel summary={summary} />

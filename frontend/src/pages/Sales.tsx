@@ -268,7 +268,7 @@ export function Sales() {
         title="Sales leads"
         subtitle="The Lead Qualifier rates each lead hot, warm or cold and explains why."
       />
-      {summary.data && <SalesInsights summary={summary.data} />}
+      {summary.data && <SalesInsights summary={summary.data} onTargetChanged={summary.reload} />}
       <div className="space-y-6">
         {editable && <NewLead onCreated={reload} />}
         <Card

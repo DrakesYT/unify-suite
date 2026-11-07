@@ -38,7 +38,7 @@ from app.models.enums import (
     Urgency,
 )
 from app.services import interviews
-from app.services.overview import quarter_of
+from app.services.company_settings import quarter_of
 
 AuthHeader = Callable[[User], dict[str, str]]
 

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models.enums import LeadRating, LeadStatus, Priority
 from app.schemas.common import Currency, MinorAmount
+from app.schemas.dashboard import SalesTarget
 
 MIN_REASON_WORDS = 20
 
@@ -75,6 +76,7 @@ class SalesSummary(BaseModel):
     currency: str
     stages: list[StageSummary]
     weeks: list[WeekSummary]
+    target: SalesTarget  # won this quarter against the quarterly target
 
 
 # --- Lead Qualifier ------------------------------------------------------------------------

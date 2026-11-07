@@ -54,7 +54,6 @@ from app.schemas.dashboard import (
     MoneyPanel,
     Overview,
     ReceivableRow,
-    SalesTarget,
     SupportPanel,
     TicketRow,
 )
@@ -165,11 +164,6 @@ def hiring(db: Session, today: date) -> Hiring:
 # --- Sales --------------------------------------------------------------------------------------
 
 
-def quarter_of(day: date) -> tuple[str, date]:
-    quarter = (day.month - 1) // 3 + 1
-    return f"Q{quarter} {day.year}", date(day.year, 3 * (quarter - 1) + 1, 1)
-
-
 def crm(db: Session, today: date) -> Crm:
     counts: dict[str, int] = defaultdict(int)
     values: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -184,16 +178,6 @@ def crm(db: Session, today: date) -> Crm:
         if status in OPEN_LEADS:
             pipeline[currency] += int(total)
 
-    target = company_settings.sales_target(db)
-    currency = target.currency
-    label, quarter_start = quarter_of(today)
-    won_minor = db.scalar(
-        select(func.coalesce(func.sum(Lead.value_minor), 0)).where(
-            Lead.status == LeadStatus.won,
-            Lead.currency == currency,
-            Lead.updated_at >= datetime.combine(quarter_start, time.min, tzinfo=UTC),
-        )
-    )
     won, lost = counts[LeadStatus.won], counts[LeadStatus.lost]
     top = db.scalars(
         select(Lead)
@@ -207,14 +191,7 @@ def crm(db: Session, today: date) -> Crm:
         win_rate=round(100 * won / (won + lost)) if won + lost else None,
         won=won,
         lost=lost,
-        target=SalesTarget(
-            quarter=label,
-            target_minor=target.amount_minor,
-            won_minor=int(won_minor or 0),
-            currency=currency,
-            set_by=target.set_by,
-            set_at=target.set_at,
-        ),
+        target=company_settings.quarter_target(db, today),
         top_deals=[
             Deal(
                 lead_id=lead.id,
