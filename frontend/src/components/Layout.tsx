@@ -8,7 +8,7 @@ import { NotificationBell, UserMenu } from "./TopBarMenus";
 import { useHashFocus } from "./useHashFocus";
 
 const pill = ({ isActive }: { isActive: boolean }) =>
-  `rounded-full px-3.5 py-1.5 text-sm whitespace-nowrap transition ${
+  `rounded-full px-3.5 py-1.5 text-sm whitespace-nowrap transition-colors duration-150 ${
     isActive
       ? "bg-accent-purple/20 text-white"
       : "text-slate-400 hover:bg-white/5 hover:text-slate-100"

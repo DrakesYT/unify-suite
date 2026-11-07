@@ -22,7 +22,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`flex min-w-0 flex-col rounded-2xl border border-white/[0.07] bg-navy-900/75 p-5 ${className}`}
+      className={`hover-tint flex min-w-0 flex-col rounded-2xl border border-white/[0.07] bg-navy-900/75 p-5 ${className}`}
     >
       <header className="mb-4 flex items-center gap-2.5">
         <span className="shrink-0 text-slate-400">{icon}</span>
@@ -55,7 +55,7 @@ export function Stat({
   tone?: string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl bg-navy-950/60 px-3.5 py-3 ring-1 ring-white/5">
+    <div className="hover-lift min-w-0 rounded-xl border border-transparent bg-navy-950/60 px-3.5 py-3 ring-1 ring-white/5">
       <p className="truncate text-[11px] text-slate-500">{label}</p>
       <p className={`mt-1 truncate text-xl font-semibold ${tone}`}>{value}</p>
       {hint && <p className="mt-0.5 truncate text-xs text-slate-500">{hint}</p>}

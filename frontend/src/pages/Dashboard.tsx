@@ -1,9 +1,23 @@
 import { Link } from "react-router";
+import { Line, LineChart, ResponsiveContainer } from "recharts";
 import { AuraPanel } from "../components/AuraPanel";
+import { CountUp } from "../components/CountUp";
 import { ErrorNote } from "../components/ui";
 import { compactMoney } from "../format";
-import type { ActivityItem, Approval, Charts, Kpis, Money, Overview, Page } from "../types";
+import type {
+  ActivityItem,
+  Approval,
+  Charts,
+  Kpis,
+  Money,
+  Overview,
+  Page,
+  PurchaseRequest,
+  SalesSummary,
+  Ticket,
+} from "../types";
 import { usePoll } from "../usePoll";
+import { ACCENT } from "./dashboard/chartStyle";
 import { AgentBoard } from "./dashboard/AgentBoard";
 import { ApprovalsBoard } from "./dashboard/ApprovalsBoard";
 import { DealBoard } from "./dashboard/DealBoard";
@@ -55,28 +69,68 @@ function InsightsBanner({ insights }: { insights: Overview["insights"] | undefin
   );
 }
 
-/** A plain number: label, figure, what it counts. */
+const TREND_WEEKS = 8;
+const WEEK_MS = 7 * 24 * 3600 * 1000;
+
+/** How many of these rows were created in each of the last 8 rolling weeks (oldest first). */
+function weeklyCounts(rows: { created_at: string }[]): number[] {
+  const now = Date.now();
+  const counts = new Array<number>(TREND_WEEKS).fill(0);
+  for (const row of rows) {
+    const age = Math.floor((now - new Date(row.created_at).getTime()) / WEEK_MS);
+    if (age >= 0 && age < TREND_WEEKS) counts[TREND_WEEKS - 1 - age] += 1;
+  }
+  return counts;
+}
+
+/** A plain number: label, figure, what it counts, and (when real data exists) a trend line. */
 function Kpi({
   title,
   value,
   hint,
   to,
+  series,
+  seriesName,
 }: {
   title: string;
   value: string | number;
   hint: string;
   to: string;
+  series?: number[];
+  seriesName?: string;
 }) {
+  const data = series?.map((v, i) => ({ i, v }));
   return (
     <Link
       to={to}
-      className="group min-w-0 rounded-2xl border border-white/[0.07] bg-navy-900/75 px-4 py-3.5 transition-colors hover:border-white/15"
+      className="hover-lift group min-w-0 rounded-2xl border border-white/[0.07] bg-navy-900/75 px-4 py-3.5"
     >
       <span className="block truncate text-xs text-slate-400">{title}</span>
       <span className="mt-1 block truncate text-2xl font-semibold text-white tabular-nums">
-        {value}
+        <CountUp value={value} />
       </span>
       <span className="block truncate text-xs text-slate-500">{hint}</span>
+      {data && (
+        <div
+          className="mt-2 h-8"
+          role="img"
+          aria-label={`${seriesName}, last ${data.length} weeks: ${series!.join(", ")}`}
+          title={`${seriesName}, last ${data.length} weeks`}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 3, right: 2, bottom: 2, left: 2 }}>
+              <Line
+                type="monotone"
+                dataKey="v"
+                stroke={ACCENT}
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </Link>
   );
 }
@@ -87,6 +141,10 @@ export function Dashboard() {
   const charts = usePoll<Charts>("/dashboard/charts");
   const feed = usePoll<ActivityItem[]>("/dashboard/activity");
   const approvals = usePoll<Page<Approval>>("/approvals?status=pending&limit=5");
+  // Trend lines reuse list endpoints; a role without access just sees the card without a line.
+  const sales = usePoll<SalesSummary>("/sales/summary");
+  const tickets = usePoll<Page<Ticket>>("/support/tickets?limit=200");
+  const requests = usePoll<Page<PurchaseRequest>>("/procurement/requests?limit=200");
   const o = overview.data;
   const k = kpis.data;
   const today = new Date().toLocaleDateString("en-GB", {
@@ -124,6 +182,8 @@ export function Dashboard() {
               value={k ? sumText(k.sales_pipeline) : "…"}
               hint="open deals"
               to="/sales"
+              series={sales.data?.weeks.map((w) => w.new_value_minor / 100)}
+              seriesName="Pipeline value added per week"
             />
             <Kpi
               title="Unpaid invoices"
@@ -142,12 +202,16 @@ export function Dashboard() {
               value={k?.open_tickets ?? "…"}
               hint="open, investigating, escalated"
               to="/support"
+              series={tickets.data ? weeklyCounts(tickets.data.items) : undefined}
+              seriesName="New tickets per week"
             />
             <Kpi
               title="Purchase requests"
               value={k?.pending_purchase_requests ?? "…"}
               hint="waiting for approval"
               to="/procurement"
+              series={requests.data ? weeklyCounts(requests.data.items) : undefined}
+              seriesName="New purchase requests per week"
             />
           </div>
 

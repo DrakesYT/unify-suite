@@ -14,6 +14,7 @@ import {
   Loading,
 } from "../components/ui";
 import { EmailPanel } from "../components/EmailPanel";
+import { VendorHeatmap } from "../components/VendorHeatmap";
 import { money, when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type {
@@ -500,7 +501,7 @@ export function Procurement() {
   const editable = Boolean(user && canWrite(user, "procurement"));
   const vendors = usePoll<Page<Vendor>>("/procurement/vendors?limit=200");
   const requests = usePoll<Page<PurchaseRequest>>("/procurement/requests?limit=100");
-  const orders = usePoll<Page<PurchaseOrder>>("/procurement/orders?limit=20");
+  const orders = usePoll<Page<PurchaseOrder>>("/procurement/orders?limit=100");
   const [picked, setPicked] = useState<string | null>(null);
   const request = requests.data?.items.find((r) => r.id === picked) ?? requests.data?.items[0];
   const vendorList = vendors.data?.items ?? [];
@@ -512,6 +513,9 @@ export function Procurement() {
         title="Procurement"
         subtitle="Vendors are ranked by code on price, lead time and on-time record; every purchase order waits for a manager."
       />
+      <div className="mb-6">
+        <VendorHeatmap requests={requests.data?.items ?? []} orders={orders.data?.items ?? []} />
+      </div>
       <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
         <div className="min-w-0 space-y-6">
           {editable && (

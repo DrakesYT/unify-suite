@@ -102,7 +102,7 @@ export function HiringBoard({ hiring }: { hiring: Overview["hiring"] }) {
         <ResponsiveContainer width="100%" height={64}>
           <AreaChart data={trend} margin={{ top: 6, right: 0, bottom: 0, left: 0 }}>
             <XAxis dataKey="day" hide />
-            <Tooltip {...TOOLTIP} formatter={(v: number) => [v, "applications"]} />
+            <Tooltip {...TOOLTIP} cursor={{ fill: "rgb(255 255 255 / 0.03)" }} formatter={(v: number) => [v, "applications"]} />
             <Area
               type="monotone"
               dataKey="value"

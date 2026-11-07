@@ -246,6 +246,63 @@ body {
   }
 }
 
+/* Hover and press feedback. Hover only on devices that have a pointer; lifts only when motion is
+   welcome. Colour changes stay either way. */
+.hover-tint {
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.hover-lift {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .hover-tint:hover,
+  .hover-lift:hover {
+    border-color: rgb(139 92 246 / 0.4);
+  }
+  @layer base {
+    tbody > tr {
+      transition: background-color 120ms var(--ease-out);
+    }
+    tbody > tr:hover {
+      background-color: rgb(255 255 255 / 0.03);
+    }
+  }
+  .recharts-bar:hover .recharts-bar-rectangle:not(:hover) {
+    opacity: 0.65;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+.recharts-bar-rectangle {
+  transition: opacity 120ms var(--ease-out);
+}
+.recharts-tooltip-wrapper:not([style*="hidden"]) .recharts-default-tooltip {
+  animation: fade-in 120ms var(--ease-out) backwards;
+}
+@layer base {
+  button {
+    transition: scale 120ms var(--ease-out);
+  }
+  button:not(:disabled):active {
+    scale: 0.97;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  @layer base {
+    button:not(:disabled):active {
+      scale: 1;
+    }
+  }
+  .recharts-tooltip-wrapper .recharts-default-tooltip {
+    animation: none;
+  }
+}
+
 /* Logo loader: by default fades in only after 300 ms (a fast load never flashes it; `immediate` skips
    the wait where the app holds it on purpose), the U draws itself, the
    centre bar drops in, then the extruded mark swings slowly left and right like a coin on a stand. */

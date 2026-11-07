@@ -6,7 +6,19 @@ an executive dashboard and the Aura chat assistant.
 
 Built for the lablab.ai **Vultr Agent Rush** hackathon (Challenge 2, "Powering the Future of Work").
 
-**Live demo:** https://unify.65.20.84.171.sslip.io — API docs at `/api/docs`.
+**Live demo:** https://unify.65.20.84.171.sslip.io (API docs at `/api/docs`).
+
+## Screenshots
+
+![Executive dashboard with KPI cards, charts and the Aura panel](docs/screenshots/dashboard.png)
+![Command Center with the agent hand-off graph and live feed](docs/screenshots/command-center.png)
+![Sales page with KPI trends and the funnel](docs/screenshots/sales-funnel.png)
+![Supplier payment run paused at manager approval](docs/screenshots/payment-run-approval.png)
+![Approval Center rejecting a payment with a comment](docs/screenshots/approval-reject.png)
+![Why? panel showing the verified input of an AI result](docs/screenshots/why-panel.png)
+![Call analyzer on a lead](docs/screenshots/call-analyzer.png)
+![Email draft with the quality gate suggestions](docs/screenshots/email-quality-gate.png)
+![Possible prompt injection warning on an invoice](docs/screenshots/prompt-injection.png)
 
 ## How Vultr is used
 
@@ -16,15 +28,15 @@ Built for the lablab.ai **Vultr Agent Rush** hackathon (Challenge 2, "Powering t
 | **Coolify** (Vultr Marketplace app) | Installed on the same VM. Every push to GitHub triggers a webhook; Coolify rebuilds `docker-compose.yml` and serves the app over HTTPS (Let's Encrypt). |
 | **Vultr Serverless Inference** | The model behind every agent: `glm-5.3-flash` through the OpenAI-compatible API at `https://api.vultrinference.com/v1` (`backend/app/llm/vultr.py`). Temperature 0, JSON output, a timeout per agent, and every call logged with model, latency and tokens. |
 
-The VM is not just hosting: the orchestrator, the approval logic and every agent run there, and all workflow state
-lives in PostgreSQL on the VM.
+The VM does more than host files. The orchestrator, the approval logic and every agent run there, and all workflow
+state lives in PostgreSQL on the VM.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
     user([Browser]) -->|HTTPS| proxy[Coolify proxy<br/>TLS + domain]
-    subgraph vm[Vultr Cloud Compute VM — docker-compose.yml]
+    subgraph vm[Vultr Cloud Compute VM, docker-compose.yml]
         proxy --> fe[frontend<br/>Caddy: React build + /api pass-through]
         fe -->|/api/*| be[backend<br/>FastAPI: routers → services<br/>orchestrator + agents]
         be -->|SQLAlchemy| db[(PostgreSQL 16<br/>named volume)]
@@ -33,12 +45,13 @@ flowchart LR
     git[GitHub] -->|push webhook| coolify[Coolify on the VM] -->|build + deploy| vm
 ```
 
-- **frontend** — React + Vite + Tailwind, served by Caddy. Only this container is reachable from the internet.
-- **backend** — FastAPI. Thin routers call services, the only code that writes data. Long work (agent calls,
-  workflow steps) runs as FastAPI background tasks; the UI polls every 5 s.
-- **db** — PostgreSQL 16, schema managed by Alembic. The audit log is append-only (a trigger rejects edits).
-- Auth is a JWT with one role (`admin`, `manager`, `employee`, `executive`) and one department per user; the backend
-  checks both on every endpoint and every tool call. See [Security](#security).
+- **frontend**: React, Vite and Tailwind, served by Caddy. Only this container is reachable from the internet.
+- **backend**: FastAPI. Thin routers call services, the only code that writes data. Long work (agent calls,
+  workflow steps) runs as FastAPI background tasks, and the UI polls every 5 s.
+- **db**: PostgreSQL 16, with the schema managed by Alembic. The audit log is append-only (a trigger rejects edits).
+- Each user has one role (`admin`, `manager`, `employee` or `executive`) and one department, and signs in with a
+  server-side session. The backend checks role and department on every endpoint and every tool call. See
+  [Security](#security).
 
 More detail (agent time limits, ranking formulas, permission table): [docs/architecture.md](docs/architecture.md).
 
@@ -92,9 +105,9 @@ Approval Center, and on a call they are shown above the analysis.
 | Aura Router | Any | Picks one route for a plain-English request ("compare vendors for the laptops") | Finds the record, checks the user's rights, runs the department agent |
 | Call Analyzer | Sales, Support | Summarises a call transcript linked to a lead or ticket: customer sentiment, concerns, and who promised what by when | Rejects any quote that is not word for word in the transcript (and action-item quotes under 4 words); counts each speaker's talk share; changes nothing on the lead or ticket |
 | Brief Writer | Any (managers, executives) | Words a 2-sentence morning brief in Aura from the facts it is given | Collects the facts (live counts, who must decide what), rejects a draft that states any number no fact contains, and shows a code-written brief instantly and whenever the model is unavailable |
-| Verification Agent | Finance | — (rules only, no model) | Checks every record of a payment run is linked correctly |
+| Verification Agent | Finance | None (rules only, no model) | Checks every record of a payment run is linked correctly |
 
-**Workflow B — supplier payment verification**, end to end (`backend/app/orchestrator/`):
+**Workflow B, supplier payment verification**, end to end (`backend/app/orchestrator/`):
 
 1. A finance clerk uploads an invoice and names the PO.
 2. **P1** loads the PO; **F1** (Invoice Processor) reads the invoice.
@@ -110,7 +123,7 @@ A failed step pauses the run as `failed`; Retry in the UI re-runs only the faile
 
 ## Tested on the demo data
 
-Our test-data team wrote a fictional data set with an answer key for every file: 57 supplier invoices (including
+A fictional data set was written for testing with an answer key for every file: 57 supplier invoices (including
 duplicates, wrong vendors, wrong totals, line items that do not add up, missing or ambiguous PO references, a credit
 note, a quotation, a past-due reminder and hidden instructions to the AI), 200 resumes for three jobs (strong to weak
 fits) and 35 call transcripts. `python -m app.evaluate` runs the real agents and rules on all of them, against a
@@ -189,11 +202,11 @@ cp .env.example .env          # then set POSTGRES_PASSWORD and JWT_SECRET (see c
 docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 ```
 
-- App: http://localhost:3000 — API docs: http://localhost:3000/api/docs
+- App: http://localhost:3000. API docs: http://localhost:3000/api/docs
 - Database tables are created/updated automatically when the backend starts (`alembic upgrade head`).
 - Add a user (asks for the password):
   `docker compose exec backend python -m app.cli create-user EMAIL "Full Name" ROLE DEPARTMENT`
-  — roles: `admin`, `manager`, `employee`, `executive`; departments: `sales`, `finance`, `hr`, `support`, `procurement`.
+  Roles: `admin`, `manager`, `employee`, `executive`. Departments: `sales`, `finance`, `hr`, `support`, `procurement`.
 - Frontend with hot reload: `cd frontend && npm install && npm run dev` (http://localhost:5173, forwards `/api` to the backend on port 8000)
 
 ### Tests and lint
@@ -240,7 +253,7 @@ attached to the `frontend` service (port 80); no other service is exposed.
 | Name | Used by | Notes |
 |---|---|---|
 | `POSTGRES_PASSWORD` | db, backend | Required. Letters and digits only. |
-| `JWT_SECRET` | backend | Required. At least 32 random characters; signs login tokens (valid 8 h). |
+| `JWT_SECRET` | backend | Required. At least 32 random characters, used as the app's signing secret. |
 | `LLM_API_KEY` | backend | Vultr Serverless Inference key. Without it AI endpoints return 503. |
 | `LLM_MODEL` | backend | Optional, default `glm-5.3-flash`. |
 | `RESEND_API_KEY` | backend | Optional. [Resend](https://resend.com) key for sending approved emails. Without it, approved emails are marked failed ("not configured"). |
@@ -255,4 +268,4 @@ Set them in `.env` locally and in Coolify's Environment Variables page in produc
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
