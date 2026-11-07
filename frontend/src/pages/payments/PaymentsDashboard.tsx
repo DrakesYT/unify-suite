@@ -1,0 +1,63 @@
+import { AgingBars } from "../../components/charts/AgingBars";
+import { Donut } from "../../components/charts/Donut";
+import { otherCurrencies, showLargest } from "../../components/charts/currency";
+import { MiniBars } from "../../components/charts/MiniTrend";
+import { HeroStat, StatCard } from "../../components/charts/StatCard";
+import type { Anomaly, Invoice, Page, Receivable } from "../../types";
+import { usePoll } from "../../usePoll";
+import {
+  agingBuckets,
+  anomalyCount,
+  matchSlices,
+  matchedPercent,
+  monthlyInvoiced,
+  outstanding,
+  overdueTotals,
+} from "./stats";
+
+export function PaymentsDashboard() {
+  const receivables = usePoll<Receivable[]>("/finance/receivables").data ?? [];
+  const invoices = usePoll<Page<Invoice>>("/finance/invoices?limit=200").data?.items ?? [];
+  const anomalies = usePoll<Page<Anomaly>>("/finance/anomalies?limit=200").data?.items ?? [];
+  const owed = outstanding(receivables);
+  const matched = matchedPercent(invoices);
+  const monthly = monthlyInvoiced(invoices);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
+        <HeroStat
+          label="Outstanding receivables"
+          value={showLargest(owed)}
+          caption={otherCurrencies(owed) ?? `${receivables.length} unpaid customer orders`}
+        />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <StatCard label="Overdue" value={showLargest(overdueTotals(receivables))} danger />
+          <StatCard
+            label="Invoices matched"
+            value={matched === null ? "—" : `${Math.round(matched)}%`}
+            accent
+          />
+          <StatCard label="Anomalies" value={anomalyCount(anomalies)} />
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Donut
+          title="Invoices by match status"
+          slices={matchSlices(invoices)}
+          accentKey="mismatch"
+        />
+        <AgingBars
+          title="Overdue by age"
+          buckets={agingBuckets(receivables)}
+          emptyText="No overdue receivables."
+        />
+        <MiniBars
+          title={`Invoiced per month${monthly.currency ? ` (${monthly.currency})` : ""}`}
+          points={monthly.points}
+          emptyText="No invoices yet."
+        />
+      </div>
+    </div>
+  );
+}

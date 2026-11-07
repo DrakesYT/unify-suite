@@ -23,6 +23,11 @@
   --rise: 8px;
   --pop-scale: 0.97;
   --slide: 100%;
+  /* Charts: cyan for data, purple for AI, everything else muted slate. */
+  --chart-accent: #22d3ee;
+  --chart-ai: #8b5cf6;
+  --chart-muted: #334155;
+  --chart-danger: #f87171;
 }
 
 body {

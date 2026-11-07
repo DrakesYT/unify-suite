@@ -333,6 +333,26 @@ export interface Receivable {
   hold_reason: string | null;
 }
 
+export interface Invoice {
+  id: string;
+  number: string;
+  vendor_id: string;
+  po_number: string | null;
+  invoice_date: string;
+  amount_minor: number;
+  currency: string;
+  status: "received" | "needs_review" | "approved" | "rejected" | "payment_submitted";
+  match_status: "matched" | "mismatch" | "no_po" | null;
+  created_at: string;
+}
+
+export interface Anomaly {
+  id: string;
+  kind: string;
+  invoice_id: string | null;
+  created_at: string;
+}
+
 export interface Count {
   label: string;
   value: number;

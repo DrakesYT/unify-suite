@@ -13,6 +13,7 @@ import {
   Loading,
 } from "../components/ui";
 import { Receivables } from "../components/Receivables";
+import { PaymentsDashboard } from "./payments/PaymentsDashboard";
 import { when } from "../format";
 import type { Execution, ExecutionSummary, Page } from "../types";
 import { usePoll } from "../usePoll";
@@ -95,6 +96,7 @@ export function Payments() {
         subtitle="Supplier invoices (Workflow B: invoice → PO match → manager approval → payment) and customer payments due"
       />
       <div className="space-y-6">
+        <PaymentsDashboard />
         {user && canWrite(user, "finance") && <StartForm />}
         <Card title="Recent supplier payment runs">
           <ErrorNote message={error} />

@@ -1,5 +1,10 @@
 const ZERO_DECIMAL = new Set(["CLP", "ISK", "JPY", "KRW", "PYG", "UGX", "VND", "XAF", "XOF"]);
 
+/** Minor units to whole major units (cents to dollars; yen stay yen), rounded. */
+export function majorUnits(amountMinor: number, currency: string): number {
+  return Math.round(amountMinor / (ZERO_DECIMAL.has(currency) ? 1 : 100));
+}
+
 export function money(amountMinor: number | undefined, currency: string | undefined): string {
   if (amountMinor === undefined || !currency) return "—";
   const digits = ZERO_DECIMAL.has(currency) ? 0 : 2;

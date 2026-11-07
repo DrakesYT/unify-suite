@@ -15,6 +15,7 @@ import {
 } from "../components/ui";
 import { EmailPanel } from "../components/EmailPanel";
 import { VendorHeatmap } from "../components/VendorHeatmap";
+import { ProcurementDashboard } from "./procurement/ProcurementDashboard";
 import { money, when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type {
@@ -512,6 +513,11 @@ export function Procurement() {
       <PageHeader
         title="Procurement"
         subtitle="Vendors are ranked by code on price, lead time and on-time record; every purchase order waits for a manager."
+      />
+      <ProcurementDashboard
+        orders={orders.data?.items ?? []}
+        requests={requests.data?.items ?? []}
+        vendorNames={vendorName}
       />
       <div className="mb-6">
         <VendorHeatmap requests={requests.data?.items ?? []} orders={orders.data?.items ?? []} />

@@ -19,6 +19,7 @@ import type { Approval, Page, User } from "../types";
 import { usePoll } from "../usePoll";
 import { toast } from "../toast";
 import { approvalHeadline } from "../approvalText";
+import { ApprovalsDashboard } from "./approvals/ApprovalsDashboard";
 
 function mayDecide(user: User, a: Approval): boolean {
   if (a.requested_by_id === user.id) return false;
@@ -202,6 +203,7 @@ export function Approvals() {
         title="Approval Center"
         subtitle="Payments and other sensitive actions wait here for a human decision."
       />
+      <ApprovalsDashboard />
       <div className="mb-4 flex gap-2">
         {(["pending", "approved", "rejected"] as const).map((t) => (
           <button

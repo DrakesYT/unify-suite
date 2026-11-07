@@ -19,6 +19,7 @@ import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
 import { toast } from "../toast";
+import { SupportDashboard } from "./support/SupportDashboard";
 
 const RUN_DONE: Record<string, string> = {
   classify: "Ticket classified",
@@ -352,8 +353,9 @@ export function Support() {
         title="Support tickets"
         subtitle="The Ticket Investigator classifies each ticket and checks the customer's orders. Refunds and legal escalations need a manager."
       />
+      <SupportDashboard tickets={tickets.data?.items ?? []} />
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {editable && (
             <Card title="New ticket">
               <NewTicket

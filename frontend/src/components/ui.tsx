@@ -69,7 +69,10 @@ export function Card({
   tour?: string; // anchor for the guided tour
 }) {
   return (
-    <section data-tour={tour} className="hover-tint rounded-xl border border-navy-800 bg-navy-900 p-5">
+    <section
+      data-tour={tour}
+      className="hover-tint min-w-0 rounded-xl border border-navy-800 bg-navy-900 p-5"
+    >
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {title && <h2 className="text-sm font-semibold text-slate-300">{title}</h2>}
