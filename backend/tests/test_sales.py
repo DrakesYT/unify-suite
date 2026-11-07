@@ -214,6 +214,20 @@ def test_summary_counts_stages_and_weekly_trend(
     assert (this_week["won"], this_week["won_minor"]) == (1, 1000000)
 
 
+def test_weeks_are_counted_in_utc() -> None:
+    """Sunday 23:30 UTC is already Monday in a +05:00 database session; it stays in the UTC week
+    (before, it mapped to a week missing from the chart and the summary answered 500)."""
+    from datetime import UTC, date, datetime, timedelta, timezone
+
+    from app.services.sales import week_of
+
+    sunday_late = datetime(2026, 11, 8, 23, 30, tzinfo=UTC)
+    as_seen_in_pkt = sunday_late.astimezone(timezone(timedelta(hours=5)))
+
+    assert as_seen_in_pkt.date() == date(2026, 11, 9)  # Monday locally
+    assert week_of(as_seen_in_pkt) == week_of(sunday_late) == date(2026, 11, 2)
+
+
 def test_summary_is_for_the_sales_department_only(
     client: TestClient,
     make_user: Callable[..., User],

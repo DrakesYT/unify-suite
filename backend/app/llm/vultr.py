@@ -5,11 +5,15 @@ import time
 
 import httpx2
 import openai
+from openai.types.chat import ChatCompletionMessageParam
 
 from app.config import LLM_MAX_TOKENS
 from app.llm.base import LLMError, LLMOutputError, T, json_instructions, parse_json_output
 
 logger = logging.getLogger(__name__)
+
+CONNECT_RETRIES = 2  # immediate retries when the connection itself fails (not the reply)
+CONNECT_RETRY_MIN_S = 1.0  # don't start a retry with less time than this left
 
 
 class VultrLLMClient:
@@ -22,36 +26,52 @@ class VultrLLMClient:
         http_client: httpx2.Client | None = None,  # tests pass a mock transport
     ) -> None:
         self.model = model
-        # Retries are done by the agent runner, so they show up in the task log.
+        # Retries of timeouts and invalid replies are done by the agent runner, so they show up in
+        # the task log; only a failed connection is retried here (see complete_json).
         self._client = openai.OpenAI(
             base_url=base_url, api_key=api_key, max_retries=0, http_client=http_client
         )
 
     def complete_json(self, schema: type[T], system: str, user: str, *, timeout_s: float) -> T:
-        started = time.monotonic()
+        deadline = time.monotonic() + timeout_s
         log: dict[str, object] = {"model": self.model, "schema": schema.__name__}
-        try:
-            response = self._client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": f"{system}\n\n{json_instructions(schema)}"},
-                    {"role": "user", "content": user},
-                ],
-                temperature=0,
-                max_tokens=LLM_MAX_TOKENS,
-                response_format={"type": "json_object"},
-                timeout=timeout_s,
-            )
-        except openai.APITimeoutError as exc:
-            self._log(started, log, ok=False, error="timeout")
-            raise LLMError(f"model timed out after {timeout_s:g} s") from exc
-        except openai.APIStatusError as exc:
-            self._log(started, log, ok=False, error=f"http_{exc.status_code}")
-            retryable = exc.status_code == 429 or exc.status_code >= 500
-            raise LLMError(f"model API returned {exc.status_code}", retryable=retryable) from exc
-        except openai.APIError as exc:
-            self._log(started, log, ok=False, error=type(exc).__name__)
-            raise LLMError("could not reach the model API") from exc
+        messages: list[ChatCompletionMessageParam] = [
+            {"role": "system", "content": f"{system}\n\n{json_instructions(schema)}"},
+            {"role": "user", "content": user},
+        ]
+        for connect_try in range(CONNECT_RETRIES + 1):
+            started = time.monotonic()
+            remaining = deadline - started
+            try:
+                response = self._client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=0,
+                    max_tokens=LLM_MAX_TOKENS,
+                    response_format={"type": "json_object"},
+                    timeout=remaining,
+                )
+                break
+            except openai.APITimeoutError as exc:  # a subclass of APIConnectionError: check first
+                self._log(started, log, ok=False, error="timeout")
+                raise LLMError(f"model timed out after {timeout_s:g} s") from exc
+            except openai.APIConnectionError as exc:
+                self._log(started, log, ok=False, error=type(exc).__name__)
+                # A pooled keep-alive connection the server already closed fails at once; a fresh
+                # connection usually works. Retry right away while the time budget allows, so a
+                # stale connection never shows up as a failed agent task.
+                out_of_time = deadline - time.monotonic() < CONNECT_RETRY_MIN_S
+                if connect_try == CONNECT_RETRIES or out_of_time:
+                    raise LLMError("could not reach the model API") from exc
+            except openai.APIStatusError as exc:
+                self._log(started, log, ok=False, error=f"http_{exc.status_code}")
+                retryable = exc.status_code == 429 or exc.status_code >= 500
+                raise LLMError(
+                    f"model API returned {exc.status_code}", retryable=retryable
+                ) from exc
+            except openai.APIError as exc:
+                self._log(started, log, ok=False, error=type(exc).__name__)
+                raise LLMError("could not reach the model API") from exc
 
         if response.usage:
             log |= {

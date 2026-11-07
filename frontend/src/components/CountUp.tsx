@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 const NUMBER = /\d[\d,]*(\.\d+)?/;
 const DURATION_MS = 250;
 
-/** Counts the first number in `value` up from zero once, the first time real data arrives. */
+/** Counts the first number in `value` up from zero once, the first time real data arrives.
+ *  Pages render 0 (or "$0") while their data loads, so a zero never uses up the animation. */
 export function CountUp({ value }: { value: string | number }) {
   const text = String(value);
   const match = NUMBER.exec(text);
@@ -12,10 +13,10 @@ export function CountUp({ value }: { value: string | number }) {
   const [shown, setShown] = useState<number | null>(null);
 
   useEffect(() => {
-    if (done.current || Number.isNaN(target)) return;
+    if (done.current || Number.isNaN(target) || target === 0) return;
     done.current = true;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || target === 0) return;
+    if (reduced) return;
     const start = performance.now();
     let frame = 0;
     const tick = (now: number) => {
@@ -25,7 +26,11 @@ export function CountUp({ value }: { value: string | number }) {
       else setShown(null);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      // The value changed (or the card left) mid-count: show the real number, never a frozen one.
+      cancelAnimationFrame(frame);
+      setShown(null);
+    };
   }, [target]);
 
   if (!match || shown === null) return <>{text}</>;

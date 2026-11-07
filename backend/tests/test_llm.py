@@ -97,6 +97,66 @@ def test_vultr_client_timeout_is_retryable() -> None:
     assert exc.value.retryable
 
 
+def test_stale_connection_is_retried_at_once() -> None:
+    """A connection that fails before any reply (e.g. a closed keep-alive) is retried inside the
+    client, so the agent runner sees one successful call and logs no failed task."""
+    attempts = 0
+
+    def _flaky(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise httpx.ConnectError("connection reset", request=request)
+        return _chat('{"label": "warm", "score": 2}')
+
+    client, seen = _vultr(_flaky)
+
+    assert client.complete_json(Answer, "s", "u", timeout_s=5) == Answer(label="warm", score=2)
+    assert len(seen) == 2
+
+
+def test_connection_retried_through_agent_runner_logs_one_task(db, make_user) -> None:  # type: ignore[no-untyped-def]
+    from app.agents.lead_qualifier import LeadQualifier
+    from app.agents.runner import TaskContext, run_agent
+    from app.models import AgentTask
+    from app.models.enums import Department, Role
+    from app.schemas.sales import LeadForQualification
+
+    reason = " ".join(["Clear budget and timeline with a decision maker involved."] * 3)
+    attempts = 0
+
+    def _flaky(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise httpx.ConnectError("connection reset", request=request)
+        return _chat(json.dumps({"rating": "hot", "reason": reason, "cited_fields": ["notes"]}))
+
+    client, _ = _vultr(_flaky)
+    user = make_user(role=Role.employee, department=Department.sales)
+    facts = LeadForQualification(
+        company="Acme", email_domain="acme.test", status="new", priority="high",
+        value="1,000.00 USD", notes="Budget approved, buying this quarter.",
+    )  # fmt: skip
+
+    run_agent(db, LeadQualifier(), facts, client, TaskContext(actor=user))
+
+    tasks = db.query(AgentTask).all()
+    assert [t.status for t in tasks] == ["succeeded"]
+
+
+def test_connection_errors_give_up_after_retries() -> None:
+    def _down(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("refused", request=request)
+
+    client, seen = _vultr(_down)
+
+    with pytest.raises(LLMError, match="could not reach") as exc:
+        client.complete_json(Answer, "s", "u", timeout_s=5)
+    assert exc.value.retryable
+    assert len(seen) == 3  # first try + 2 immediate retries
+
+
 def test_fenced_json_is_accepted() -> None:
     assert parse_json_output(Answer, '```json\n{"label": "a", "score": 1}\n```').score == 1
 

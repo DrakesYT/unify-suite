@@ -34,13 +34,19 @@ function Kpi({
   title,
   value,
   series,
+  seriesName = title,
   delta,
+  note,
   fmt = String,
 }: {
   title: string;
   value: string;
   series: number[];
+  /** What the trend line counts, when that is not the card's own number. */
+  seriesName?: string;
   delta: number; // this week minus last week, in the series' own unit
+  /** Replaces the "vs last week" line when the trend measures something else than `value`. */
+  note?: string;
   fmt?: (n: number) => string;
 }) {
   const up = delta > 0;
@@ -49,11 +55,12 @@ function Kpi({
       <p className="text-xs text-slate-400">{title}</p>
       <p className="mt-1 truncate text-2xl font-semibold text-white tabular-nums">{value}</p>
       <p className={`mt-0.5 text-xs ${up ? "text-emerald-300" : "text-slate-500"}`}>
-        {delta === 0
-          ? "Same as last week"
-          : `${up ? "+" : "−"}${fmt(Math.abs(delta))} vs last week`}
+        {note ??
+          (delta === 0
+            ? "Same as last week"
+            : `${up ? "+" : "−"}${fmt(Math.abs(delta))} vs last week`)}
       </p>
-      <Spark values={series} name={title} />
+      <Spark values={series} name={seriesName} />
     </div>
   );
 }
@@ -150,9 +157,16 @@ export function SalesInsights({ summary }: { summary: SalesSummary }) {
         <Kpi
           title="Open pipeline"
           value={compactMoney(openValue, currency)}
+          // The open pipeline has no history (status changes are not stored), so the line shows
+          // the value of leads added each week, and says so, instead of a "vs last week" change.
           series={weeks.map((w) => w.new_value_minor / 100)}
-          delta={diff((w) => w.new_value_minor)}
-          fmt={(n) => compactMoney(n, currency)}
+          seriesName="Pipeline value added per week"
+          delta={last.new_value_minor}
+          note={
+            last.new_value_minor
+              ? `+${compactMoney(last.new_value_minor, currency)} added this week`
+              : "Nothing added this week"
+          }
         />
         <Kpi
           title="New leads this week"

@@ -16,7 +16,7 @@ type Row = {
   delivered: number;
 };
 
-/** Average each vendor's saved comparison scores (0 to 1) and count its late orders. */
+/** Average each vendor's saved comparison scores (0 to 1) and count its late and delivered orders. */
 function build(requests: PurchaseRequest[], orders: PurchaseOrder[]): Row[] {
   const byVendor = new Map<string, Row & { sums: number[] }>();
   for (const req of requests) {
@@ -71,7 +71,7 @@ export function VendorHeatmap({
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] border-separate border-spacing-1 text-sm">
+            <table className="w-full min-w-[540px] border-separate border-spacing-1 text-sm">
               <thead className="text-xs text-slate-500">
                 <tr>
                   <th className="px-2 py-1 text-left font-medium">Vendor</th>
@@ -80,7 +80,8 @@ export function VendorHeatmap({
                       {c.label}
                     </th>
                   ))}
-                  <th className="px-2 py-1 text-center font-medium">Late orders</th>
+                  <th className="px-2 py-1 text-center font-medium">Late now</th>
+                  <th className="px-2 py-1 text-center font-medium">Delivered</th>
                 </tr>
               </thead>
               <tbody>
@@ -108,7 +109,9 @@ export function VendorHeatmap({
                       }`}
                     >
                       {row.late}
-                      <span className="text-xs text-slate-500"> / {row.delivered} delivered</span>
+                    </td>
+                    <td className="rounded-md bg-navy-950/60 px-2 py-2 text-center text-slate-400 tabular-nums">
+                      {row.delivered}
                     </td>
                   </tr>
                 ))}
@@ -117,7 +120,8 @@ export function VendorHeatmap({
           </div>
           <p className="mt-3 text-xs text-slate-500">
             Scores are each vendor&apos;s average across the saved comparisons, each relative to the
-            best offer (100 is best). Late orders count purchase orders past their due date.
+            best offer (100 is best). Late now counts approved orders past their expected delivery
+            date that have not arrived; Delivered counts orders received.
           </p>
         </>
       )}

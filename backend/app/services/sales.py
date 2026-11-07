@@ -49,6 +49,12 @@ def _week_start(day: date) -> date:
     return day - timedelta(days=day.weekday())
 
 
+def week_of(moment: datetime) -> date:
+    """Monday of the UTC week `moment` falls in. Weeks are counted in UTC, like the chart's start:
+    a database session in another time zone must not move a late-Sunday lead into next week."""
+    return _week_start(moment.astimezone(UTC).date())
+
+
 def summary(db: Session, today: date | None = None) -> SalesSummary:
     """Funnel stages plus eight weeks of new and won leads (status has no history: 'won' uses the
     lead's last update). Values are summed in the most common lead currency, USD when empty."""
@@ -80,11 +86,11 @@ def summary(db: Session, today: date | None = None) -> SalesSummary:
     ):
         in_currency = cur == currency
         if created >= since:
-            row = weeks[_week_start(created.date())]
+            row = weeks[week_of(created)]
             row[0] += 1
             row[1] += value if in_currency else 0
         if status == LeadStatus.won and updated >= since:
-            row = weeks[_week_start(updated.date())]
+            row = weeks[week_of(updated)]
             row[2] += 1
             row[3] += value if in_currency else 0
     return SalesSummary(

@@ -21,8 +21,18 @@ export function when(iso: string | null): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
+/** "no_po" → "no PO": snake_case values as words, with abbreviations kept in capitals. */
 export function label(value: string): string {
-  return value.replaceAll("_", " ");
+  return value.replaceAll("_", " ").replace(/\bpo\b/gi, "PO");
+}
+
+/** 840 → "840 ms", 68017 → "1.1 min": long waits (a person deciding) read in their own unit. */
+export function duration(ms: number): string {
+  if (ms < 1000) return `${ms} ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)} s`;
+  if (ms < 3_600_000) return `${(ms / 60_000).toFixed(1)} min`;
+  if (ms < 86_400_000) return `${(ms / 3_600_000).toFixed(1)} h`;
+  return `${(ms / 86_400_000).toFixed(1)} d`;
 }
 
 /** 4_800_000 cents → "$48K" (for tight dashboard tiles; exact values stay on the pages). */

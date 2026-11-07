@@ -1,5 +1,6 @@
 import { Link } from "react-router";
-import { ago, label } from "../format";
+import { ago, duration, label } from "../format";
+import { canRead, useAuth } from "../session";
 import type { Handoff, HandoffNode, StepStatus } from "../types";
 
 // Stroke colour per real step status. Flat colours only; purple is reserved for "working now".
@@ -27,10 +28,16 @@ const PAD = 14;
 
 /** Workflow B as a hand-off: each stop is coloured by the latest real status of its step. */
 export function HandoffGraph({ run }: { run: Handoff | null }) {
+  const { user } = useAuth();
   if (!run) {
+    // Only point at Payments for people who can open it (finance staff and leaders).
+    const hint =
+      user && canRead(user, "finance")
+        ? "Start one from Payments and it appears here."
+        : "It appears here when finance starts one.";
     return (
       <p className="py-10 text-center text-sm text-slate-500">
-        No supplier-payment run yet. Start one from Payments and it appears here.
+        No supplier-payment run yet. {hint}
       </p>
     );
   }
@@ -113,7 +120,7 @@ export function HandoffGraph({ run }: { run: Handoff | null }) {
                   {KIND[n.kind]} · {label(n.status)}
                 </text>
                 <text x={16} y={60} fontSize={11} fill="#64748b">
-                  {n.duration_ms !== null ? `${n.duration_ms} ms` : "—"}
+                  {n.duration_ms !== null ? duration(n.duration_ms) : "—"}
                   {n.attempts > 1 ? ` · try ${n.attempts}` : ""}
                 </text>
               </g>
