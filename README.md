@@ -167,21 +167,22 @@ docker compose exec backend python -m app.import_demo
 
 The 57 supplier invoices in `backend/demo_data/invoices/` are left for live uploads: each one starts a payment run.
 
-| Sign in as | Role | Try this |
-|---|---|---|
-| `ceo@demo.example.com` | executive | Dashboard (set the quarterly sales target with **Edit target** on the deal board), Aura chat, Approval Center (read-only) |
-| `finance.clerk@demo.example.com` | finance employee | Payments: upload an invoice for `PO-1007`; Customer payments due → SO-1101 → Send payment reminder |
-| `finance.manager@demo.example.com` | finance manager | Approval Center: approve or reject the payment and the payment reminder |
-| `sales.rep@demo.example.com` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
-| `sales.manager@demo.example.com` | sales manager | Approval Center: approve & send the email (or reject it) |
-| `hr.recruiter@demo.example.com` | HR employee | Hiring → pick a job → add a resume (from `backend/demo_data/resumes/`) → Screen new applicants → Invite to interview (top candidate) |
-| `hr.manager@demo.example.com` | HR manager | Approval Center: approve & send the interview invite (or reject it, which frees the times) |
-| `support.agent@demo.example.com` | support employee | Support tickets → Investigate, Escalate a refund |
-| `support.manager@demo.example.com` | support manager | Approve the refund escalation |
-| `buyer@demo.example.com` | procurement employee | Procurement → Compare vendors, Create purchase order; PO-2001 is late → Follow up with supplier |
-| `procurement.manager@demo.example.com` | procurement manager | Approve the request, the purchase order and the supplier follow-up email |
+| Sign in as | Password | Role | Try this |
+|---|---|---|---|
+| `ceo@demo.example.com` | `demodemo.` | executive | Dashboard (set the quarterly sales target with **Edit target** on the deal board), Aura chat, Approval Center (read-only) |
+| `finance.clerk@demo.example.com` | `demodemo.` | finance employee | Payments: upload an invoice for `PO-1007`; Customer payments due → SO-1101 → Send payment reminder |
+| `finance.manager@demo.example.com` | `demodemo.` | finance manager | Approval Center: approve or reject the payment and the payment reminder |
+| `manager@unify-demo.com` | `f.manager@overseer` | finance manager | A second finance manager: approve or reject payments the other finance manager started (nobody can decide their own request). Not a demo account, so **Tour** and **View as** are not offered |
+| `sales.rep@demo.example.com` | `demodemo.` | sales employee | Sales leads → Qualify with AI → open the rating → Draft email with AI → Send for approval |
+| `sales.manager@demo.example.com` | `demodemo.` | sales manager | Approval Center: approve & send the email (or reject it) |
+| `hr.recruiter@demo.example.com` | `demodemo.` | HR employee | Hiring → pick a job → add a resume (from `backend/demo_data/resumes/`) → Screen new applicants → Invite to interview (top candidate) |
+| `hr.manager@demo.example.com` | `demodemo.` | HR manager | Approval Center: approve & send the interview invite (or reject it, which frees the times) |
+| `support.agent@demo.example.com` | `demodemo.` | support employee | Support tickets → Investigate, Escalate a refund |
+| `support.manager@demo.example.com` | `demodemo.` | support manager | Approve the refund escalation |
+| `buyer@demo.example.com` | `demodemo.` | procurement employee | Procurement → Compare vendors, Create purchase order; PO-2001 is late → Follow up with supplier |
+| `procurement.manager@demo.example.com` | `demodemo.` | procurement manager | Approve the request, the purchase order and the supplier follow-up email |
 
-The demo password for the live site is given in the lablab.ai submission.
+Every `@demo.example.com` account uses the password `demodemo.` (with the full stop) on the live site. Demo accounts can do only what their role allows, and the demo data is fictional.
 
 **Guided tour and role switcher:** after signing in with any demo account, press **Tour** in the top bar. Five
 steps walk through the dashboard, an invoice upload (as the finance clerk), the approval pause (as the finance
@@ -251,7 +252,7 @@ attached to the `frontend` service (port 80); no other service is exposed.
 ## Environment variables
 
 | Name | Used by | Notes |
-|---|---|---|
+|---|---|---|---|
 | `POSTGRES_PASSWORD` | db, backend | Required. Letters and digits only. |
 | `JWT_SECRET` | backend | Required. At least 32 random characters, used as the app's signing secret. |
 | `LLM_API_KEY` | backend | Vultr Serverless Inference key. Without it AI endpoints return 503. |
