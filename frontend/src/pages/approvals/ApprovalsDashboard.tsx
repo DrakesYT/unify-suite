@@ -1,4 +1,5 @@
 import { Donut } from "../../components/charts/Donut";
+import { CheckIcon, ClockIcon, CloseIcon, ShieldIcon } from "../../components/icons";
 import { MiniBars } from "../../components/charts/MiniTrend";
 import { HeroStat, StatCard } from "../../components/charts/StatCard";
 import { Badge, Card, Empty } from "../../components/ui";
@@ -29,17 +30,30 @@ export function ApprovalsDashboard() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
         <HeroStat
           label="Waiting for a decision"
+          icon={<ShieldIcon size={16} />}
           value={String(pending.length)}
           caption={pending.length === 0 ? "Nothing is waiting." : "Pending approvals"}
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <StatCard
             label="Approved, last 7 days"
+            icon={<CheckIcon size={16} />}
+            tone="emerald"
             value={decidedInWeek(decided, "approved")}
             accent
           />
-          <StatCard label="Rejected, last 7 days" value={decidedInWeek(decided, "rejected")} />
-          <StatCard label="Median time to decide" value={formatMinutes(medianMinutes(decided))} />
+          <StatCard
+            label="Rejected, last 7 days"
+            value={decidedInWeek(decided, "rejected")}
+            icon={<CloseIcon size={16} />}
+            tone="red"
+          />
+          <StatCard
+            label="Median time to decide"
+            value={formatMinutes(medianMinutes(decided))}
+            icon={<ClockIcon size={16} />}
+            tone="amber"
+          />
         </div>
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
@@ -57,7 +71,7 @@ export function ApprovalsDashboard() {
           accentKey="approved"
           emptyText="No decisions yet."
         />
-        <Card title="Recent decisions">
+        <Card title="Recent decisions" icon={<ClockIcon size={16} />}>
           {recent.length === 0 ? (
             <Empty>No decisions yet.</Empty>
           ) : (

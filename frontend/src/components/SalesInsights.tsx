@@ -1,38 +1,19 @@
-import { Line, LineChart, ResponsiveContainer } from "recharts";
+import type { ReactNode } from "react";
+import { Spark } from "./charts/Spark";
+import { CheckIcon, ChartIcon, UsersIcon, WalletIcon } from "./icons";
 import { compactMoney } from "../format";
 import type { LeadStatus, SalesSummary } from "../types";
 import { ACCENT } from "../pages/dashboard/chartStyle";
 import { TargetBar } from "./SalesTarget";
-import { Card } from "./ui";
+import { CHIP_TONE, type ChipTone } from "./chipTone";
+import { Card, IconChip } from "./ui";
 
 type Week = SalesSummary["weeks"][number];
 
-function Spark({ values, name }: { values: number[]; name: string }) {
-  const data = values.map((v, i) => ({ i, v }));
-  return (
-    <div
-      className="h-10"
-      role="img"
-      aria-label={`${name}, last ${values.length} weeks: ${values.join(", ")}`}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 4, right: 2, bottom: 2, left: 2 }}>
-          <Line
-            type="monotone"
-            dataKey="v"
-            stroke={ACCENT}
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
 function Kpi({
   title,
+  icon,
+  tone,
   value,
   series,
   seriesName = title,
@@ -41,6 +22,8 @@ function Kpi({
   fmt = String,
 }: {
   title: string;
+  icon: ReactNode;
+  tone: ChipTone;
   value: string;
   series: number[];
   /** What the trend line counts, when that is not the card's own number. */
@@ -52,16 +35,27 @@ function Kpi({
 }) {
   const up = delta > 0;
   return (
-    <div className="min-w-0 rounded-xl border border-navy-800 bg-navy-900 p-4">
-      <p className="text-xs text-slate-400">{title}</p>
-      <p className="mt-1 truncate text-2xl font-semibold text-white tabular-nums">{value}</p>
-      <p className={`mt-0.5 text-xs ${up ? "text-emerald-300" : "text-slate-500"}`}>
-        {note ??
-          (delta === 0
-            ? "Same as last week"
-            : `${up ? "+" : "−"}${fmt(Math.abs(delta))} vs last week`)}
+    <div className="flex min-w-0 flex-col rounded-2xl border border-white/[0.07] bg-navy-900/80 p-4 card-shadow">
+      <span className="flex min-w-0 items-center gap-2.5">
+        <IconChip icon={icon} tone={tone} size="sm" />
+        <span className="truncate text-sm font-medium text-slate-300">{title}</span>
+      </span>
+      <p className="mt-3 truncate text-2xl font-bold tracking-tight text-white tabular-nums">
+        {value}
       </p>
-      <Spark values={series} name={seriesName} />
+      <span className="mt-auto flex items-end gap-3 pt-3">
+        <span
+          className={`max-w-[60%] shrink-0 truncate rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+            up ? CHIP_TONE.emerald : "bg-white/[0.05] text-slate-400"
+          }`}
+        >
+          {note ??
+            (delta === 0
+              ? "Same as last week"
+              : `${up ? "+" : "−"}${fmt(Math.abs(delta))} vs last week`)}
+        </span>
+        <Spark series={series} name={seriesName} />
+      </span>
     </div>
   );
 }
@@ -163,6 +157,8 @@ export function SalesInsights({
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Kpi
           title="Open pipeline"
+          icon={<ChartIcon size={16} />}
+          tone="violet"
           value={compactMoney(openValue, currency)}
           // The open pipeline has no history (status changes are not stored), so the line shows
           // the value of leads added each week, and says so, instead of a "vs last week" change.
@@ -177,18 +173,24 @@ export function SalesInsights({
         />
         <Kpi
           title="New leads this week"
+          icon={<UsersIcon size={16} />}
+          tone="sky"
           value={String(last.new_leads)}
           series={weeks.map((w) => w.new_leads)}
           delta={diff((w) => w.new_leads)}
         />
         <Kpi
           title="Deals won"
+          icon={<CheckIcon size={16} />}
+          tone="emerald"
           value={String(won.count)}
           series={weeks.map((w) => w.won)}
           delta={diff((w) => w.won)}
         />
         <Kpi
           title="Won value"
+          icon={<WalletIcon size={16} />}
+          tone="amber"
           value={compactMoney(won.value_minor, currency)}
           series={weeks.map((w) => w.won_minor / 100)}
           delta={diff((w) => w.won_minor)}
@@ -199,8 +201,12 @@ export function SalesInsights({
         Trend lines show the last 8 weeks: leads and value by the week they were added, wins by the
         week of the lead&apos;s last update.
       </p>
-      <TargetBar target={summary.target} onTargetChanged={onTargetChanged} />
-      <Card title="Sales funnel">
+      <TargetBar
+        target={summary.target}
+        onTargetChanged={onTargetChanged}
+        className="rounded-2xl! bg-navy-900/80! px-5! py-4! card-shadow"
+      />
+      <Card title="Sales funnel" icon={<ChartIcon size={16} />}>
         <div className="grid items-center gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
           <Funnel summary={summary} />
           <ul className="space-y-3">

@@ -1,6 +1,5 @@
-import { useId, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { AuraPanel } from "../components/AuraPanel";
 import { CountUp } from "../components/CountUp";
 import {
@@ -15,7 +14,9 @@ import {
   UsersIcon,
   WalletIcon,
 } from "../components/icons";
-import { ErrorNote } from "../components/ui";
+import { Spark } from "../components/charts/Spark";
+import { CHIP_TONE, type ChipTone } from "../components/chipTone";
+import { ErrorNote, LiveNote } from "../components/ui";
 import { compactMoney } from "../format";
 import { useAuth } from "../session";
 import type {
@@ -31,7 +32,6 @@ import type {
   Ticket,
 } from "../types";
 import { usePoll } from "../usePoll";
-import { ACCENT } from "./dashboard/chartStyle";
 import { AgentBoard } from "./dashboard/AgentBoard";
 import { ApprovalsBoard } from "./dashboard/ApprovalsBoard";
 import { DealBoard } from "./dashboard/DealBoard";
@@ -42,18 +42,7 @@ import { SupportBoard } from "./dashboard/SupportBoard";
 
 type Insight = Overview["insights"][number];
 
-/** Soft icon chip colours; the light theme deepens the text shade automatically. */
-const TONE = {
-  violet: "bg-violet-500/12 text-violet-300",
-  amber: "bg-amber-500/15 text-amber-300",
-  sky: "bg-sky-500/15 text-sky-300",
-  rose: "bg-rose-500/15 text-rose-300",
-  emerald: "bg-emerald-500/15 text-emerald-300",
-  red: "bg-red-500/15 text-red-300",
-} as const;
-type Tone = keyof typeof TONE;
-
-const INSIGHT_LOOK: Record<Insight["tone"], { tone: Tone; icon: ReactNode; word: string }> = {
+const INSIGHT_LOOK: Record<Insight["tone"], { tone: ChipTone; icon: ReactNode; word: string }> = {
   alert: { tone: "red", icon: <ShieldIcon size={17} />, word: "Urgent" },
   warn: { tone: "amber", icon: <BoltIcon size={17} />, word: "Check soon" },
   good: { tone: "emerald", icon: <CheckIcon size={17} />, word: "Good news" },
@@ -85,14 +74,9 @@ function Greeting({ name }: { name: string }) {
       <p className="mt-3 max-w-md text-sm text-slate-400">
         Five departments, one AI workforce. Agents do the routine work; you approve what matters.
       </p>
-      <span className="mt-4 flex items-center gap-2 text-xs text-slate-500">
-        {/* The one moving dot: this page really is live (it polls every 5 s). */}
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60 motion-reduce:hidden" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-        </span>
-        Live data · refreshes every 5 s
-      </span>
+      <div className="mt-4">
+        <LiveNote />
+      </div>
     </div>
   );
 }
@@ -123,7 +107,9 @@ function NeedsALook({ insights }: { insights: Insight[] | undefined }) {
               className="hover-lift group flex min-w-0 flex-col gap-3 rounded-2xl border border-white/[0.07] bg-navy-900/80 p-4 card-shadow"
             >
               <span className="flex items-center justify-between">
-                <span className={`grid h-9 w-9 place-items-center rounded-xl ${TONE[look.tone]}`}>
+                <span
+                  className={`grid h-9 w-9 place-items-center rounded-xl ${CHIP_TONE[look.tone]}`}
+                >
                   {look.icon}
                 </span>
                 <ArrowRight
@@ -159,40 +145,6 @@ function weeklyCounts(rows: { created_at: string }[]): number[] {
   return counts;
 }
 
-/** A small filled trend line (real weekly numbers only). */
-function Spark({ series, name }: { series: number[]; name: string }) {
-  const id = useId().replace(/:/g, "");
-  const data = series.map((v, i) => ({ i, v }));
-  return (
-    <div
-      className="h-8 min-w-12 flex-1"
-      role="img"
-      aria-label={`${name}, last ${series.length} weeks: ${series.join(", ")}`}
-      title={`${name}, last ${series.length} weeks`}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 3, right: 2, bottom: 2, left: 2 }}>
-          <defs>
-            <linearGradient id={`spark-${id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={ACCENT} stopOpacity={0.28} />
-              <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <Area
-            type="monotone"
-            dataKey="v"
-            stroke={ACCENT}
-            strokeWidth={2}
-            fill={`url(#spark-${id})`}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
 /** A KPI card: icon chip and label, the figure, this week's change (when known) and a trend line. */
 function Kpi({
   title,
@@ -210,7 +162,7 @@ function Kpi({
   hint: string;
   to: string;
   icon: ReactNode;
-  tone: Tone;
+  tone: ChipTone;
   week?: string;
   series?: number[];
   seriesName?: string;
@@ -221,7 +173,7 @@ function Kpi({
       className="hover-lift group flex min-w-0 flex-col rounded-2xl border border-white/[0.07] bg-navy-900/80 p-4 card-shadow"
     >
       <span className="flex items-center gap-2.5">
-        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${TONE[tone]}`}>
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${CHIP_TONE[tone]}`}>
           {icon}
         </span>
         <span className="truncate text-sm font-medium text-slate-300">{title}</span>
@@ -234,7 +186,7 @@ function Kpi({
         <span className="mt-auto flex items-end gap-3 pt-3">
           {week && (
             <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${TONE[tone]}`}
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${CHIP_TONE[tone]}`}
             >
               {week}
             </span>

@@ -8,6 +8,7 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
+import { ChartIcon } from "../icons";
 import { Card, Empty } from "../ui";
 
 export interface Point {
@@ -42,7 +43,7 @@ export function MiniTrend({
 }) {
   const any = points.some((p) => Number(p[accent]) > 0 || (muted && Number(p[muted]) > 0));
   return (
-    <Card title={title}>
+    <Card title={title} icon={<ChartIcon size={16} />}>
       {!any ? (
         <Empty>{emptyText}</Empty>
       ) : (
@@ -103,7 +104,7 @@ export function MiniBars({
 }) {
   const max = Math.max(0, ...points.map((p) => Number(p[dataKey])));
   return (
-    <Card title={title}>
+    <Card title={title} icon={<ChartIcon size={16} />}>
       {max === 0 ? (
         <Empty>{emptyText}</Empty>
       ) : (

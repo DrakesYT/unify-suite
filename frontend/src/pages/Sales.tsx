@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { ChartIcon, ListIcon, PlusIcon } from "../components/icons";
 import { api } from "../api";
 import {
   Badge,
@@ -67,7 +68,7 @@ function NewLead({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
-    <Card title="New lead">
+    <Card title="New lead" icon={<PlusIcon size={16} />}>
       <form onSubmit={submit} className="grid gap-3 md:grid-cols-3">
         <input
           className={inputClass}
@@ -265,6 +266,9 @@ export function Sales() {
   return (
     <>
       <PageHeader
+        eyebrow="Sales · Lead Qualifier agent"
+        icon={<ChartIcon size={22} />}
+        live
         title="Sales leads"
         subtitle="The Lead Qualifier rates each lead hot, warm or cold and explains why."
       />
@@ -273,6 +277,7 @@ export function Sales() {
         {editable && <NewLead onCreated={reload} />}
         <Card
           title="Pipeline"
+          icon={<ListIcon size={16} />}
           actions={
             <select
               className="rounded-md border border-navy-800 bg-navy-950 px-2 py-1 text-sm"

@@ -1,4 +1,5 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { PieIcon } from "../icons";
 import { label as pretty } from "../../format";
 import { Card, Empty } from "../ui";
 
@@ -41,7 +42,7 @@ export function Donut({
   let shade = 0;
   const colours = shown.map((s) => (s.key === accentKey ? accentColor : shades[shade++ % 4]));
   return (
-    <Card title={title}>
+    <Card title={title} icon={<PieIcon size={16} />}>
       {total === 0 ? (
         <Empty>{emptyText}</Empty>
       ) : (

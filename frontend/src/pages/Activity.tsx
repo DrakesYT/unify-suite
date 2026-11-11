@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { StatCard } from "../components/charts/StatCard";
+import { BoltIcon, ClockIcon, FlowIcon, InfoIcon, ListIcon } from "../components/icons";
 import { Link } from "react-router";
 import { api } from "../api";
 import { Badge, Card, Empty, ErrorNote, PageHeader, ghostButton, Loading } from "../components/ui";
@@ -7,15 +9,6 @@ import { ago, when } from "../format";
 import type { AgentTask, LatestHandoff, Page } from "../types";
 import { usePoll } from "../usePoll";
 import { toast } from "../toast";
-
-function Stat({ title, value }: { title: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-navy-800 bg-navy-900 p-4">
-      <p className="text-xs text-slate-400">{title}</p>
-      <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
-    </div>
-  );
-}
 
 const FEED_DOT: Record<AgentTask["status"], string> = {
   succeeded: "bg-emerald-400",
@@ -82,17 +75,36 @@ export function Activity() {
   return (
     <>
       <PageHeader
+        eyebrow="Agents at work"
+        icon={<BoltIcon size={22} />}
+        live
         title="Command Center"
-        subtitle="Every agent call and tool call with its input hash, outcome and duration. Refreshes every 5 s."
+        subtitle="Every agent call and tool call with its input hash, outcome and duration."
       />
       <div data-tour="command-center" className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat title="Calls shown" value={rows.length} />
-        <Stat title="Agent calls" value={agentRows.length} />
-        <Stat title="Failed" value={failed} />
-        <Stat title="Avg agent time" value={`${avg} ms`} />
+        <StatCard label="Calls shown" value={rows.length} icon={<ListIcon size={16} />} />
+        <StatCard
+          label="Agent calls"
+          value={agentRows.length}
+          icon={<BoltIcon size={16} />}
+          tone="sky"
+        />
+        <StatCard
+          label="Failed"
+          value={failed}
+          icon={<InfoIcon size={16} />}
+          tone="red"
+          danger={failed > 0}
+        />
+        <StatCard
+          label="Avg agent time"
+          value={`${avg} ms`}
+          icon={<ClockIcon size={16} />}
+          tone="amber"
+        />
       </div>
       <div className="mb-6 grid gap-4 items-start lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-        <Card title="Agent hand-off">
+        <Card title="Agent hand-off" icon={<FlowIcon size={16} />}>
           <ErrorNote message={handoff.error} />
           {handoff.data ? (
             <HandoffGraph run={handoff.data.run} />
@@ -100,7 +112,7 @@ export function Activity() {
             !handoff.error && <Loading rows={3} />
           )}
         </Card>
-        <Card title="Live activity">
+        <Card title="Live activity" icon={<ClockIcon size={16} />}>
           <LiveFeed items={feed.data?.items} />
         </Card>
       </div>

@@ -1,4 +1,5 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { ChartIcon } from "../icons";
 import { Card, Empty } from "../ui";
 
 /** Half-donut for a 0-100 % rate; `percent` null means there is no data to rate. */
@@ -14,7 +15,7 @@ export function Gauge({
 }) {
   const value = percent === null ? 0 : Math.min(100, Math.max(0, percent));
   return (
-    <Card title={title}>
+    <Card title={title} icon={<ChartIcon size={16} />}>
       {percent === null ? (
         <Empty>{caption ?? "No data yet."}</Empty>
       ) : (

@@ -1,4 +1,5 @@
 import { AgingBars } from "../../components/charts/AgingBars";
+import { CheckIcon, ClockIcon, InfoIcon, WalletIcon } from "../../components/icons";
 import { Donut } from "../../components/charts/Donut";
 import { otherCurrencies, showLargest } from "../../components/charts/currency";
 import { MiniBars } from "../../components/charts/MiniTrend";
@@ -28,17 +29,31 @@ export function PaymentsDashboard() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
         <HeroStat
           label="Outstanding receivables"
+          icon={<WalletIcon size={16} />}
           value={showLargest(owed)}
           caption={otherCurrencies(owed) ?? `${receivables.length} unpaid customer orders`}
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <StatCard label="Overdue" value={showLargest(overdueTotals(receivables))} danger />
+          <StatCard
+            label="Overdue"
+            value={showLargest(overdueTotals(receivables))}
+            icon={<ClockIcon size={16} />}
+            tone="red"
+            danger
+          />
           <StatCard
             label="Invoices matched"
+            icon={<CheckIcon size={16} />}
+            tone="emerald"
             value={matched === null ? "—" : `${Math.round(matched)}%`}
             accent
           />
-          <StatCard label="Anomalies" value={anomalyCount(anomalies)} />
+          <StatCard
+            label="Anomalies"
+            value={anomalyCount(anomalies)}
+            icon={<InfoIcon size={16} />}
+            tone="amber"
+          />
         </div>
       </div>
       <div className="grid gap-6 lg:grid-cols-3">

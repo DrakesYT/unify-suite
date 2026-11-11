@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { WalletIcon } from "./icons";
 import { api } from "../api";
 import { money } from "../format";
 import type { Receivable } from "../types";
@@ -90,7 +91,7 @@ export function Receivables({ editable }: { editable: boolean }) {
   const { data, error, reload } = usePoll<Receivable[]>("/finance/receivables");
 
   return (
-    <Card title="Customer payments due">
+    <Card title="Customer payments due" icon={<WalletIcon size={16} />}>
       <ErrorNote message={error} />
       {!data && !error && <Loading rows={3} />}
       {data && data.length === 0 && <Empty>No unpaid customer orders.</Empty>}

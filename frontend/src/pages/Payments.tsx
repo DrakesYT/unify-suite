@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { FileIcon, ListIcon, WalletIcon } from "../components/icons";
 import { Link, useNavigate } from "react-router";
 import { api } from "../api";
 import { canWrite, useAuth } from "../session";
@@ -48,7 +49,7 @@ function StartForm() {
   };
 
   return (
-    <Card title="Verify a supplier invoice" tour="upload-invoice">
+    <Card title="Verify a supplier invoice" icon={<FileIcon size={16} />} tour="upload-invoice">
       <form onSubmit={submit} className="grid gap-4 md:grid-cols-[1fr_200px_auto] md:items-end">
         <label className="space-y-1 text-sm">
           <span className="text-slate-300">Invoice (PDF or TXT, max 10 MB)</span>
@@ -92,13 +93,16 @@ export function Payments() {
   return (
     <>
       <PageHeader
+        eyebrow="Finance · Invoice Processor agent"
+        icon={<WalletIcon size={22} />}
+        live
         title="Payments"
         subtitle="Supplier invoices (Workflow B: invoice → PO match → manager approval → payment) and customer payments due"
       />
       <div className="space-y-6">
         <PaymentsDashboard />
         {user && canWrite(user, "finance") && <StartForm />}
-        <Card title="Recent supplier payment runs">
+        <Card title="Recent supplier payment runs" icon={<ListIcon size={16} />}>
           <ErrorNote message={error} />
           {!data && !error && <Loading rows={4} />}
           {data && data.items.length === 0 && (

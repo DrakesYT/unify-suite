@@ -1,4 +1,5 @@
 import { Card, Empty } from "./ui";
+import { TruckIcon } from "./icons";
 import type { PurchaseOrder, PurchaseRequest } from "../types";
 
 const COLUMNS = [
@@ -63,7 +64,7 @@ export function VendorHeatmap({
 }) {
   const rows = build(requests, orders);
   return (
-    <Card title="Supplier performance">
+    <Card title="Supplier performance" icon={<TruckIcon size={16} />}>
       {rows.length === 0 ? (
         <Empty hint="Run “Compare vendors” on a request with two or more quotes.">
           No vendor comparisons yet.

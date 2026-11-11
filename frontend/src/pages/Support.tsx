@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { ListIcon, PlusIcon, TicketIcon } from "../components/icons";
 import { Link, useLocation } from "react-router";
 import { api } from "../api";
 import {
@@ -317,7 +318,7 @@ function TicketDetail({
   );
 
   return (
-    <Card title="Ticket">
+    <Card title="Ticket" icon={<TicketIcon size={16} />}>
       <div className="@container">
         <div className="grid gap-5 @3xl:grid-cols-[1fr_250px]">
           <div className="min-w-0">{main}</div>
@@ -350,6 +351,9 @@ export function Support() {
   return (
     <>
       <PageHeader
+        eyebrow="Support · Ticket Investigator agent"
+        icon={<TicketIcon size={22} />}
+        live
         title="Support tickets"
         subtitle="The Ticket Investigator classifies each ticket and checks the customer's orders. Refunds and legal escalations need a manager."
       />
@@ -357,14 +361,14 @@ export function Support() {
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
         <div className="min-w-0 space-y-6">
           {editable && (
-            <Card title="New ticket">
+            <Card title="New ticket" icon={<PlusIcon size={16} />}>
               <NewTicket
                 customers={customers.data ?? []}
                 onCreated={(t) => (setPicked(t.id), void tickets.reload())}
               />
             </Card>
           )}
-          <Card title="Queue">
+          <Card title="Queue" icon={<ListIcon size={16} />}>
             <ErrorNote message={tickets.error} />
             {!tickets.data && !tickets.error && <Loading rows={4} />}
             {tickets.data?.items.length === 0 && <Empty>No tickets yet.</Empty>}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BoltIcon, FileIcon, FlowIcon, ShieldIcon } from "../components/icons";
 import { Link, useParams } from "react-router";
 import { api } from "../api";
 import { canWrite, useAuth } from "../session";
@@ -77,6 +78,9 @@ export function PaymentRun() {
   return (
     <>
       <PageHeader
+        eyebrow="Finance · supplier payment run"
+        icon={<FileIcon size={22} />}
+        live
         title={data?.input.file_name ?? "Payment run"}
         subtitle={
           data ? `PO ${data.input.po_number} · started ${when(data.created_at)}` : undefined
@@ -93,6 +97,7 @@ export function PaymentRun() {
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
           <Card
             title="Steps"
+            icon={<FlowIcon size={16} />}
             actions={
               <div className="flex items-center gap-3">
                 <Badge value={data.status} />
@@ -136,7 +141,7 @@ export function PaymentRun() {
           </Card>
           <div className="space-y-6">
             {data.result && (
-              <Card title="Verification">
+              <Card title="Verification" icon={<ShieldIcon size={16} />}>
                 <p
                   className={`mb-3 text-sm font-medium ${data.result.passed ? "text-emerald-300" : "text-red-300"}`}
                 >
@@ -153,7 +158,7 @@ export function PaymentRun() {
                 </ul>
               </Card>
             )}
-            <Card title="Agent calls">
+            <Card title="Agent calls" icon={<BoltIcon size={16} />}>
               <ul className="space-y-2 text-sm">
                 {(tasks.data?.items ?? []).map((t) => (
                   <li key={t.id} className="flex items-center justify-between gap-2">

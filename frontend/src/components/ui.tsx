@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { label } from "../format";
+import { CHIP_TONE, type ChipTone } from "./chipTone";
 
 const TONES: Record<string, string> = {
   completed: "bg-emerald-500/15 text-emerald-300",
@@ -57,13 +58,47 @@ export function Badge({ value }: { value: string }) {
   );
 }
 
+/** A rounded square holding an icon, tinted by tone. */
+export function IconChip({
+  icon,
+  tone = "violet",
+  size = "md",
+}: {
+  icon: ReactNode;
+  tone?: ChipTone;
+  size?: "sm" | "md";
+}) {
+  const box = size === "sm" ? "h-8 w-8" : "h-9 w-9";
+  return (
+    <span className={`grid ${box} shrink-0 place-items-center rounded-xl ${CHIP_TONE[tone]}`}>
+      {icon}
+    </span>
+  );
+}
+
+/** The green dot that says a page polls for fresh data. */
+export function LiveNote() {
+  return (
+    <span className="flex items-center gap-2 text-xs text-slate-500">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60 motion-reduce:hidden" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+      </span>
+      Live data · refreshes every 5 s
+    </span>
+  );
+}
+
 export function Card({
   title,
+  icon,
   actions,
   children,
   tour,
 }: {
   title?: string;
+  /** Shown in a tinted chip before the title, like the dashboard panels. */
+  icon?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   tour?: string; // anchor for the guided tour
@@ -71,11 +106,16 @@ export function Card({
   return (
     <section
       data-tour={tour}
-      className="hover-tint min-w-0 rounded-2xl border border-navy-800 bg-navy-900 p-5 card-shadow"
+      className="hover-tint min-w-0 rounded-2xl border border-white/[0.07] bg-navy-900/80 p-5 card-shadow"
     >
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          {title && <h2 className="text-sm font-semibold text-slate-300">{title}</h2>}
+          {title && (
+            <span className="flex min-w-0 items-center gap-2.5">
+              {icon && <IconChip icon={icon} size="sm" />}
+              <h2 className="text-[15px] font-semibold text-white">{title}</h2>
+            </span>
+          )}
           {actions}
         </div>
       )}
@@ -84,11 +124,46 @@ export function Card({
   );
 }
 
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+/** Page title in the dashboard style: icon tile, small kicker line, large bold title, live note. */
+export function PageHeader({
+  title,
+  subtitle,
+  eyebrow,
+  icon,
+  live = false,
+  actions,
+}: {
+  title: string;
+  subtitle?: string;
+  /** Small line above the title: the department or the agent that works here. */
+  eyebrow?: string;
+  icon?: ReactNode;
+  /** The page polls every 5 s; say so. */
+  live?: boolean;
+  actions?: ReactNode;
+}) {
   return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-semibold text-white">{title}</h1>
-      {subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div className="flex min-w-0 items-start gap-4">
+        {icon && (
+          <span className="mt-1 hidden h-12 w-12 shrink-0 place-items-center rounded-2xl bg-navy-900 text-accent-soft ring-1 ring-white/[0.07] card-shadow sm:grid">
+            {icon}
+          </span>
+        )}
+        <div className="min-w-0">
+          {eyebrow && <p className="text-xs font-medium text-slate-500">{eyebrow}</p>}
+          <h1 className="mt-0.5 text-2xl leading-tight font-bold tracking-tight text-white md:text-[2rem]">
+            {title}
+          </h1>
+          {subtitle && <p className="mt-1.5 max-w-3xl text-sm text-slate-400">{subtitle}</p>}
+        </div>
+      </div>
+      {(live || actions) && (
+        <div className="flex items-center gap-3">
+          {live && <LiveNote />}
+          {actions}
+        </div>
+      )}
     </header>
   );
 }

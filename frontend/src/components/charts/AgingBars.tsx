@@ -19,7 +19,7 @@ export function AgingBars({
 }) {
   const max = Math.max(0, ...buckets.map((b) => b.value));
   return (
-    <Card title={title}>
+    <Card title={title} icon={<ChartIcon size={16} />}>
       {max === 0 ? (
         <Empty>{emptyText}</Empty>
       ) : (
@@ -46,3 +46,4 @@ export function AgingBars({
     </Card>
   );
 }
+import { ChartIcon } from "../icons";

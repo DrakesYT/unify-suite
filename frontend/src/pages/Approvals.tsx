@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ShieldIcon } from "../components/icons";
 import { Link } from "react-router";
 import { api } from "../api";
 import { useAuth } from "../session";
@@ -200,6 +201,9 @@ export function Approvals() {
   return (
     <>
       <PageHeader
+        eyebrow="Human in the loop"
+        icon={<ShieldIcon size={22} />}
+        live
         title="Approval Center"
         subtitle="Payments and other sensitive actions wait here for a human decision."
       />

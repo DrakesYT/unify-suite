@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { CartIcon, FileIcon, ListIcon, PlusIcon, TruckIcon } from "../components/icons";
 import { Link } from "react-router";
 import { api } from "../api";
 import {
@@ -283,7 +284,7 @@ function RequestDetail({
   };
 
   return (
-    <Card title="Purchase request">
+    <Card title="Purchase request" icon={<FileIcon size={16} />}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-white">
@@ -511,6 +512,9 @@ export function Procurement() {
   return (
     <>
       <PageHeader
+        eyebrow="Procurement · Vendor Comparator agent"
+        icon={<CartIcon size={22} />}
+        live
         title="Procurement"
         subtitle="Vendors are ranked by code on price, lead time and on-time record; every purchase order waits for a manager."
       />
@@ -525,11 +529,11 @@ export function Procurement() {
       <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
         <div className="min-w-0 space-y-6">
           {editable && (
-            <Card title="New request">
+            <Card title="New request" icon={<PlusIcon size={16} />}>
               <NewRequest onCreated={(r) => (setPicked(r.id), void requests.reload())} />
             </Card>
           )}
-          <Card title="Requests">
+          <Card title="Requests" icon={<ListIcon size={16} />}>
             {!requests.data && !requests.error && <Loading rows={3} />}
             {requests.data?.items.length === 0 && <Empty>No purchase requests yet.</Empty>}
             <ul className="space-y-1">
@@ -552,7 +556,7 @@ export function Procurement() {
               ))}
             </ul>
           </Card>
-          <Card title="Vendors">
+          <Card title="Vendors" icon={<TruckIcon size={16} />}>
             <ul className="mb-3 space-y-1 text-sm">
               {vendorList.map((v) => (
                 <li key={v.id} className="flex justify-between text-slate-300">
@@ -585,7 +589,7 @@ export function Procurement() {
               )}
             </Card>
           )}
-          <Card title="Purchase orders">
+          <Card title="Purchase orders" icon={<FileIcon size={16} />}>
             {!orders.data && !orders.error && <Loading rows={2} />}
             {orders.data?.items.length === 0 && <Empty>No purchase orders yet.</Empty>}
             <ul className="space-y-2 text-sm">

@@ -257,3 +257,45 @@ export const MoonIcon = (p: IconProps) => (
     <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
   </Icon>
 );
+
+export const PlusIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);
+
+export const ListIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 6h11M9 12h11M9 18h11" />
+    <path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
+  </Icon>
+);
+
+export const ClockIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </Icon>
+);
+
+export const PieIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 12A9 9 0 1 1 12 3v9Z" />
+    <path d="M15 3.5A9 9 0 0 1 20.5 9H15Z" />
+  </Icon>
+);
+
+export const BriefcaseIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" />
+  </Icon>
+);
+
+export const FlowIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="6" height="6" rx="1.5" />
+    <rect x="15" y="14" width="6" height="6" rx="1.5" />
+    <path d="M9 7h4a2 2 0 0 1 2 2v5" />
+  </Icon>
+);

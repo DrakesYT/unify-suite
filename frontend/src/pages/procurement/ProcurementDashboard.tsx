@@ -1,4 +1,5 @@
 import { AgingBars } from "../../components/charts/AgingBars";
+import { CartIcon, CheckIcon, ClockIcon } from "../../components/icons";
 import { otherCurrencies, showLargest } from "../../components/charts/currency";
 import { Gauge } from "../../components/charts/Gauge";
 import { MiniBars } from "../../components/charts/MiniTrend";
@@ -32,13 +33,21 @@ export function ProcurementDashboard({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
         <HeroStat
           label="Total PO spend"
+          icon={<CartIcon size={16} />}
           value={showLargest(spend)}
           caption={otherCurrencies(spend) ?? "Approved purchase orders"}
         />
         <div className="grid grid-cols-2 gap-4">
-          <StatCard label="POs waiting for approval" value={pendingOrders(orders)} />
+          <StatCard
+            label="POs waiting for approval"
+            value={pendingOrders(orders)}
+            icon={<ClockIcon size={16} />}
+            tone="amber"
+          />
           <StatCard
             label="Saved by vendor ranking"
+            icon={<CheckIcon size={16} />}
+            tone="emerald"
             value={showLargest(savings)}
             delta="vs. average quote"
             accent

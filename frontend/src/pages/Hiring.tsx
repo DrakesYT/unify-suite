@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { BriefcaseIcon, ListIcon, PlusIcon, UsersIcon } from "../components/icons";
 import { api } from "../api";
 import {
   Card,
@@ -327,12 +328,15 @@ export function Hiring() {
   return (
     <>
       <PageHeader
+        eyebrow="HR · Resume Screener agent"
+        icon={<UsersIcon size={22} />}
+        live
         title="Hiring"
         subtitle="The Resume Screener quotes the resume for every skill it credits; code checks each quote and computes the score."
       />
       <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
         <div className="space-y-6">
-          <Card title="Open jobs">
+          <Card title="Open jobs" icon={<BriefcaseIcon size={16} />}>
             <ErrorNote message={jobs.error} />
             {!jobs.data && !jobs.error && <Loading rows={2} />}
             {jobs.data?.items.length === 0 && <Empty>No open jobs.</Empty>}
@@ -358,10 +362,10 @@ export function Hiring() {
           </Card>
           {editable && (
             <>
-              <Card title="New job">
+              <Card title="New job" icon={<PlusIcon size={16} />}>
                 <NewJob onCreated={(j) => (setPicked(j.id), void jobs.reload())} />
               </Card>
-              <Card title="Add a candidate">
+              <Card title="Add a candidate" icon={<PlusIcon size={16} />}>
                 <ResumeUpload job={job} onUploaded={() => void jobs.reload()} />
                 <p className="mt-3 text-xs text-slate-500">
                   {job
@@ -374,6 +378,7 @@ export function Hiring() {
         </div>
         <Card
           title={job ? `Ranking: ${job.title}` : "Ranking"}
+          icon={<ListIcon size={16} />}
           actions={
             editable && job ? (
               <button
