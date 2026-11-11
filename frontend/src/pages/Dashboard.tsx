@@ -156,6 +156,7 @@ function Kpi({
   week,
   series,
   seriesName,
+  className = "",
 }: {
   title: string;
   value: string | number;
@@ -166,11 +167,13 @@ function Kpi({
   week?: string;
   series?: number[];
   seriesName?: string;
+  /** Grid placement (column spans) from the row layout. */
+  className?: string;
 }) {
   return (
     <Link
       to={to}
-      className="hover-lift group flex min-w-0 flex-col rounded-2xl border border-white/[0.07] bg-navy-900/80 p-4 card-shadow"
+      className={`hover-lift group flex min-w-0 flex-col rounded-2xl border border-white/[0.07] bg-navy-900/80 p-4 card-shadow ${className}`}
     >
       <span className="flex items-center gap-2.5">
         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${CHIP_TONE[tone]}`}>
@@ -228,9 +231,12 @@ export function Dashboard() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_370px]">
         <div className="min-w-0 space-y-6">
-          <div className="stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          {/* Five cards, no empty slot: one row of five on wide screens, otherwise the two money
+              cards above the three counts (and two per row on small screens). */}
+          <div className="stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6 2xl:grid-cols-5">
             <Kpi
               title="Sales pipeline"
+              className="lg:col-span-3 2xl:col-span-1"
               value={k ? sumText(k.sales_pipeline) : "…"}
               hint="open deals"
               to="/sales"
@@ -246,6 +252,7 @@ export function Dashboard() {
             />
             <Kpi
               title="Unpaid invoices"
+              className="lg:col-span-3 2xl:col-span-1"
               value={k ? sumText(k.unpaid_invoices) : "…"}
               hint="supplier invoices not yet paid"
               to="/payments"
@@ -254,6 +261,7 @@ export function Dashboard() {
             />
             <Kpi
               title="Open vacancies"
+              className="lg:col-span-2 2xl:col-span-1"
               value={k?.open_vacancies ?? "…"}
               hint="jobs open"
               to="/hr"
@@ -262,6 +270,7 @@ export function Dashboard() {
             />
             <Kpi
               title="Open tickets"
+              className="lg:col-span-2 2xl:col-span-1"
               value={k?.open_tickets ?? "…"}
               hint="open, investigating, escalated"
               to="/support"
@@ -273,6 +282,7 @@ export function Dashboard() {
             />
             <Kpi
               title="Purchase requests"
+              className="sm:col-span-2 lg:col-span-2 2xl:col-span-1"
               value={k?.pending_purchase_requests ?? "…"}
               hint="waiting for approval"
               to="/procurement"
