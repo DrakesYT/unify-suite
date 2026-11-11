@@ -10,7 +10,7 @@ Built for the lablab.ai **Vultr Agent Rush** hackathon (Challenge 2, "Powering t
 
 ## Screenshots
 
-![Executive dashboard with KPI cards, charts and the Aura panel](docs/screenshots/dashboard.png)
+![Executive dashboard with the "Needs a look" cards, KPI cards and the Aura panel](docs/screenshots/dashboard.png)
 ![Command Center with the agent hand-off graph and live feed](docs/screenshots/command-center.png)
 ![Sales page with KPI trends and the funnel](docs/screenshots/sales-funnel.png)
 ![Supplier payment run paused at manager approval](docs/screenshots/payment-run-approval.png)
