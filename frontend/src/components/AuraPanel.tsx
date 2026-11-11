@@ -95,7 +95,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
   return (
     <aside
       data-tour="aura"
-      className="flex flex-col self-start overflow-hidden rounded-2xl border border-white/[0.07] bg-navy-900/75 xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)]"
+      className="flex flex-col self-start overflow-hidden rounded-2xl border border-white/[0.07] bg-navy-900/80 card-shadow xl:sticky xl:top-20 xl:max-h-[calc(100vh-6rem)]"
     >
       <div className="border-b border-white/5 px-5 py-4">
         <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
           type="submit"
           disabled={busy || !message.trim()}
           aria-label="Send"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent-purple text-white transition-colors hover:bg-accent-purple/85 disabled:opacity-40"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent-purple text-on-accent transition-colors hover:bg-accent-purple/85 disabled:opacity-40"
         >
           <SendIcon size={16} />
         </button>

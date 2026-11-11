@@ -146,11 +146,11 @@ export function LogoMark({ size = 28 }: { size?: number }) {
       <path
         d="M9 8v8.5a7 7 0 0 0 14 0V8"
         fill="none"
-        stroke="#8b5cf6"
+        stroke="var(--color-accent-purple)"
         strokeWidth="3.2"
         strokeLinecap="round"
       />
-      <path d="M16 8v8" stroke="#c4b5fd" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M16 8v8" stroke="var(--color-accent-soft)" strokeWidth="3.2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -233,5 +233,27 @@ export const InfoIcon = (p: IconProps) => (
 export const PlayIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M7 5v14l11-7Z" />
+  </Icon>
+);
+
+export const GridIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+    <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+    <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+    <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+  </Icon>
+);
+
+export const SunIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </Icon>
+);
+
+export const MoonIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
   </Icon>
 );

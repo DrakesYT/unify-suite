@@ -10,8 +10,8 @@ const TONE: Record<StepStatus, string> = {
   waiting_approval: "#fbbf24",
   failed: "#f87171",
   rejected: "#f87171",
-  pending: "#475569",
-  skipped: "#334155",
+  pending: "var(--chart-bar)",
+  skipped: "var(--chart-muted)",
 };
 const KIND: Record<HandoffNode["kind"], string> = {
   agent: "AI agent",
@@ -106,20 +106,20 @@ export function HandoffGraph({ run }: { run: Handoff | null }) {
                   width={W}
                   height={H}
                   rx={12}
-                  fill="#070b1a"
+                  fill="var(--color-navy-950)"
                   stroke={colour}
                   strokeWidth={active ? 2 : 1.5}
                   strokeDasharray={n.status === "skipped" ? "4 4" : undefined}
                   className={active ? "anim-working" : undefined}
                 />
                 <circle cx={16} cy={18} r={4} fill={colour} />
-                <text x={28} y={22} fontSize={13} fontWeight={600} fill="#f1f5f9">
+                <text x={28} y={22} fontSize={13} fontWeight={600} fill="var(--color-slate-100)">
                   {n.label}
                 </text>
-                <text x={16} y={44} fontSize={11} fill="#94a3b8">
+                <text x={16} y={44} fontSize={11} fill="var(--color-slate-400)">
                   {KIND[n.kind]} · {label(n.status)}
                 </text>
-                <text x={16} y={60} fontSize={11} fill="#64748b">
+                <text x={16} y={60} fontSize={11} fill="var(--color-slate-500)">
                   {n.duration_ms !== null ? duration(n.duration_ms) : "—"}
                   {n.attempts > 1 ? ` · try ${n.attempts}` : ""}
                 </text>

@@ -71,7 +71,7 @@ export function Card({
   return (
     <section
       data-tour={tour}
-      className="hover-tint min-w-0 rounded-xl border border-navy-800 bg-navy-900 p-5"
+      className="hover-tint min-w-0 rounded-2xl border border-navy-800 bg-navy-900 p-5 card-shadow"
     >
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -163,8 +163,8 @@ export function Loading({ rows = 3 }: { rows?: number }) {
 // Press feedback: a slight squeeze that lands faster than it lets go (tone stays the main cue).
 export const buttonClass =
   "rounded-lg px-4 py-2 text-sm font-medium transition duration-200 active:scale-[0.97] active:duration-75 motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
-export const primaryButton = `${buttonClass} bg-accent-purple text-white hover:bg-accent-purple/85`;
+export const primaryButton = `${buttonClass} bg-accent-purple text-on-accent hover:bg-accent-purple/85`;
 export const ghostButton = `${buttonClass} border border-navy-800 text-slate-200 hover:bg-navy-800`;
-export const dangerButton = `${buttonClass} bg-red-500/80 text-white hover:bg-red-500`;
+export const dangerButton = `${buttonClass} bg-red-500/80 text-on-accent hover:bg-red-500`;
 export const inputClass =
   "w-full rounded-lg border border-navy-800 bg-navy-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent-purple focus:outline-none";

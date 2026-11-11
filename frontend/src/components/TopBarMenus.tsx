@@ -36,7 +36,7 @@ export function NotificationBell() {
       >
         <BellIcon />
         {count && (
-          <span className="absolute -top-0.5 -right-0.5 grid min-w-[18px] place-items-center rounded-full bg-accent-purple px-1 text-[10px] leading-[18px] font-semibold text-white">
+          <span className="absolute -top-0.5 -right-0.5 grid min-w-[18px] place-items-center rounded-full bg-accent-purple px-1 text-[10px] leading-[18px] font-semibold text-on-accent">
             {count}
           </span>
         )}

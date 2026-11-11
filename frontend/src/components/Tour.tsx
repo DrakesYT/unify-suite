@@ -142,13 +142,13 @@ function TourOverlay() {
             left: rect.left - PAD,
             width: rect.width + 2 * PAD,
             height: rect.height + 2 * PAD,
-            boxShadow: "0 0 0 9999px rgb(4 7 18 / 0.68)",
+            boxShadow: "0 0 0 9999px var(--overlay)",
           }}
         />
       ) : (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-[60] bg-[#040712]/70"
+          className="pointer-events-none fixed inset-0 z-[60] bg-[var(--overlay)]"
         />
       )}
       <div
@@ -198,7 +198,7 @@ function TourOverlay() {
           <button
             onClick={() => (last ? end() : goTo(index + 1))}
             disabled={busy}
-            className="rounded-lg bg-accent-purple px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-purple/85 disabled:opacity-50"
+            className="rounded-lg bg-accent-purple px-4 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-purple/85 disabled:opacity-50"
           >
             {busy ? "Switching…" : last ? "Finish" : "Next"}
           </button>
@@ -248,7 +248,7 @@ export function TourInvite() {
             dismiss();
             start();
           }}
-          className="rounded-lg bg-accent-purple px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-purple/85"
+          className="rounded-lg bg-accent-purple px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-purple/85"
         >
           Start the tour
         </button>

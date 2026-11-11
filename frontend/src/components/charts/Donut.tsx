@@ -8,10 +8,10 @@ export interface Slice {
 }
 
 const tooltipStyle = {
-  background: "#0c1229",
-  border: "1px solid #141c3a",
+  background: "var(--tooltip-bg)",
+  border: "1px solid var(--tooltip-border)",
   borderRadius: 8,
-  color: "#e2e8f0",
+  color: "var(--tooltip-text)",
   fontSize: 12,
 };
 
@@ -32,7 +32,12 @@ export function Donut({
   const shown = slices.filter((s) => s.value > 0);
   const total = shown.reduce((sum, s) => sum + s.value, 0);
   // Muted slices get stepped shades so neighbours stay apart without adding hues.
-  const shades = ["#475569", "#334155", "#64748b", "#1e293b"];
+  const shades = [
+    "var(--chart-axis)",
+    "var(--chart-muted)",
+    "var(--chart-quiet)",
+    "var(--chart-bar)",
+  ];
   let shade = 0;
   const colours = shown.map((s) => (s.key === accentKey ? accentColor : shades[shade++ % 4]));
   return (

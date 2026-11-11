@@ -37,7 +37,7 @@ export function Login() {
 
   return (
     <main className="grid min-h-screen place-items-center px-3 py-6 md:px-6">
-      <div className="anim-rise-slow grid w-full max-w-[1120px] gap-2 rounded-3xl border border-white/5 bg-navy-900 p-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <div className="anim-rise-slow grid w-full max-w-[1120px] gap-2 rounded-3xl border border-white/5 bg-navy-900 p-2 card-shadow lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         {/* Left: the form */}
         <section className="flex flex-col px-5 py-8 sm:px-10 lg:px-14 lg:py-12">
           <div className="anim-rise flex items-center gap-3" style={at(80)}>
@@ -130,7 +130,10 @@ export function Login() {
         </section>
 
         {/* Right: what the product does, as a short moving story */}
-        <section className="dot-grid relative overflow-hidden rounded-2xl bg-violet-700 px-5 py-8 sm:px-10 lg:px-12 lg:py-12">
+        <section
+          data-theme="dark"
+          className="dot-grid relative overflow-hidden rounded-2xl bg-violet-700 px-5 py-8 sm:px-10 lg:px-12 lg:py-12"
+        >
           <p
             className="anim-rise text-xs font-semibold tracking-wider text-violet-200 uppercase"
             style={at(160)}

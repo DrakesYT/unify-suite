@@ -16,13 +16,13 @@ export interface Point {
 }
 
 const tooltipStyle = {
-  background: "#0c1229",
-  border: "1px solid #141c3a",
+  background: "var(--tooltip-bg)",
+  border: "1px solid var(--tooltip-border)",
   borderRadius: 8,
-  color: "#e2e8f0",
+  color: "var(--tooltip-text)",
   fontSize: 12,
 };
-const axis = { fill: "#64748b", fontSize: 11 };
+const axis = { fill: "var(--chart-quiet)", fontSize: 11 };
 
 /** Area chart: `accent` series in cyan, optional `muted` series in slate. */
 export function MiniTrend({
@@ -49,7 +49,7 @@ export function MiniTrend({
         <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={points} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-              <CartesianGrid stroke="#141c3a" vertical={false} />
+              <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={axis}
@@ -64,8 +64,8 @@ export function MiniTrend({
               {muted && (
                 <Area
                   dataKey={muted}
-                  stroke="#64748b"
-                  fill="#64748b"
+                  stroke="var(--chart-quiet)"
+                  fill="var(--chart-quiet)"
                   fillOpacity={0.12}
                   strokeWidth={1.5}
                   isAnimationActive={false}
@@ -110,7 +110,7 @@ export function MiniBars({
         <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={points} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-              <CartesianGrid stroke="#141c3a" vertical={false} />
+              <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={axis}
@@ -120,13 +120,13 @@ export function MiniBars({
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                cursor={{ fill: "rgb(255 255 255 / 0.04)" }}
+                cursor={{ fill: "var(--chart-cursor)" }}
                 formatter={(v) => [String(v), ""]}
               />
               <Bar
                 dataKey={dataKey}
                 radius={[4, 4, 0, 0]}
-                fill="#475569"
+                fill="var(--chart-bar)"
                 isAnimationActive={false}
                 shape={(props: {
                   x?: number;
@@ -145,7 +145,7 @@ export function MiniBars({
                       width={props.width}
                       height={props.height}
                       rx={4}
-                      fill={hot ? "var(--chart-accent)" : "#475569"}
+                      fill={hot ? "var(--chart-accent)" : "var(--chart-bar)"}
                     />
                   );
                 }}

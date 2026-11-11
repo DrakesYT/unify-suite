@@ -8,6 +8,175 @@
   --color-navy-800: #141c3a;
   --color-accent-purple: #8b5cf6;
   --color-accent-soft: #c4b5fd;
+  --color-on-accent: #fff; /* text on a solid accent or danger button, in both themes */
+}
+
+/* Two themes from one set of names. Pages use the dark names (navy surfaces, white and slate text);
+   the light theme maps each name to its light counterpart: navy becomes white cards on a pale lavender
+   page, "white" text becomes ink, the slate scale runs the other way and pale status colours deepen
+   so they stay readable on white. An element marked data-theme="dark" (the side rail, the sign-in
+   showcase) keeps the dark values inside a light page. */
+:root {
+  color-scheme: dark;
+  --page-bg: #070b1a;
+  --card-shadow: none;
+  --card-shadow-hover: none;
+  --rail-from: #7c5cfa;
+  --rail-to: #4f35d6;
+  --chart-grid: rgb(255 255 255 / 0.05);
+  --chart-axis: #475569;
+  --chart-quiet: #64748b;
+  --chart-bar: #475569;
+  --chart-cursor: rgb(255 255 255 / 0.04);
+  --tooltip-bg: #0c1229;
+  --tooltip-border: rgb(255 255 255 / 0.1);
+  --tooltip-text: #e2e8f0;
+  --tooltip-label: #94a3b8;
+  --overlay: rgb(4 7 18 / 0.68);
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-navy-950: #070b1a;
+  --color-navy-900: #0c1229;
+  --color-navy-800: #141c3a;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-soft: #c4b5fd;
+  --color-white: #fff;
+  --color-slate-100: oklch(96.8% 0.007 247.896);
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-400: oklch(70.4% 0.04 256.788);
+  --color-slate-500: oklch(55.4% 0.046 257.417);
+  --color-slate-600: oklch(44.6% 0.043 257.281);
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+  --color-red-50: oklch(97.1% 0.013 17.38);
+  --color-red-100: oklch(93.6% 0.032 17.717);
+  --color-red-200: oklch(88.5% 0.062 18.334);
+  --color-red-300: oklch(80.8% 0.114 19.571);
+  --color-amber-100: oklch(96.2% 0.059 95.617);
+  --color-amber-200: oklch(92.4% 0.12 95.746);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-emerald-50: oklch(97.9% 0.021 166.113);
+  --color-emerald-200: oklch(90.5% 0.093 164.15);
+  --color-emerald-300: oklch(84.5% 0.143 164.978);
+  --color-sky-300: oklch(82.8% 0.111 230.318);
+  --color-violet-100: oklch(94.3% 0.029 294.588);
+  --color-violet-200: oklch(89.4% 0.057 293.283);
+  --color-violet-300: oklch(81.1% 0.111 293.571);
+  --color-rose-300: oklch(81% 0.117 11.638);
+  --page-bg: #070b1a;
+  --card-shadow: none;
+  --card-shadow-hover: none;
+  --chart-grid: rgb(255 255 255 / 0.05);
+  --chart-axis: #475569;
+  --chart-quiet: #64748b;
+  --chart-bar: #475569;
+  --chart-muted: #334155;
+  --chart-cursor: rgb(255 255 255 / 0.04);
+  --tooltip-bg: #0c1229;
+  --tooltip-border: rgb(255 255 255 / 0.1);
+  --tooltip-text: #e2e8f0;
+  --tooltip-label: #94a3b8;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-navy-950: #f3f2fa;
+  --color-navy-900: #ffffff;
+  --color-navy-800: #e6e3f1;
+  --color-accent-purple: #7356f1;
+  --color-accent-soft: #5b3fd6;
+  --color-white: #17142e;
+  --color-slate-100: #1d1a36;
+  --color-slate-200: #2b2846;
+  --color-slate-300: #3e3a5a;
+  --color-slate-400: #5c5876;
+  --color-slate-500: #77738f;
+  --color-slate-600: #a29fb6;
+  --color-slate-700: #cfcce0;
+  --color-red-50: #7f1d1d;
+  --color-red-100: #991b1b;
+  --color-red-200: #b91c1c;
+  --color-red-300: #dc2626;
+  --color-amber-100: #78350f;
+  --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
+  --color-emerald-50: #064e3b;
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-sky-300: #0369a1;
+  --color-violet-100: #4c1d95;
+  --color-violet-200: #5b21b6;
+  --color-violet-300: #6d28d9;
+  --color-rose-300: #be123c;
+  --page-bg:
+    radial-gradient(1100px 520px at 12% -8%, rgb(115 86 241 / 0.1), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, rgb(56 189 248 / 0.07), transparent 60%), #f3f2fa;
+  --card-shadow: 0 1px 2px rgb(23 20 46 / 0.04), 0 8px 24px -12px rgb(23 20 46 / 0.12);
+  --card-shadow-hover: 0 2px 4px rgb(23 20 46 / 0.05), 0 16px 32px -14px rgb(91 63 214 / 0.25);
+  --chart-accent: #0891b2;
+  --chart-ai: #7356f1;
+  --chart-muted: #d9d6e8;
+  --chart-danger: #ef4444;
+  --chart-grid: rgb(23 20 46 / 0.06);
+  --chart-axis: #8d89a3;
+  --chart-quiet: #9a97ae;
+  --chart-bar: #c9c5dd;
+  --chart-cursor: rgb(115 86 241 / 0.06);
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e6e3f1;
+  --tooltip-text: #1d1a36;
+  --tooltip-label: #77738f;
+  --overlay: rgb(23 20 46 / 0.4);
+  --color-black: rgb(52 40 120 / 0.55); /* shadows: a soft violet haze instead of black */
+}
+
+/* A card surface: soft shadow in the light theme, flat in the dark one. */
+.card-shadow {
+  box-shadow: var(--card-shadow);
+}
+
+/* Switching theme: the new theme grows out of the switch as a circle (View Transitions API). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  animation: theme-reveal 520ms var(--ease-emphasized);
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--reveal-x, 50%) var(--reveal-y, 0%));
+  }
+  to {
+    clip-path: circle(var(--reveal-r, 150%) at var(--reveal-x, 50%) var(--reveal-y, 0%));
+  }
+}
+
+/* A new page settles in: rises a little and comes into focus. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(6px);
+  }
+}
+.anim-page {
+  animation: page-in 380ms var(--ease-out) backwards;
+}
+
+/* Side rail labels: shown beside the icon on hover or keyboard focus. */
+.rail-tip {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.rail-item:hover .rail-tip,
+.rail-item:focus-visible .rail-tip {
+  opacity: 1;
+  transform: none;
 }
 
 /* One motion language for the whole app: three curves, durations as multiples of one base.
@@ -31,7 +200,9 @@
 }
 
 body {
-  @apply bg-navy-950 text-slate-100 antialiased;
+  @apply text-slate-100 antialiased;
+  background: var(--page-bg);
+  background-attachment: fixed;
 }
 
 @keyframes rise-in {
@@ -233,7 +404,8 @@ body {
     animation-duration: 150ms;
     animation-delay: 0ms;
   }
-  .anim-drawer-in {
+  .anim-drawer-in,
+  .anim-page {
     animation-name: fade-in;
     animation-duration: 150ms;
   }
@@ -259,19 +431,23 @@ body {
 .hover-lift {
   transition:
     transform var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
   .hover-tint:hover,
   .hover-lift:hover {
     border-color: rgb(139 92 246 / 0.4);
   }
+  .card-shadow.hover-lift:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
   @layer base {
     tbody > tr {
       transition: background-color 120ms var(--ease-out);
     }
     tbody > tr:hover {
-      background-color: rgb(255 255 255 / 0.03);
+      background-color: color-mix(in oklab, var(--color-white) 3%, transparent);
     }
   }
   .recharts-bar:hover .recharts-bar-rectangle:not(:hover) {

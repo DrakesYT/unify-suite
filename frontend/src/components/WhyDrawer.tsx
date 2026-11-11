@@ -97,7 +97,7 @@ function WhyDrawer({
       <button
         aria-label="Close"
         onClick={close}
-        className={`${leaving ? "anim-fade-out" : "anim-fade"} absolute inset-0 bg-[#040712]/60 backdrop-blur-[2px]`}
+        className={`${leaving ? "anim-fade-out" : "anim-fade"} absolute inset-0 bg-[var(--overlay)] backdrop-blur-[2px]`}
       />
       <aside
         role="dialog"

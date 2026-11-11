@@ -47,10 +47,10 @@ export function AgentBoard({
                 data={charts.agent_calls_by_day.map((d) => ({ ...d, day: d.day.slice(5) }))}
                 margin={{ top: 4, right: 0, bottom: 0, left: -24 }}
               >
-                <CartesianGrid stroke="rgb(255 255 255 / 0.05)" vertical={false} />
+                <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
                 <XAxis dataKey="day" {...AXIS} />
                 <YAxis allowDecimals={false} {...AXIS} />
-                <Tooltip {...TOOLTIP} cursor={{ fill: "rgb(255 255 255 / 0.03)" }} />
+                <Tooltip {...TOOLTIP} cursor={{ fill: "var(--chart-cursor)" }} />
                 <Bar dataKey="succeeded" stackId="a" fill={ACCENT} maxBarSize={36} />
                 <Bar
                   dataKey="failed"

@@ -35,7 +35,7 @@ export function AgingBars({
                   className="h-full rounded-full"
                   style={{
                     width: `${(b.value / max) * 100}%`,
-                    background: b.value === max ? "var(--chart-accent)" : "#475569",
+                    background: b.value === max ? "var(--chart-accent)" : "var(--chart-bar)",
                   }}
                 />
               </div>
