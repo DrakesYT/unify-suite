@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { canRead, useAuth } from "../session";
 import {
@@ -19,6 +19,17 @@ import { ThemeSwitch } from "./ThemeSwitch";
 import { TourButton, TourInvite, TourProvider } from "./Tour";
 import { NotificationBell, UserMenu } from "./TopBarMenus";
 import { useHashFocus } from "./useHashFocus";
+
+const PAGE_TITLES: [string, string][] = [
+  ["/dashboard", "Dashboard"],
+  ["/sales", "Sales"],
+  ["/payments", "Payments"],
+  ["/hr", "Hiring"],
+  ["/support", "Support"],
+  ["/procurement", "Procurement"],
+  ["/approvals", "Approvals"],
+  ["/activity", "Command Center"],
+];
 
 interface NavItem {
   to: string;
@@ -70,6 +81,14 @@ export function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname } = useLocation();
   useHashFocus();
+  useEffect(() => {
+    // The tab says which page it is, so several open tabs can be told apart.
+    const page = PAGE_TITLES.find(([prefix]) => pathname.startsWith(prefix))?.[1];
+    document.title = page ? `${page} · UNIFY SUITE` : "UNIFY SUITE";
+    return () => {
+      document.title = "UNIFY SUITE";
+    };
+  }, [pathname]);
   if (!user) return null;
 
   const leader = user.role !== "employee";

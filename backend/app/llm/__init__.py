@@ -17,6 +17,7 @@ __all__ = [
     "LLMError",
     "LLMOutputError",
     "OptionalLLM",
+    "UnmeteredLLM",
     "get_llm",
     "get_optional_llm",
 ]
@@ -53,6 +54,11 @@ LLM = Annotated[LLMClient, Depends(_metered_llm)]
 def get_optional_llm() -> LLMClient | None:
     """For features that still work without a model (they fall back to text written by code)."""
     return _vultr_client() if get_settings().llm_api_key is not None else None
+
+
+# For work that must go on whether or not a model is available and whatever the caller's AI budget:
+# a manager's decision, and the workflow steps after it, never call the model.
+UnmeteredLLM = Annotated[LLMClient | None, Depends(get_optional_llm)]
 
 
 def _metered_optional_llm(

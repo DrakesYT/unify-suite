@@ -1,6 +1,6 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BoltIcon } from "../../components/icons";
-import { ago, label } from "../../format";
+import { ago, label, shortDay } from "../../format";
 import type { ActivityItem, Charts, Overview } from "../../types";
 import { ACCENT, AXIS, FAILED, TOOLTIP } from "./chartStyle";
 import { Panel, Skeleton } from "./parts";
@@ -44,7 +44,7 @@ export function AgentBoard({
           {charts ? (
             <ResponsiveContainer width="100%" height={210}>
               <BarChart
-                data={charts.agent_calls_by_day.map((d) => ({ ...d, day: d.day.slice(5) }))}
+                data={charts.agent_calls_by_day.map((d) => ({ ...d, day: shortDay(d.day) }))}
                 margin={{ top: 4, right: 0, bottom: 0, left: -24 }}
               >
                 <CartesianGrid stroke="var(--chart-grid)" vertical={false} />

@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.agents.runner import TaskContext, ToolUser, call_tool, run_agent
+from app.agents.runner import TaskContext, ToolUser, call_tool
 from app.agents.verification import VerificationAgent
 from app.llm import LLMClient
 from app.models import ApprovalRequest, Invoice, Payment, Upload, WorkflowExecution, WorkflowStep
@@ -43,7 +43,7 @@ class WaitForApproval:
 @dataclass
 class StepRun:
     db: Session
-    llm: LLMClient
+    llm: LLMClient | None  # None when no model is configured: only F1 needs one
     ctx: TaskContext
     execution: WorkflowExecution
     step: WorkflowStep
@@ -75,6 +75,8 @@ def extract_invoice(run: StepRun) -> StepResult:
     upload = run.db.get(Upload, uuid.UUID(run.execution.input["upload_id"]))
     if upload is None:
         raise StepError("The uploaded invoice file is missing")
+    if run.llm is None:
+        raise StepError("The AI service is not configured, so the invoice cannot be read")
     fields, suspicious = finance.extract_invoice(run.db, run.llm, upload, run.ctx)
     return fields.model_dump(mode="json") | {"suspicious_text": suspicious}
 
@@ -124,6 +126,15 @@ def _describe(diff: dict[str, Any], currency: str) -> str:
         )
     if diff["field"] == "po_reference":
         return f"the invoice refers to {diff['invoice']}, but this run is for {diff['po']}"
+    if diff["field"] == "po_already_invoiced":
+        earlier = diff["po"]
+        numbers = ", ".join(earlier["invoices"])
+        billed = format_minor(earlier["billed_minor"], currency)
+        order = format_minor(earlier["po_amount_minor"], currency)
+        return (
+            f"this purchase order ({order}) was already invoiced: {numbers} ({billed}); "
+            "paying this one too would pay more than the order"
+        )
     if diff["field"] == "po_status":
         status = (diff["po"] or "unknown").replace("_", " ")
         return f"PO status: {status} (a PO must be approved first)"
@@ -238,7 +249,7 @@ def verify(run: StepRun) -> StepResult:
         _snapshot,
         run.ctx,
     )
-    result = run_agent(run.db, VERIFIER, snapshot, run.llm, run.ctx)
+    result = VERIFIER.check(run.db, snapshot, run.ctx)
     return result.model_dump(mode="json")
 
 

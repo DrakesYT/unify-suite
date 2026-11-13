@@ -112,6 +112,31 @@ def update_vendor(db: Session, vendor_id: uuid.UUID, data: VendorUpdate, actor: 
 # --- purchase requests ---------------------------------------------------------------------
 
 
+REQUEST_ACTION = "approve_request"
+
+
+def _request_payload(request: PurchaseRequest) -> dict[str, Any]:
+    return {
+        "request_id": str(request.id),
+        "item": request.item,
+        "quantity": request.quantity,
+        "budget_minor": request.budget_minor,
+        "amount_minor": request.budget_minor,
+        "currency": request.currency,
+    }
+
+
+def _request_approval(db: Session, request: PurchaseRequest) -> ApprovalRequest | None:
+    """The request's pending entry in the Approval Center (none for requests made before those)."""
+    return db.scalar(
+        select(ApprovalRequest).where(
+            ApprovalRequest.action == REQUEST_ACTION,
+            ApprovalRequest.status == ApprovalStatus.pending,
+            ApprovalRequest.payload["request_id"].as_string() == str(request.id),
+        )
+    )
+
+
 def list_requests(
     db: Session, limit: int, cursor: str | None, status: PurchaseRequestStatus | None = None
 ) -> tuple[list[PurchaseRequest], str | None]:
@@ -131,6 +156,14 @@ def create_request(db: Session, data: PurchaseRequestCreate, actor: User) -> Pur
     request = PurchaseRequest(**data.model_dump(), requested_by_id=actor.id)
     db.add(request)
     db.flush()
+    approvals.create_approval(
+        db,
+        action=REQUEST_ACTION,
+        payload=_request_payload(request),
+        required_role=Role.manager,
+        department=Department.procurement,
+        requested_by_id=actor.id,
+    )
     audit.record(
         db,
         action="purchase_request.created",
@@ -152,6 +185,9 @@ def update_request(
     if changes.get("chosen_vendor_id"):
         get_vendor(db, changes["chosen_vendor_id"])
     detail = _apply(request, changes)
+    waiting = _request_approval(db, request)
+    if waiting is not None:  # the approver sees the request as it is now
+        waiting.payload = _request_payload(request)
     audit.record(
         db,
         action="purchase_request.updated",
@@ -380,6 +416,11 @@ def decide_request(
     if request.status != PurchaseRequestStatus.pending:
         raise ApiError(409, "already_decided", f"This request is already {request.status}")
     request.status = PurchaseRequestStatus.approved if approve else PurchaseRequestStatus.rejected
+    waiting = _request_approval(db, request)
+    if waiting is not None:  # decided on the Procurement page: the Approval Center shows the same
+        waiting.status = ApprovalStatus.approved if approve else ApprovalStatus.rejected
+        waiting.decided_by_id = actor.id
+        waiting.decided_at = utcnow()
     audit.record(
         db,
         action=f"purchase_request.{request.status}",
@@ -477,7 +518,26 @@ def order_from_request(
 
 
 def apply_decision(db: Session, approval: ApprovalRequest, actor: User) -> None:
-    """After a PO decision: approved → PO approved and request ordered; rejected → PO rejected."""
+    """After a PO decision: approved → PO approved and request ordered; rejected → PO rejected.
+    After a purchase request decision: the request takes the same status."""
+    if approval.action == REQUEST_ACTION:
+        request = db.get(PurchaseRequest, uuid.UUID(approval.payload["request_id"]))
+        if request is None or request.status != PurchaseRequestStatus.pending:
+            return
+        approved = approval.status == ApprovalStatus.approved
+        request.status = (
+            PurchaseRequestStatus.approved if approved else PurchaseRequestStatus.rejected
+        )
+        audit.record(
+            db,
+            action=f"purchase_request.{request.status}",
+            entity="purchase_request",
+            entity_id=request.id,
+            actor_id=actor.id,
+            detail={"approval_id": str(approval.id)},
+        )
+        db.commit()
+        return
     if approval.action != "approve_po":
         return
     order = db.get(PurchaseOrder, uuid.UUID(approval.payload["po_id"]))

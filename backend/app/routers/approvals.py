@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Query
 from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX
 from app.db import DbSession, SessionFactory
 from app.deps import CurrentUser
-from app.llm import LLM
+from app.llm import UnmeteredLLM
 from app.mailer import Mailer
 from app.models.enums import ApprovalStatus
 from app.orchestrator import engine
@@ -41,7 +41,7 @@ def _decide(
     approve: bool,
     db: DbSession,
     user: CurrentUser,
-    llm: LLM,
+    llm: UnmeteredLLM,
     mailer: Mailer,
     factory: SessionFactory,
     background: BackgroundTasks,
@@ -63,7 +63,7 @@ def approve(
     body: DecisionIn,
     db: DbSession,
     user: CurrentUser,
-    llm: LLM,
+    llm: UnmeteredLLM,
     mailer: Mailer,
     factory: SessionFactory,
     background: BackgroundTasks,
@@ -77,7 +77,7 @@ def reject(
     body: DecisionIn,
     db: DbSession,
     user: CurrentUser,
-    llm: LLM,
+    llm: UnmeteredLLM,
     mailer: Mailer,
     factory: SessionFactory,
     background: BackgroundTasks,

@@ -10,9 +10,9 @@ from app.agents.lead_qualifier import LeadQualifier
 from app.agents.runner import TaskContext, call_tool, run_agent
 from app.errors import ApiError
 from app.llm import LLMClient
-from app.models import Lead, User
+from app.models import CallTranscript, Lead, OutboundEmail, User
 from app.models.base import utcnow
-from app.models.enums import LeadRating, LeadStatus
+from app.models.enums import LeadRating, LeadStatus, Role
 from app.money import format_minor
 from app.schemas.sales import (
     LeadCreate,
@@ -113,7 +113,19 @@ def get_lead(db: Session, lead_id: uuid.UUID) -> Lead:
     return lead
 
 
+OPEN = (LeadStatus.new, LeadStatus.contacted, LeadStatus.qualified)
+
+
 def create_lead(db: Session, data: LeadCreate, actor: User) -> Lead:
+    existing = db.scalar(
+        select(Lead).where(func.lower(Lead.email) == data.email.lower(), Lead.status.in_(OPEN))
+    )
+    if existing is not None:  # the same contact twice would be chased twice
+        raise ApiError(
+            409,
+            "duplicate_lead",
+            f"There is already an open lead for {existing.email} ({existing.company})",
+        )
     lead = Lead(**data.model_dump(), owner_id=actor.id)
     db.add(lead)
     db.flush()
@@ -137,6 +149,31 @@ def update_lead(db: Session, lead_id: uuid.UUID, data: LeadUpdate, actor: User) 
     )
     db.commit()
     return lead
+
+
+def delete_lead(db: Session, lead_id: uuid.UUID, actor: User) -> None:
+    """Remove a lead entered by mistake (a manager's call). A lead with emails or call
+    transcripts has history worth keeping: mark it lost instead."""
+    if actor.role not in (Role.manager, Role.admin):
+        raise ApiError(403, "forbidden", "Only a sales manager can delete a lead")
+    lead = get_lead(db, lead_id)
+    has_history = db.scalar(
+        select(OutboundEmail.id).where(OutboundEmail.lead_id == lead.id).limit(1)
+    ) or db.scalar(select(CallTranscript.id).where(CallTranscript.lead_id == lead.id).limit(1))
+    if has_history:
+        raise ApiError(
+            409, "lead_has_history", "This lead has emails or calls on file; mark it lost instead"
+        )
+    audit.record(
+        db,
+        action="lead.deleted",
+        entity="lead",
+        entity_id=lead.id,
+        actor_id=actor.id,
+        detail={"company": lead.company, "status": lead.status},
+    )
+    db.delete(lead)
+    db.commit()
 
 
 def _for_agent(lead: Lead) -> LeadForQualification:

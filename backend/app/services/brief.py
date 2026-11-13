@@ -5,14 +5,17 @@ person). The Brief Writer only words them, and its draft is checked before anyon
 Without a model, or when its draft fails the checks, code writes the brief itself.
 """
 
+import threading
+import time
+import uuid
 from datetime import timedelta
 
 from sqlalchemy import case, select
 from sqlalchemy.orm import Session
 
 from app.agents.brief_writer import BriefWriter
-from app.agents.runner import AgentFailed, TaskContext, run_agent
-from app.config import OFFICE_UTC_OFFSET_HOURS
+from app.agents.runner import AgentFailed, TaskContext, input_hash, run_agent
+from app.config import BRIEF_CACHE_S, OFFICE_UTC_OFFSET_HOURS
 from app.llm import LLMClient
 from app.models import (
     ApprovalRequest,
@@ -125,6 +128,33 @@ def code_brief(items: list[BriefFact]) -> BriefDraft:
     return BriefDraft(headline=items[0].text[:90], summary=summary, top=[f.id for f in items[:3]])
 
 
+# Model-written briefs, per reader: (hash of the facts, expiry on the monotonic clock, brief).
+# The dashboard asks on every load; the model is asked again only when the facts changed or the
+# brief got old. In memory, like the rate limits: one backend process serves the API.
+_cache: dict[uuid.UUID, tuple[str, float, Brief]] = {}
+_cache_lock = threading.Lock()
+
+
+def _facts_key(items: list[BriefFact]) -> str:
+    """What the brief was written from. The agent-activity line is left out: writing a brief is
+    itself an agent call, so that line changes every time and nothing would ever be reused."""
+    return input_hash([f.model_dump() for f in items if f.link != "/activity"])
+
+
+def cached_brief(db: Session, user: User) -> Brief | None:
+    """The reader's model-written brief, if the facts it was written from still hold."""
+    with _cache_lock:
+        entry = _cache.get(user.id)
+    if entry is None or entry[1] < time.monotonic() or entry[0] != _facts_key(facts(db, user)):
+        return None
+    return entry[2]
+
+
+def clear_cache() -> None:
+    with _cache_lock:
+        _cache.clear()
+
+
 def morning_brief(db: Session, llm: LLMClient | None, user: User) -> Brief:
     items = facts(db, user)
     draft, written_by = code_brief(items), "code"
@@ -145,13 +175,17 @@ def morning_brief(db: Session, llm: LLMClient | None, user: User) -> Brief:
             pass  # every attempt is in the Command Center; the reader still gets a brief
     by_id = {f.id: f for f in items}
     ranked = [by_id[i] for i in draft.top] + [f for f in items if f.id not in draft.top]
-    return Brief(
+    result = Brief(
         headline=draft.headline,
         summary=draft.summary,
         items=ranked[:SHOWN_ITEMS],
         written_by=written_by,  # type: ignore[arg-type]
         model=getattr(llm, "model", None) if written_by == "model" else None,
     )
+    if written_by == "model":
+        with _cache_lock:
+            _cache[user.id] = (_facts_key(items), time.monotonic() + BRIEF_CACHE_S, result)
+    return result
 
 
 def quick_actions(db: Session, user: User) -> list[QuickAction]:

@@ -13,10 +13,10 @@ import {
   primaryButton,
   Loading,
 } from "../components/ui";
-import { when } from "../format";
+import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
-import type { Approval, Customer, Page, Ticket } from "../types";
-import { usePoll } from "../usePoll";
+import type { Approval, Customer, Order, Ticket } from "../types";
+import { usePoll, usePollAll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
 import { toast } from "../toast";
@@ -26,6 +26,9 @@ const RUN_DONE: Record<string, string> = {
   classify: "Ticket classified",
   investigate: "Investigation done: see the likely causes",
   escalate: "Escalated",
+  resolve: "Ticket resolved",
+  close: "Ticket closed",
+  reopen: "Ticket reopened",
 };
 
 const NEEDS_APPROVAL = new Set(["refund", "legal"]);
@@ -174,8 +177,17 @@ function TicketDetail({
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [approval, setApproval] = useState<Approval | null>(null);
+  const [refundOrder, setRefundOrder] = useState("");
   const inv = ticket.investigation;
   const closed = ticket.status === "resolved" || ticket.status === "closed";
+  const isRefund = ticket.category === "refund";
+  // A refund names the order the money goes back on; approval then marks that order refunded.
+  const orders = usePoll<Order[]>(
+    isRefund && ticket.customer_id && !closed
+      ? `/support/customers/${ticket.customer_id}/orders`
+      : null,
+  );
+  const refundable = (orders.data ?? []).filter((o) => o.status !== "refunded");
 
   const run = async (what: string, path: string, body?: unknown) => {
     setBusy(what);
@@ -243,6 +255,38 @@ function TicketDetail({
           </button>
         </div>
       )}
+      {editable && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {!closed && (
+            <button
+              disabled={!!busy}
+              onClick={() => run("resolve", `/support/tickets/${ticket.id}/resolve`, {})}
+              className={primaryButton}
+            >
+              {busy === "resolve" ? "Saving…" : "Mark resolved"}
+            </button>
+          )}
+          {ticket.status !== "closed" && (
+            <button
+              disabled={!!busy}
+              onClick={() => run("close", `/support/tickets/${ticket.id}/close`, {})}
+              className={ghostButton}
+              title="Nothing more to do: file it away"
+            >
+              {busy === "close" ? "Saving…" : "Close"}
+            </button>
+          )}
+          {closed && (
+            <button
+              disabled={!!busy}
+              onClick={() => run("reopen", `/support/tickets/${ticket.id}/reopen`, {})}
+              className={ghostButton}
+            >
+              {busy === "reopen" ? "Saving…" : "Reopen"}
+            </button>
+          )}
+        </div>
+      )}
       <ErrorNote message={error} />
 
       {inv && (
@@ -290,9 +334,29 @@ function TicketDetail({
             maxLength={1000}
             onChange={(e) => setNote(e.target.value)}
           />
+          {isRefund && refundable.length > 0 && (
+            <select
+              className={inputClass}
+              value={refundOrder}
+              aria-label="Order to refund"
+              onChange={(e) => setRefundOrder(e.target.value)}
+            >
+              <option value="">Order to refund (none named)</option>
+              {refundable.map((o) => (
+                <option key={o.id} value={o.order_number}>
+                  {o.order_number} · {money(o.amount_minor, o.currency)} · {label(o.status)}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             disabled={!!busy}
-            onClick={() => run("escalate", `/support/tickets/${ticket.id}/escalate`, { note })}
+            onClick={() =>
+              run("escalate", `/support/tickets/${ticket.id}/escalate`, {
+                note,
+                order_number: isRefund && refundOrder ? refundOrder : null,
+              })
+            }
             className={primaryButton}
           >
             {busy === "escalate" ? "Escalating…" : "Escalate"}
@@ -334,7 +398,7 @@ const TICKET_HASH = "#ticket-";
 export function Support() {
   const { user } = useAuth();
   const editable = Boolean(user && canWrite(user, "support"));
-  const tickets = usePoll<Page<Ticket>>("/support/tickets?limit=100");
+  const tickets = usePollAll<Ticket>("/support/tickets");
   const customers = usePoll<Customer[]>("/support/customers");
   // A link to /support#ticket-<id> (search, dashboard) opens that ticket.
   const { hash } = useLocation();

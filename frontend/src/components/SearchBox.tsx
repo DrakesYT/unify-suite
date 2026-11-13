@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { label } from "../format";
 import { useNavigate } from "react-router";
 import { api } from "../api";
 import type { SearchHit } from "../types";
@@ -138,7 +139,9 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm text-slate-100">{hit.title}</span>
-                    <span className="block truncate text-xs text-slate-500">{hit.subtitle}</span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {label(hit.subtitle)}
+                    </span>
                   </span>
                 </button>
               </li>

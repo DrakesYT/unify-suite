@@ -11,7 +11,13 @@ from app.llm import LLM
 from app.mailer import Mailer
 from app.models.enums import AnomalyKind, Department, InvoiceStatus, MatchStatus
 from app.schemas.common import Page
-from app.schemas.finance import AnomalyOut, InvoiceOut, InvoiceUploadResult, ReceivableOut
+from app.schemas.finance import (
+    AnomalyOut,
+    InvoiceOut,
+    InvoiceRejectIn,
+    InvoiceUploadResult,
+    ReceivableOut,
+)
 from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
 from app.services import finance, outbound, receivables
 from app.services.uploads import save_upload
@@ -48,6 +54,14 @@ def list_invoices(
 ) -> Page[InvoiceOut]:
     rows, next_cursor = finance.list_invoices(db, limit, cursor, status, match_status)
     return Page(items=[InvoiceOut.model_validate(r) for r in rows], next_cursor=next_cursor)
+
+
+@router.post("/invoices/{invoice_id}/reject")
+def reject_invoice(
+    invoice_id: uuid.UUID, body: InvoiceRejectIn, db: DbSession, user: CurrentUser
+) -> InvoiceOut:
+    """Settle an invoice that needs a human check and will not be paid (finance manager)."""
+    return InvoiceOut.model_validate(finance.reject_invoice(db, invoice_id, body.reason, user))
 
 
 @router.get("/anomalies")

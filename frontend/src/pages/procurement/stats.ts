@@ -34,11 +34,17 @@ export function rankingSavings(requests: PurchaseRequest[]): Map<string, number>
   return totals;
 }
 
-/** Delivered orders that arrived without being late, as a percent; null with none delivered. */
+/**
+ * Orders that arrived on time, as a percent of every order whose date has passed: the delivered
+ * ones plus the ones that are late right now (an order still on its way and not yet due says
+ * nothing either way). Null when no order has reached its date.
+ */
 export function onTimePercent(orders: PurchaseOrder[]): number | null {
   const delivered = orders.filter((o) => o.delivered_on);
-  if (delivered.length === 0) return null;
-  return (delivered.filter((o) => o.days_late <= 0).length / delivered.length) * 100;
+  const lateNow = orders.filter((o) => !o.delivered_on && o.delivery_status === "late");
+  const due = delivered.length + lateNow.length;
+  if (due === 0) return null;
+  return (delivered.filter((o) => o.days_late <= 0).length / due) * 100;
 }
 
 /** Approved orders as a share of decided (approved + rejected) ones. */

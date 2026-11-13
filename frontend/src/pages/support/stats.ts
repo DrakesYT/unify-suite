@@ -1,3 +1,4 @@
+import { shortDay } from "../../format";
 import type { Ticket } from "../../types";
 
 export const STATUSES = ["open", "investigating", "escalated", "resolved"] as const;
@@ -26,7 +27,7 @@ export function createdVsResolved(tickets: Ticket[], days = 14, now = new Date()
   const points = Array.from({ length: days }, (_, i) => {
     const d = new Date(now);
     d.setDate(d.getDate() - (days - 1 - i));
-    return { key: dayKey(d), label: `${d.getDate()}/${d.getMonth() + 1}`, created: 0, resolved: 0 };
+    return { key: dayKey(d), label: shortDay(dayKey(d)), created: 0, resolved: 0 };
   });
   const byKey = new Map(points.map((p) => [p.key, p]));
   for (const t of tickets) {

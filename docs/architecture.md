@@ -35,7 +35,7 @@ flowchart LR
   | Vendor Comparator | procurement | explain the code-computed ranking | 20 s |
   | Payment Reminder Writer | finance | draft a reminder for an overdue customer order | 30 s |
   | Supplier Follow-up Writer | procurement | draft a chase email for a late purchase order | 30 s |
-  | Verification Agent | finance | nothing (rules only) | 5 s |
+  | Verification (rules, shown as plain code) | finance | nothing (rules only) | 5 s |
 - Uploads (`services/uploads.py`) are refused before anything is stored if the agents could not read
   them: only PDF, CSV and TXT up to 10 MB, type checked by content (magic bytes), images and Word files
   get a message saying what to do, and a PDF with no text layer (a scan) is refused with its reason, so
@@ -46,7 +46,9 @@ flowchart LR
   more can be paid (a credit note, quotation or reminder is flagged `not_an_invoice`); the PO reference is
   normalised (`po-1007` → `PO-1007`) and one naming two numbers is ambiguous, never guessed; each line's
   quantity × price and the lines' sum must equal the total; match by PO status (must be approved), vendor,
-  currency and amount (and, in Workflow B, the PO the invoice names must be the PO chosen) → duplicate check →
+  currency and amount (and, in Workflow B, the PO the invoice names must be the PO chosen); earlier invoices
+  for the same PO that were not rejected, plus this one, may not exceed the order (otherwise a mismatch that
+  names them, so a PO is not paid twice) → duplicate check →
   `save_invoice` or `flag_anomaly` (a `no_po` anomaly records whether the PO was missing, unknown or
   ambiguous). `app/safety.py` (code, no model) scans invoice and call-transcript text for lines aimed at the
   AI; invoice findings are audited (`security.instruction_text_found`) and shown as a prompt-injection warning
@@ -73,8 +75,12 @@ flowchart LR
   A step runs only when the steps it depends on have finished; `when` conditions skip F3 / F4.
   Steps run in a FastAPI background task and the UI polls every 5 s. A1 always pauses the run
   (`waiting_approval`) until a finance manager (or an admin) approves or rejects in the Approval Center; nobody can
-  decide their own request. A failed step pauses the run as `failed`; Retry re-runs only failed
-  steps with their stored inputs. Payments are created only for an approved request of that invoice.
+  decide their own request. A decision and the steps after it never call the model, so they work without one
+  and whatever the AI budget. A failed step pauses the run as `failed`; Retry re-runs only failed
+  steps with their stored inputs. A run cut off by a restart is picked up again when the backend starts
+  (`engine.recover_interrupted`), and Retry also resumes a run with no step activity for 5 minutes.
+  Payments are created only for an approved request of that invoice. A finance manager can reject an invoice
+  that needs review and has no payment waiting (`POST /api/finance/invoices/{id}/reject`).
 - Sales: the Lead Qualifier gets only company, email domain, status, priority, value and notes (no
   contact name or full email) and must return hot/warm/cold, a reason of 20+ words and the fields it cited.
   For a qualified lead the Outreach Writer drafts a first email from the same facts; code rejects drafts
@@ -92,10 +98,14 @@ flowchart LR
   copy every time verbatim or the draft is retried. An HR manager approves; a rejected invite frees its times.
 - Support: new tickets are saved, then classified (category + urgency). Investigation sends the customer's
   last 20 orders; code rejects any cited order number that is not theirs. Escalating a refund or legal ticket
-  creates an approval for a support manager; approved → resolved, rejected → reopened. Replies are drafts only.
+  creates an approval for a support manager; approved → resolved, rejected → reopened. A refund escalation can
+  name one of the customer's orders, and approval marks that order `refunded`. Support staff resolve, close
+  and reopen tickets themselves (not while an escalation waits for a manager); a resolved dispute lifts the
+  hold on that customer's payment reminders. Replies are drafts only.
 - Procurement: vendors quote a unit price per request. Code ranks them: 50% price + 25% lead time + 25%
   on-time rate, each relative to the best offer (ties: cheaper, then name). The Vendor Comparator only
-  explains the result and must name the winner. A procurement manager approves the request; every PO
+  explains the result and must name the winner. A procurement manager approves the request, in the Approval
+  Center or on the Procurement page (one decision, shown in both); every PO
   (from a request or created directly) waits in the Approval Center as `pending_approval`.
   Approval starts delivery tracking: `ordered_on` = today, `expected_delivery` = today + the vendor's
   lead time. Code computes `delivery_status` (on_track / late / delivered) and `days_late`; the buyer

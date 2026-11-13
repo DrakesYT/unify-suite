@@ -15,6 +15,11 @@ export function approvalHeadline(a: Approval): { title: string; detail: string }
         title: `Purchase order ${p.po_number ?? ""} · ${money(p.amount_minor, p.currency)}`,
         detail: [p.vendor_name, p.item && `${p.quantity} × ${p.item}`].filter(Boolean).join(" · "),
       };
+    case "approve_request":
+      return {
+        title: `Purchase request: ${p.quantity} × ${p.item ?? "item"}`,
+        detail: `Budget ${money(p.budget_minor ?? undefined, p.currency)}`,
+      };
     case "send_email":
       return {
         title: p.subject ?? "Send an email",

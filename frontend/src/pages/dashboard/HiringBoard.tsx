@@ -1,6 +1,6 @@
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { UsersIcon } from "../../components/icons";
-import { initials } from "../../format";
+import { initials, shortDay } from "../../format";
 import type { HiringStageKey, Overview } from "../../types";
 import { QUIET, TOOLTIP } from "./chartStyle";
 import { Panel, Quiet } from "./parts";
@@ -21,7 +21,7 @@ function scoreTone(score: number): string {
 
 export function HiringBoard({ hiring }: { hiring: Overview["hiring"] }) {
   const total = hiring.stages.reduce((n, s) => n + s.count, 0);
-  const trend = hiring.applications_by_day.map((d) => ({ day: d.label.slice(5), value: d.value }));
+  const trend = hiring.applications_by_day.map((d) => ({ day: shortDay(d.label), value: d.value }));
 
   return (
     <Panel

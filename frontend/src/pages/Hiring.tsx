@@ -14,8 +14,8 @@ import {
 import { EmailPanel } from "../components/EmailPanel";
 import { when } from "../format";
 import { canWrite, useAuth } from "../session";
-import type { Candidate, CandidateScore, Job, Page } from "../types";
-import { usePoll } from "../usePoll";
+import type { Candidate, CandidateScore, Job } from "../types";
+import { usePoll, usePollAll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { toast } from "../toast";
 
@@ -301,7 +301,7 @@ function ScoreCard({
 export function Hiring() {
   const { user } = useAuth();
   const editable = Boolean(user && canWrite(user, "hr"));
-  const jobs = usePoll<Page<Job>>("/hr/jobs?status=open&limit=100");
+  const jobs = usePollAll<Job>("/hr/jobs?status=open");
   const [picked, setPicked] = useState<string | null>(null);
   const jobId = picked ?? jobs.data?.items[0]?.id ?? null;
   const job = jobs.data?.items.find((j) => j.id === jobId) ?? null;

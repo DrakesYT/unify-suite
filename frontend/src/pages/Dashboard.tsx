@@ -31,7 +31,7 @@ import type {
   SalesSummary,
   Ticket,
 } from "../types";
-import { usePoll } from "../usePoll";
+import { usePoll, usePollAll } from "../usePoll";
 import { AgentBoard } from "./dashboard/AgentBoard";
 import { ApprovalsBoard } from "./dashboard/ApprovalsBoard";
 import { DealBoard } from "./dashboard/DealBoard";
@@ -212,8 +212,8 @@ export function Dashboard() {
   const approvals = usePoll<Page<Approval>>("/approvals?status=pending&limit=5");
   // Trend lines reuse list endpoints; a role without access just sees the card without a line.
   const sales = usePoll<SalesSummary>("/sales/summary");
-  const tickets = usePoll<Page<Ticket>>("/support/tickets?limit=200");
-  const requests = usePoll<Page<PurchaseRequest>>("/procurement/requests?limit=200");
+  const tickets = usePollAll<Ticket>("/support/tickets");
+  const requests = usePollAll<PurchaseRequest>("/procurement/requests");
   const o = overview.data;
   const k = kpis.data;
   const s = sales.data;

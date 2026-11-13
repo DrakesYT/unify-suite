@@ -13,13 +13,14 @@ from app.agents.runner import TaskContext, call_tool, run_agent
 from app.errors import ApiError
 from app.invoice_checks import PoReference, line_item_differences, parse_po_reference
 from app.llm import LLMClient
-from app.models import ApprovalRequest, Invoice, InvoiceAnomaly, Payment, Upload, Vendor
+from app.models import ApprovalRequest, Invoice, InvoiceAnomaly, Payment, Upload, User, Vendor
 from app.models.enums import (
     AnomalyKind,
     ApprovalStatus,
     InvoiceStatus,
     MatchStatus,
     PurchaseOrderStatus,
+    Role,
 )
 from app.safety import find_instruction_text
 from app.schemas.finance import (
@@ -111,6 +112,38 @@ def match_invoice(
     )
 
 
+def _with_earlier_invoices(
+    db: Session, match: MatchResult, fields: InvoiceFields, po: PoSnapshot
+) -> MatchResult:
+    """A purchase order is paid once. Earlier invoices against the same PO (any that were not
+    rejected) plus this one may not come to more than the order: otherwise it is a mismatch that
+    names those invoices, so the approver sees the order was already billed."""
+    earlier = list(
+        db.scalars(
+            select(Invoice)
+            .where(
+                Invoice.purchase_order_id == po.id,
+                Invoice.status != InvoiceStatus.rejected,
+                Invoice.currency == po.currency,
+            )
+            .order_by(Invoice.created_at)
+        )
+    )
+    billed = sum(i.amount_minor for i in earlier)
+    if not earlier or billed + fields.amount_minor <= po.amount_minor:
+        return match
+    difference = FieldDifference(
+        field="po_already_invoiced",
+        invoice=fields.amount_minor,
+        po={
+            "invoices": [i.number for i in earlier],
+            "billed_minor": billed,
+            "po_amount_minor": po.amount_minor,
+        },
+    )
+    return MatchResult(status=MatchStatus.mismatch, differences=[*match.differences, difference])
+
+
 def _flag(
     db: Session,
     kind: AnomalyKind,
@@ -181,6 +214,8 @@ def record_invoice(
         return None, None, [_flag(db, kind, upload, ctx, existing=existing, detail=detail)]
 
     match = match_invoice(fields, vendor, po, reference, po_chosen=po_chosen)
+    if po is not None:
+        match = _with_earlier_invoices(db, match, fields, po)
 
     def _save() -> Invoice:
         invoice = Invoice(
@@ -295,6 +330,44 @@ def set_invoice_status(
     audit.record(
         db, action=f"invoice.{status}", entity="invoice", entity_id=invoice.id, actor_id=actor_id
     )
+    return invoice
+
+
+REVIEWABLE = (InvoiceStatus.received, InvoiceStatus.needs_review)
+
+
+def reject_invoice(db: Session, invoice_id: uuid.UUID, reason: str, actor: User) -> Invoice:
+    """A finance manager settles an invoice that will not be paid (no PO, wrong amount, sent by
+    mistake): it leaves the review list and the unpaid total. An invoice whose payment is waiting
+    in the Approval Center is decided there instead."""
+    if actor.role not in (Role.manager, Role.admin):
+        raise ApiError(403, "forbidden", "Only a finance manager can reject an invoice")
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None:
+        raise ApiError(404, "not_found", "Invoice not found")
+    if invoice.status not in REVIEWABLE:
+        raise ApiError(409, "not_reviewable", f"This invoice is already {invoice.status}")
+    waiting = db.scalar(
+        select(ApprovalRequest.id).where(
+            ApprovalRequest.action == "pay_invoice",
+            ApprovalRequest.status == ApprovalStatus.pending,
+            ApprovalRequest.payload["invoice_id"].as_string() == str(invoice.id),
+        )
+    )
+    if waiting:
+        raise ApiError(
+            409, "waiting_approval", "This invoice's payment is waiting in the Approval Center"
+        )
+    invoice.status = InvoiceStatus.rejected
+    audit.record(
+        db,
+        action="invoice.rejected",
+        entity="invoice",
+        entity_id=invoice.id,
+        actor_id=actor.id,
+        detail={"reason": reason.strip()},
+    )
+    db.commit()
     return invoice
 
 

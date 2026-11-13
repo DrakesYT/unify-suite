@@ -56,6 +56,8 @@ export interface Approval {
     quantity?: number | null;
     budget_minor?: number | null;
     over_budget?: boolean;
+    order_number?: string | null;
+    refund_amount_minor?: number | null;
     company?: string | null;
     to?: string;
     subject?: string;
@@ -559,4 +561,14 @@ export interface SalesSummary {
     won: number;
     won_minor: number;
   }[];
+}
+
+/** A customer's order, as Support sees it. */
+export interface Order {
+  id: string;
+  order_number: string;
+  amount_minor: number;
+  currency: string;
+  status: "placed" | "shipped" | "delivered" | "cancelled" | "refunded";
+  ordered_at: string;
 }

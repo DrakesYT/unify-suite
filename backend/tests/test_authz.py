@@ -6,7 +6,6 @@ import pytest
 from fastapi import APIRouter, Depends
 from fastapi.testclient import TestClient
 
-from app.db import get_db
 from app.deps import require_department, require_roles
 from app.main import create_app
 from app.models import User
@@ -30,7 +29,7 @@ def guarded_client(client: TestClient) -> Iterator[TestClient]:
     app = create_app()
     app.include_router(finance)
     app.include_router(admin_only)
-    app.dependency_overrides[get_db] = client.app.dependency_overrides[get_db]  # type: ignore[attr-defined]
+    app.dependency_overrides.update(client.app.dependency_overrides)  # type: ignore[attr-defined]
     with TestClient(app) as test_client:
         yield test_client
 

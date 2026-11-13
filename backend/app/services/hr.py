@@ -254,6 +254,12 @@ def ranked_scores(db: Session, job_id: uuid.UUID) -> list[ScoreOut]:
         select(CandidateScore, Candidate)
         .join(Candidate, Candidate.id == CandidateScore.candidate_id)
         .where(CandidateScore.job_id == job.id)
-        .order_by(CandidateScore.score.desc(), Candidate.name)
+        # Equal scores: more experience first (the score stops counting years at the job's
+        # minimum), then by name so the order never depends on luck.
+        .order_by(
+            CandidateScore.score.desc(),
+            Candidate.years_experience.desc().nulls_last(),
+            Candidate.name,
+        )
     ).all()
     return [_to_out(job, candidate, row) for row, candidate in rows]

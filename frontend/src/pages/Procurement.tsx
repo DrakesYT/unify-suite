@@ -19,15 +19,8 @@ import { VendorHeatmap } from "../components/VendorHeatmap";
 import { ProcurementDashboard } from "./procurement/ProcurementDashboard";
 import { money, when } from "../format";
 import { canWrite, useAuth } from "../session";
-import type {
-  Page,
-  PurchaseOrder,
-  PurchaseRequest,
-  Quote,
-  Vendor,
-  VendorComparison,
-} from "../types";
-import { usePoll } from "../usePoll";
+import type { PurchaseOrder, PurchaseRequest, Quote, Vendor, VendorComparison } from "../types";
+import { usePoll, usePollAll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { toast } from "../toast";
 
@@ -501,9 +494,9 @@ function OrderRow({
 export function Procurement() {
   const { user } = useAuth();
   const editable = Boolean(user && canWrite(user, "procurement"));
-  const vendors = usePoll<Page<Vendor>>("/procurement/vendors?limit=200");
-  const requests = usePoll<Page<PurchaseRequest>>("/procurement/requests?limit=100");
-  const orders = usePoll<Page<PurchaseOrder>>("/procurement/orders?limit=100");
+  const vendors = usePollAll<Vendor>("/procurement/vendors");
+  const requests = usePollAll<PurchaseRequest>("/procurement/requests");
+  const orders = usePollAll<PurchaseOrder>("/procurement/orders");
   const [picked, setPicked] = useState<string | null>(null);
   const request = requests.data?.items.find((r) => r.id === picked) ?? requests.data?.items[0];
   const vendorList = vendors.data?.items ?? [];

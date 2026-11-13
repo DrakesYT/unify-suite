@@ -16,8 +16,8 @@ import {
   Loading,
 } from "../components/ui";
 import { label, money, when } from "../format";
-import type { Approval, Page, User } from "../types";
-import { usePoll } from "../usePoll";
+import type { Approval, User } from "../types";
+import { usePollAll } from "../usePoll";
 import { toast } from "../toast";
 import { approvalHeadline } from "../approvalText";
 import { ApprovalsDashboard } from "./approvals/ApprovalsDashboard";
@@ -38,6 +38,8 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
   const isPayment = approval.action === "pay_invoice";
   const isOrder = approval.action === "approve_po";
   const isEmail = approval.action === "send_email";
+  const isRequest = approval.action === "approve_request";
+  const isRefund = approval.action === "issue_refund";
 
   const decide = async (verb: "approve" | "reject") => {
     setBusy(true);
@@ -85,6 +87,15 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
                 {p.budget_minor != null ? ` · budget ${money(p.budget_minor, p.currency)}` : ""}
               </p>
             </>
+          ) : isRequest ? (
+            <>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {p.quantity} × {p.item}
+              </p>
+              <p className="text-sm text-slate-300">
+                Purchase request · budget {money(p.budget_minor ?? undefined, p.currency)}
+              </p>
+            </>
           ) : isEmail ? (
             <>
               <p className="mt-1 text-lg font-semibold text-white">{p.subject}</p>
@@ -96,6 +107,13 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
             <>
               <p className="mt-1 text-lg font-semibold text-white">{p.title}</p>
               <p className="text-sm text-slate-300">{p.customer_name ?? "No customer linked"}</p>
+              {isRefund && (
+                <p className="mt-1 text-sm text-slate-300">
+                  {p.order_number
+                    ? `Approving marks ${p.order_number} (${money(p.refund_amount_minor ?? undefined, p.currency)}) as refunded.`
+                    : "No order is named, so approving only resolves the ticket."}
+                </p>
+              )}
             </>
           )}
         </div>
@@ -171,9 +189,11 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
                 ? "Approve payment"
                 : isOrder
                   ? "Approve order"
-                  : isEmail
-                    ? "Approve & send"
-                    : "Approve"}
+                  : isRequest
+                    ? "Approve request"
+                    : isEmail
+                      ? "Approve & send"
+                      : "Approve"}
             </button>
             <button
               disabled={busy || !comment.trim()}
@@ -196,7 +216,7 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
 
 export function Approvals() {
   const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
-  const { data, error, reload } = usePoll<Page<Approval>>(`/approvals?status=${tab}`);
+  const { data, error, reload } = usePollAll<Approval>(`/approvals?status=${tab}`);
 
   return (
     <>

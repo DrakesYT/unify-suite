@@ -5,7 +5,10 @@ Confirms that the purchase order, invoice, approval and payment rows of a workfl
 
 from typing import ClassVar
 
+from sqlalchemy.orm import Session
+
 from app.agents.base import Agent
+from app.agents.runner import TaskContext, run_agent
 from app.llm import LLMClient
 from app.models.enums import ApprovalStatus, Department
 from app.schemas.workflows import Check, LinkSnapshot, VerificationResult
@@ -20,7 +23,12 @@ class VerificationAgent(Agent[LinkSnapshot, VerificationResult]):
     max_llm_calls = 0
     timeout_s = 5.0
 
-    def run(self, data: LinkSnapshot, llm: LLMClient) -> VerificationResult:
+    def check(self, db: Session, data: LinkSnapshot, ctx: TaskContext) -> VerificationResult:
+        """Run the rules through the agent runner (permission check, activity log). The runner's
+        model argument is unused: this agent never calls one."""
+        return run_agent(db, self, data, None, ctx)  # type: ignore[arg-type]
+
+    def run(self, data: LinkSnapshot, llm: LLMClient | None) -> VerificationResult:
         checks = [
             Check(
                 name="invoice linked to purchase order",

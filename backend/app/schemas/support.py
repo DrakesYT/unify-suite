@@ -29,8 +29,22 @@ class TicketOut(BaseModel):
     updated_at: datetime
 
 
+class TicketUpdate(BaseModel):
+    title: Annotated[str, Field(min_length=1, max_length=200)] | None = None
+    description: Annotated[str, Field(max_length=5000)] | None = None
+    customer_id: uuid.UUID | None = None
+
+
+class TicketNote(BaseModel):
+    """Why a ticket is resolved, closed or reopened (kept in the audit log)."""
+
+    note: Annotated[str, Field(max_length=1000)] = ""
+
+
 class EscalateIn(BaseModel):
     note: Annotated[str, Field(max_length=1000)] = ""
+    # For a refund: the customer's order the money goes back on. Approval marks it refunded.
+    order_number: Annotated[str, Field(max_length=40)] | None = None
 
 
 class EscalationOut(BaseModel):

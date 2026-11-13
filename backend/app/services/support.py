@@ -21,7 +21,13 @@ from app.models.enums import (
     TicketStatus,
 )
 from app.money import format_minor
-from app.schemas.support import InvestigationInput, OrderFact, TicketCreate, TicketText
+from app.schemas.support import (
+    InvestigationInput,
+    OrderFact,
+    TicketCreate,
+    TicketText,
+    TicketUpdate,
+)
 from app.services import approvals, audit
 from app.services.pagination import paginate
 
@@ -202,8 +208,92 @@ def investigate(db: Session, llm: LLMClient, ticket_id: uuid.UUID, ctx: TaskCont
     return ticket
 
 
+DONE = (TicketStatus.resolved, TicketStatus.closed)
+
+
+def _pending_approval(db: Session, ticket: Ticket) -> uuid.UUID | None:
+    return db.scalar(
+        select(ApprovalRequest.id).where(
+            ApprovalRequest.action.in_(TICKET_ACTIONS),
+            ApprovalRequest.status == ApprovalStatus.pending,
+            ApprovalRequest.payload["ticket_id"].as_string() == str(ticket.id),
+        )
+    )
+
+
+def update_ticket(db: Session, ticket_id: uuid.UUID, data: TicketUpdate, actor: User) -> Ticket:
+    """Correct a ticket's text or link it to a customer. A closed ticket is not edited."""
+    ticket = get_ticket(db, ticket_id)
+    if ticket.status == TicketStatus.closed:
+        raise ApiError(409, "ticket_closed", "This ticket is closed; reopen it to change it")
+    changes = data.model_dump(exclude_unset=True)
+    if changes.get("customer_id") and db.get(Customer, changes["customer_id"]) is None:
+        raise ApiError(404, "not_found", "Customer not found")
+    for key, value in changes.items():
+        setattr(ticket, key, value)
+    audit.record(
+        db,
+        action="ticket.updated",
+        entity="ticket",
+        entity_id=ticket.id,
+        actor_id=actor.id,
+        detail={"fields": sorted(changes)},
+    )
+    db.commit()
+    return ticket
+
+
+def set_status(
+    db: Session, ticket_id: uuid.UUID, target: TicketStatus, note: str, actor: User
+) -> Ticket:
+    """Resolve, close or reopen a ticket. Code decides which moves are allowed:
+    resolve: any open ticket · close: any ticket not yet closed · reopen: a resolved or closed one.
+    A refund or legal escalation waiting for a manager is decided in the Approval Center first."""
+    ticket = get_ticket(db, ticket_id)
+    allowed = {
+        TicketStatus.resolved: ticket.status not in DONE,
+        TicketStatus.closed: ticket.status != TicketStatus.closed,
+        TicketStatus.open: ticket.status in DONE,
+    }
+    if not allowed.get(target, False):
+        raise ApiError(
+            409, "invalid_status_change", f"A ticket that is {ticket.status} cannot become {target}"
+        )
+    if target != TicketStatus.open and _pending_approval(db, ticket):
+        raise ApiError(
+            409, "waiting_approval", "This ticket is waiting for a manager's decision first"
+        )
+    previous, ticket.status = ticket.status, target
+    audit.record(
+        db,
+        action=f"ticket.{'reopened' if target == TicketStatus.open else target}",
+        entity="ticket",
+        entity_id=ticket.id,
+        actor_id=actor.id,
+        detail={"from": previous, "note": note.strip()},
+    )
+    db.commit()
+    return ticket
+
+
+def _refund_order(db: Session, ticket: Ticket, order_number: str | None) -> Order | None:
+    """The order a refund escalation names: it must be one of this ticket's customer's orders."""
+    if not (order_number or "").strip():
+        return None
+    order = db.scalar(select(Order).where(Order.order_number == order_number.strip()))  # type: ignore[union-attr]
+    if order is None or ticket.customer_id is None or order.customer_id != ticket.customer_id:
+        raise ApiError(422, "not_customers_order", "That order does not belong to this customer")
+    if order.status == OrderStatus.refunded:
+        raise ApiError(409, "already_refunded", f"{order.order_number} is already refunded")
+    return order
+
+
 def escalate(
-    db: Session, ticket_id: uuid.UUID, note: str, actor: User
+    db: Session,
+    ticket_id: uuid.UUID,
+    note: str,
+    actor: User,
+    order_number: str | None = None,
 ) -> tuple[Ticket, ApprovalRequest | None]:
     """FR-SUP-03: refund and legal escalations need a support manager's approval."""
     ticket = get_ticket(db, ticket_id)
@@ -211,15 +301,9 @@ def escalate(
         raise ApiError(409, "ticket_closed", "This ticket is already resolved")
     action = NEEDS_APPROVAL.get(ticket.category) if ticket.category else None
     approval = None
+    refund_order = _refund_order(db, ticket, order_number) if action == "issue_refund" else None
     if action:
-        pending = db.scalar(
-            select(ApprovalRequest.id).where(
-                ApprovalRequest.action == action,
-                ApprovalRequest.status == ApprovalStatus.pending,
-                ApprovalRequest.payload["ticket_id"].as_string() == str(ticket.id),
-            )
-        )
-        if pending:
+        if _pending_approval(db, ticket):
             raise ApiError(409, "already_escalated", "This ticket is already waiting for approval")
         customer = db.get(Customer, ticket.customer_id) if ticket.customer_id else None
         approval = approvals.create_approval(
@@ -232,6 +316,9 @@ def escalate(
                 "urgency": ticket.urgency,
                 "customer_name": customer.name if customer else None,
                 "note": note.strip(),
+                "order_number": refund_order.order_number if refund_order else None,
+                "refund_amount_minor": refund_order.amount_minor if refund_order else None,
+                "currency": refund_order.currency if refund_order else None,
                 "likely_cause": ((ticket.investigation or {}).get("likely_causes") or [{}])[0].get(
                     "cause"
                 ),
@@ -260,9 +347,23 @@ def apply_decision(db: Session, approval: ApprovalRequest, actor: User) -> None:
     ticket = db.get(Ticket, uuid.UUID(approval.payload["ticket_id"]))
     if ticket is None:
         return
-    ticket.status = (
-        TicketStatus.resolved if approval.status == ApprovalStatus.approved else TicketStatus.open
-    )
+    approved = approval.status == ApprovalStatus.approved
+    ticket.status = TicketStatus.resolved if approved else TicketStatus.open
+    order_number = approval.payload.get("order_number")
+    if approved and approval.action == "issue_refund" and order_number:
+        # The approved refund is recorded on the order, where Finance sees it: a refunded order
+        # is no longer an open receivable.
+        order = db.scalar(select(Order).where(Order.order_number == order_number))
+        if order is not None and order.status != OrderStatus.refunded:
+            order.status = OrderStatus.refunded
+            audit.record(
+                db,
+                action="order.refunded",
+                entity="order",
+                entity_id=order.id,
+                actor_id=actor.id,
+                detail={"approval_id": str(approval.id), "ticket_id": str(ticket.id)},
+            )
     audit.record(
         db,
         action=f"ticket.{ticket.status}",

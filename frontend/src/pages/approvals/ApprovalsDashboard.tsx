@@ -5,8 +5,8 @@ import { HeroStat, StatCard } from "../../components/charts/StatCard";
 import { Badge, Card, Empty } from "../../components/ui";
 import { approvalHeadline } from "../../approvalText";
 import { ago } from "../../format";
-import type { Approval, Page } from "../../types";
-import { usePoll } from "../../usePoll";
+import type { Approval } from "../../types";
+import { usePollAll } from "../../usePoll";
 import {
   decidedInWeek,
   formatMinutes,
@@ -17,11 +17,9 @@ import {
 
 /** Charts over every approval the user can see (pending, approved and rejected). */
 export function ApprovalsDashboard() {
-  const pending = usePoll<Page<Approval>>("/approvals?status=pending&limit=200").data?.items ?? [];
-  const approved =
-    usePoll<Page<Approval>>("/approvals?status=approved&limit=200").data?.items ?? [];
-  const rejected =
-    usePoll<Page<Approval>>("/approvals?status=rejected&limit=200").data?.items ?? [];
+  const pending = usePollAll<Approval>("/approvals?status=pending").data?.items ?? [];
+  const approved = usePollAll<Approval>("/approvals?status=approved").data?.items ?? [];
+  const rejected = usePollAll<Approval>("/approvals?status=rejected").data?.items ?? [];
   const decided = [...approved, ...rejected];
   const recent = recentDecisions(decided);
 

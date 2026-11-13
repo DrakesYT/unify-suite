@@ -9,15 +9,16 @@ import {
   Empty,
   ErrorNote,
   PageHeader,
+  dangerButton,
   inputClass,
   primaryButton,
   Loading,
 } from "../components/ui";
 import { Receivables } from "../components/Receivables";
 import { PaymentsDashboard } from "./payments/PaymentsDashboard";
-import { when } from "../format";
-import type { Execution, ExecutionSummary, Page } from "../types";
-import { usePoll } from "../usePoll";
+import { money, when } from "../format";
+import type { Execution, ExecutionSummary, Invoice } from "../types";
+import { usePollAll } from "../usePoll";
 import { toast } from "../toast";
 
 function StartForm() {
@@ -86,9 +87,79 @@ function StartForm() {
   );
 }
 
+/** Invoices code could not match (no PO, a mismatch outside a payment run). A finance manager
+ *  settles the ones that will not be paid, so the review list and the unpaid total stay true. */
+function InvoicesToReview({ canDecide }: { canDecide: boolean }) {
+  const { data, error, reload } = usePollAll<Invoice>("/finance/invoices?status=needs_review");
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  if (!data || data.items.length === 0) return <ErrorNote message={error} />;
+
+  const reject = async (invoice: Invoice) => {
+    setBusy(invoice.id);
+    setFailed(null);
+    try {
+      await api(`/finance/invoices/${invoice.id}/reject`, {
+        method: "POST",
+        body: JSON.stringify({ reason: reasons[invoice.id] ?? "" }),
+      });
+      toast(`Invoice ${invoice.number} rejected`, "info");
+      void reload();
+    } catch (err) {
+      setFailed(err instanceof Error ? err.message : "Could not reject the invoice");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Card title="Invoices that need a human check" icon={<FileIcon size={16} />}>
+      <p className="mb-3 text-xs text-slate-500">
+        An invoice whose payment is waiting for approval is decided in the Approval Center. The
+        others stay here until a finance manager rejects them.
+      </p>
+      <ErrorNote message={error ?? failed} />
+      <ul className="divide-y divide-navy-800">
+        {data.items.map((invoice) => (
+          <li key={invoice.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
+            <span className="min-w-0 flex-1">
+              <span className="text-slate-100">{invoice.number}</span>{" "}
+              <span className="text-slate-400">
+                · {money(invoice.amount_minor, invoice.currency)} · {invoice.po_number ?? "no PO"} ·{" "}
+                {when(invoice.created_at)}
+              </span>
+            </span>
+            {invoice.match_status && <Badge value={invoice.match_status} />}
+            {canDecide && (
+              <>
+                <input
+                  className={`${inputClass} max-w-56`}
+                  placeholder="Reason (required)"
+                  aria-label={`Reason for rejecting ${invoice.number}`}
+                  maxLength={500}
+                  value={reasons[invoice.id] ?? ""}
+                  onChange={(e) => setReasons({ ...reasons, [invoice.id]: e.target.value })}
+                />
+                <button
+                  disabled={busy === invoice.id || (reasons[invoice.id] ?? "").trim().length < 3}
+                  onClick={() => void reject(invoice)}
+                  className={dangerButton}
+                >
+                  {busy === invoice.id ? "Saving…" : "Reject"}
+                </button>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 export function Payments() {
   const { user } = useAuth();
-  const { data, error } = usePoll<Page<ExecutionSummary>>("/workflows?limit=50");
+  const { data, error } = usePollAll<ExecutionSummary>("/workflows");
 
   return (
     <>
@@ -146,6 +217,9 @@ export function Payments() {
             </div>
           )}
         </Card>
+        <InvoicesToReview
+          canDecide={Boolean(user && canWrite(user, "finance") && user.role !== "employee")}
+        />
         <Receivables editable={Boolean(user && canWrite(user, "finance"))} />
       </div>
     </>

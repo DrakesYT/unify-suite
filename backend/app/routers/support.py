@@ -16,7 +16,9 @@ from app.schemas.support import (
     EscalationOut,
     OrderOut,
     TicketCreate,
+    TicketNote,
     TicketOut,
+    TicketUpdate,
 )
 from app.schemas.workflows import ApprovalOut
 from app.services import support
@@ -83,8 +85,41 @@ def escalate_ticket(
     ticket_id: uuid.UUID, body: EscalateIn, db: DbSession, user: CurrentUser
 ) -> EscalationOut:
     """Refund and legal tickets create an approval request for a support manager."""
-    ticket, approval = support.escalate(db, ticket_id, body.note, user)
+    ticket, approval = support.escalate(db, ticket_id, body.note, user, body.order_number)
     return EscalationOut(
         ticket=TicketOut.model_validate(ticket),
         approval=ApprovalOut.model_validate(approval) if approval else None,
     )
+
+
+@router.patch("/tickets/{ticket_id}")
+def update_ticket(
+    ticket_id: uuid.UUID, data: TicketUpdate, db: DbSession, user: CurrentUser
+) -> TicketOut:
+    return TicketOut.model_validate(support.update_ticket(db, ticket_id, data, user))
+
+
+@router.post("/tickets/{ticket_id}/resolve")
+def resolve_ticket(
+    ticket_id: uuid.UUID, body: TicketNote, db: DbSession, user: CurrentUser
+) -> TicketOut:
+    """The customer's problem is dealt with. Any hold on their payment reminders ends."""
+    ticket = support.set_status(db, ticket_id, TicketStatus.resolved, body.note, user)
+    return TicketOut.model_validate(ticket)
+
+
+@router.post("/tickets/{ticket_id}/close")
+def close_ticket(
+    ticket_id: uuid.UUID, body: TicketNote, db: DbSession, user: CurrentUser
+) -> TicketOut:
+    """Nothing (more) to do: a thank-you note, a duplicate, or a resolved ticket filed away."""
+    ticket = support.set_status(db, ticket_id, TicketStatus.closed, body.note, user)
+    return TicketOut.model_validate(ticket)
+
+
+@router.post("/tickets/{ticket_id}/reopen")
+def reopen_ticket(
+    ticket_id: uuid.UUID, body: TicketNote, db: DbSession, user: CurrentUser
+) -> TicketOut:
+    ticket = support.set_status(db, ticket_id, TicketStatus.open, body.note, user)
+    return TicketOut.model_validate(ticket)

@@ -51,8 +51,12 @@ INTERVIEW_SEARCH_DAYS = 21
 RESEND_API_URL = "https://api.resend.com/emails"
 EMAIL_SEND_TIMEOUT_S = 10.0
 
+BRIEF_CACHE_S = 15 * 60  # a model-written brief is reused this long while its facts hold
 LLM_MAX_TOKENS = 8_000  # includes the model's hidden reasoning tokens; only used when needed
 AGENT_RETRY_DELAYS_S = (2, 8)  # two retries: wait 2 s, then 8 s
+# A workflow run with no step activity for this long was cut off by a restart and may be resumed
+# by hand (longer than any step can take: three model attempts plus their waits).
+WORKFLOW_STALE_S = 5 * 60
 
 
 class Settings(BaseSettings):

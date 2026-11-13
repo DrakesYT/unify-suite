@@ -31,9 +31,12 @@ def morning_brief(
 ) -> Brief:
     """Facts gathered by code, worded by the Brief Writer, then checked by code.
     `writer=code` returns the instant code-written version (shown while the model writes);
-    only the model-written one spends an AI run."""
+    only a newly model-written one spends an AI run: it is reused until the facts change."""
     model = llm if writer == "model" else None
     if model is not None:
+        cached = brief.cached_brief(db, user)
+        if cached is not None:  # same reader, same facts: no model call, no AI run spent
+            return cached
         spend_ai_run(request, user)
     return brief.morning_brief(db, model, user)
 

@@ -17,7 +17,7 @@ HANDOFF = (
     ("F2", "PO match", "rules"),
     ("A1", "Manager approval", "human"),
     ("F4", "Payment", "tool"),
-    ("V1", "Verification Agent", "agent"),
+    ("V1", "Verification", "rules"),
 )
 
 

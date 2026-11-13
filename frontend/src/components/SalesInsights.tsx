@@ -145,7 +145,6 @@ export function SalesInsights({
   const lost = stage("lost");
   const closed = won.count + lost.count;
   const all = stages.reduce((n, s) => n + s.count, 0);
-  const diff = (pick: (w: Week) => number) => pick(last) - (prev ? pick(prev) : 0);
 
   const funnelRows = FUNNEL.map((f) => ({
     ...f,
@@ -177,7 +176,8 @@ export function SalesInsights({
           tone="sky"
           value={String(last.new_leads)}
           series={weeks.map((w) => w.new_leads)}
-          delta={diff((w) => w.new_leads)}
+          delta={last.new_leads}
+          note={`${prev?.new_leads ?? 0} last week`}
         />
         <Kpi
           title="Deals won"
@@ -185,7 +185,9 @@ export function SalesInsights({
           tone="emerald"
           value={String(won.count)}
           series={weeks.map((w) => w.won)}
-          delta={diff((w) => w.won)}
+          seriesName="Deals won per week"
+          delta={last.won}
+          note={`${last.won} this week · ${prev?.won ?? 0} last week`}
         />
         <Kpi
           title="Won value"
@@ -193,8 +195,9 @@ export function SalesInsights({
           tone="amber"
           value={compactMoney(won.value_minor, currency)}
           series={weeks.map((w) => w.won_minor / 100)}
-          delta={diff((w) => w.won_minor)}
-          fmt={(n) => compactMoney(n, currency)}
+          seriesName="Value won per week"
+          delta={last.won_minor}
+          note={`${compactMoney(last.won_minor, currency)} this week · ${compactMoney(prev?.won_minor ?? 0, currency)} last week`}
         />
       </div>
       <p className="-mt-2 text-xs text-slate-500">

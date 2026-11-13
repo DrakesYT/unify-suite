@@ -197,7 +197,7 @@ def test_summary_counts_stages_and_weekly_trend(
     client: TestClient, headers: dict[str, str]
 ) -> None:
     won = _create(client, headers, value_minor=1000000)
-    _create(client, headers, value_minor=250000, status="new")
+    _create(client, headers, value_minor=250000, status="new", email="omar@other.example.com")
     client.patch(f"{API}/{won['id']}", json={"status": "won"}, headers=headers)
 
     res = client.get("/api/sales/summary", headers=headers)

@@ -4,8 +4,8 @@ import { Donut } from "../../components/charts/Donut";
 import { otherCurrencies, showLargest } from "../../components/charts/currency";
 import { MiniBars } from "../../components/charts/MiniTrend";
 import { HeroStat, StatCard } from "../../components/charts/StatCard";
-import type { Anomaly, Invoice, Page, Receivable } from "../../types";
-import { usePoll } from "../../usePoll";
+import type { Anomaly, Invoice, Receivable } from "../../types";
+import { usePoll, usePollAll } from "../../usePoll";
 import {
   agingBuckets,
   anomalyCount,
@@ -18,8 +18,8 @@ import {
 
 export function PaymentsDashboard() {
   const receivables = usePoll<Receivable[]>("/finance/receivables").data ?? [];
-  const invoices = usePoll<Page<Invoice>>("/finance/invoices?limit=200").data?.items ?? [];
-  const anomalies = usePoll<Page<Anomaly>>("/finance/anomalies?limit=200").data?.items ?? [];
+  const invoices = usePollAll<Invoice>("/finance/invoices").data?.items ?? [];
+  const anomalies = usePollAll<Anomaly>("/finance/anomalies").data?.items ?? [];
   const owed = outstanding(receivables);
   const matched = matchedPercent(invoices);
   const monthly = monthlyInvoiced(invoices);

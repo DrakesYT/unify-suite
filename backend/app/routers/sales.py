@@ -56,6 +56,12 @@ def update_lead(lead_id: uuid.UUID, data: LeadUpdate, db: DbSession, user: Curre
     return LeadOut.model_validate(sales.update_lead(db, lead_id, data, user))
 
 
+@router.delete("/leads/{lead_id}", status_code=204)
+def delete_lead(lead_id: uuid.UUID, db: DbSession, user: CurrentUser) -> None:
+    """Remove a lead entered by mistake (sales manager; only a lead with no emails or calls)."""
+    sales.delete_lead(db, lead_id, user)
+
+
 @router.post("/leads/{lead_id}/qualify")
 def qualify_lead(lead_id: uuid.UUID, db: DbSession, user: CurrentUser, llm: LLM) -> LeadOut:
     """Lead Qualifier: hot / warm / cold with a reason and the lead fields it relied on."""

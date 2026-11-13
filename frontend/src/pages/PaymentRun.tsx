@@ -12,7 +12,7 @@ import {
   ghostButton,
   Loading,
 } from "../components/ui";
-import { label, money, when } from "../format";
+import { label, money, moneyFromDecimal, when } from "../format";
 import type { AgentTask, Execution, Page, Step } from "../types";
 import { usePoll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
@@ -25,8 +25,8 @@ function StepDetail({ step }: { step: Step }) {
     return (
       <>
         <p className="text-sm text-slate-400">
-          {String(out.vendor_name)} · invoice {String(out.number)} · {String(out.total_amount)}{" "}
-          {String(out.currency)}
+          {String(out.vendor_name)} · invoice {String(out.number)} ·{" "}
+          {moneyFromDecimal(out.total_amount, out.currency)}
         </p>
         <InjectionWarning lines={out.suspicious_text as string[] | undefined} />
       </>

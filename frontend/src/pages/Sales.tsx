@@ -15,9 +15,9 @@ import {
 import { EmailPanel } from "../components/EmailPanel";
 import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
-import type { Lead, LeadStatus, Page, Priority, SalesSummary } from "../types";
+import type { Lead, LeadStatus, Priority, SalesSummary } from "../types";
 import { SalesInsights } from "../components/SalesInsights";
-import { usePoll } from "../usePoll";
+import { usePoll, usePollAll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
 import { toast } from "../toast";
@@ -130,10 +130,12 @@ function NewLead({ onCreated }: { onCreated: () => void }) {
 function LeadRow({
   lead,
   editable,
+  canDelete,
   onChange,
 }: {
   lead: Lead;
   editable: boolean;
+  canDelete: boolean;
   onChange: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -152,6 +154,20 @@ function LeadRow({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm(`Delete the lead ${lead.company}? This cannot be undone.`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/sales/leads/${lead.id}`, { method: "DELETE" });
+      toast(`${lead.company} deleted`, "info");
+      onChange();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete the lead");
       setBusy(false);
     }
   };
@@ -221,6 +237,16 @@ function LeadRow({
               {busy ? "Thinking…" : lead.rating ? "Re-qualify" : "Qualify with AI"}
             </button>
           )}
+          {canDelete && (
+            <button
+              disabled={busy}
+              onClick={() => void remove()}
+              className={`${ghostButton} ml-2`}
+              title="Remove a lead entered by mistake"
+            >
+              Delete
+            </button>
+          )}
         </td>
       </tr>
       {(error || callsOpen || (open && lead.qualification)) && (
@@ -257,8 +283,8 @@ function LeadRow({
 export function Sales() {
   const { user } = useAuth();
   const [rating, setRating] = useState("");
-  const { data, error, reload } = usePoll<Page<Lead>>(
-    `/sales/leads?limit=100${rating ? `&rating=${rating}` : ""}`,
+  const { data, error, reload } = usePollAll<Lead>(
+    `/sales/leads${rating ? `?rating=${rating}` : ""}`,
   );
   const summary = usePoll<SalesSummary>("/sales/summary");
   const editable = Boolean(user && canWrite(user, "sales"));
@@ -313,7 +339,13 @@ export function Sales() {
                 </thead>
                 <tbody className="divide-y divide-navy-800">
                   {data.items.map((lead) => (
-                    <LeadRow key={lead.id} lead={lead} editable={editable} onChange={reload} />
+                    <LeadRow
+                      key={lead.id}
+                      lead={lead}
+                      editable={editable}
+                      canDelete={editable && user?.role !== "employee"}
+                      onChange={reload}
+                    />
                   ))}
                 </tbody>
               </table>

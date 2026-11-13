@@ -6,7 +6,7 @@ an executive dashboard and the Aura chat assistant.
 
 Built for the lablab.ai **Vultr Agent Rush** hackathon (Challenge 2, "Powering the Future of Work").
 
-**Live demo:** https://unify.65.20.84.171.sslip.io (API docs at `/api/docs`).
+**Live demo:** https://unify.65.20.84.171.sslip.io (API description at `/api/openapi.json`).
 
 ## Screenshots
 
@@ -111,8 +111,9 @@ Approval Center, and on a call they are shown above the analysis.
 
 1. A finance clerk uploads an invoice and names the PO.
 2. **P1** loads the PO; **F1** (Invoice Processor) reads the invoice.
-3. **F2** matches invoice and PO in code (status, vendor, currency, amount, the PO the invoice itself names, and
-   whether its line items add up) and checks for duplicates. A mismatch makes **F3** write a discrepancy report in
+3. **F2** matches invoice and PO in code (status, vendor, currency, amount, the PO the invoice itself names,
+   whether its line items add up, and whether earlier invoices already used up the order, so a PO is never
+   paid twice unnoticed) and checks for duplicates. A mismatch makes **F3** write a discrepancy report in
    plain words ("line items add up to 3,550.00 USD, but the total due says 3,750.00 USD").
 4. **A1** always pauses the run (`waiting_approval`). A finance manager approves or rejects in the Approval Center;
    nobody can decide their own request.
@@ -120,6 +121,8 @@ Approval Center, and on a call they are shown above the analysis.
 6. **V1** verifies every link (invoice ↔ PO ↔ approval ↔ payment) and the run ends `completed` or `rejected`.
 
 A failed step pauses the run as `failed`; Retry in the UI re-runs only the failed steps with their stored inputs.
+A run cut off by a restart continues by itself when the backend comes back. Approving or rejecting never needs
+the model.
 
 ## Tested on the demo data
 
@@ -177,8 +180,8 @@ The 57 supplier invoices in `backend/demo_data/invoices/` are left for live uplo
 | `sales.manager@demo.example.com` | `demodemo.` | sales manager | Approval Center: approve & send the email (or reject it) |
 | `hr.recruiter@demo.example.com` | `demodemo.` | HR employee | Hiring → pick a job → add a resume (from `backend/demo_data/resumes/`) → Screen new applicants → Invite to interview (top candidate) |
 | `hr.manager@demo.example.com` | `demodemo.` | HR manager | Approval Center: approve & send the interview invite (or reject it, which frees the times) |
-| `support.agent@demo.example.com` | `demodemo.` | support employee | Support tickets → Investigate, Escalate a refund |
-| `support.manager@demo.example.com` | `demodemo.` | support manager | Approve the refund escalation |
+| `support.agent@demo.example.com` | `demodemo.` | support employee | Support tickets → Investigate, Mark resolved, Escalate a refund (pick the order to refund) |
+| `support.manager@demo.example.com` | `demodemo.` | support manager | Approve the refund escalation (the order is marked refunded) |
 | `buyer@demo.example.com` | `demodemo.` | procurement employee | Procurement → Compare vendors, Create purchase order; PO-2001 is late → Follow up with supplier |
 | `procurement.manager@demo.example.com` | `demodemo.` | procurement manager | Approve the request, the purchase order and the supplier follow-up email |
 
@@ -203,7 +206,7 @@ cp .env.example .env          # then set POSTGRES_PASSWORD and JWT_SECRET (see c
 docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 ```
 
-- App: http://localhost:3000. API docs: http://localhost:3000/api/docs
+- App: http://localhost:3000. API description: http://localhost:3000/api/openapi.json
 - Database tables are created/updated automatically when the backend starts (`alembic upgrade head`).
 - Add a user (asks for the password):
   `docker compose exec backend python -m app.cli create-user EMAIL "Full Name" ROLE DEPARTMENT`

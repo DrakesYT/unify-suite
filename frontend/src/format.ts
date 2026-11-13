@@ -67,3 +67,22 @@ export function ago(iso: string): string {
   if (hours < 24) return `${hours} h ago`;
   return `${Math.round(hours / 24)} d ago`;
 }
+
+/** "2026-11-07" → "Nov 7": the one short form for a day on every chart axis. */
+export function shortDay(isoDate: string): string {
+  return new Date(`${isoDate.slice(0, 10)}T00:00:00`).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+/** A decimal amount as the model read it ("4250.50") in the app's money format. */
+export function moneyFromDecimal(amount: unknown, currency: unknown): string {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || typeof currency !== "string") return `${String(amount)}`;
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
+  } catch {
+    return `${value} ${currency}`;
+  }
+}

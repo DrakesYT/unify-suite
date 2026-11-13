@@ -8,12 +8,14 @@ and its `when` condition holds; otherwise it is skipped.
 
 import logging
 import uuid
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.agents.runner import TaskContext
+from app.config import WORKFLOW_STALE_S
 from app.errors import ApiError
 from app.llm import LLMClient
 from app.models import ApprovalRequest, User, WorkflowDefinition, WorkflowExecution, WorkflowStep
@@ -138,7 +140,9 @@ def _settle(db: Session, execution: WorkflowExecution, steps: dict[str, Workflow
     db.commit()
 
 
-def advance(db: Session, execution_id: uuid.UUID, llm: LLMClient, actor: User) -> WorkflowExecution:
+def advance(
+    db: Session, execution_id: uuid.UUID, llm: LLMClient | None, actor: User
+) -> WorkflowExecution:
     """Run every step that can run now, then update the execution status."""
     execution = db.get(WorkflowExecution, execution_id, with_for_update=True)
     assert execution is not None
@@ -202,19 +206,44 @@ def resume_after_decision(
     return execution
 
 
+def _last_activity(execution: WorkflowExecution, steps: list[WorkflowStep]) -> datetime:
+    moments = [execution.updated_at, execution.created_at]
+    moments += [m for s in steps for m in (s.started_at, s.finished_at) if m is not None]
+    return max(moments)
+
+
+def _is_interrupted(execution: WorkflowExecution, steps: list[WorkflowStep]) -> bool:
+    """Still marked as advancing, but nothing has happened for a while: the process that ran its
+    steps was restarted (a deploy), so nothing will ever finish it by itself."""
+    if execution.status not in ADVANCING:
+        return False
+    return utcnow() - _last_activity(execution, steps) > timedelta(seconds=WORKFLOW_STALE_S)
+
+
+def _reopen_running_steps(steps: list[WorkflowStep]) -> list[WorkflowStep]:
+    """A step that was cut off mid-run goes back to pending; finished steps keep their output."""
+    cut_off = [s for s in steps if s.status == StepStatus.running]
+    for step in cut_off:
+        step.status, step.error = StepStatus.pending, None
+    return cut_off
+
+
 def retry(db: Session, execution_id: uuid.UUID, actor: User) -> WorkflowExecution:
+    """Re-run the failed steps of a failed run, or pick up a run a restart interrupted."""
     execution = db.get(WorkflowExecution, execution_id, with_for_update=True)
     if execution is None:
         raise ApiError(404, "not_found", "Workflow run not found")
-    failed = [s for s in steps_of(db, execution).values() if s.status == StepStatus.failed]
-    if execution.status != ExecutionStatus.failed or not failed:
-        raise ApiError(409, "nothing_to_retry", "Only failed runs can be retried")
-    for step in failed:
-        step.status, step.error = StepStatus.pending, None
-    approved = any(
-        s.step_key == "A1" and s.status == StepStatus.succeeded
-        for s in steps_of(db, execution).values()
-    )
+    steps = list(steps_of(db, execution).values())
+    failed = [s for s in steps if s.status == StepStatus.failed]
+    if execution.status == ExecutionStatus.failed and failed:
+        for step in failed:
+            step.status, step.error = StepStatus.pending, None
+        reopened = failed
+    elif _is_interrupted(execution, steps):
+        reopened = _reopen_running_steps(steps)
+    else:
+        raise ApiError(409, "nothing_to_retry", "Only failed or interrupted runs can be retried")
+    approved = any(s.step_key == "A1" and s.status == StepStatus.succeeded for s in steps)
     execution.status = ExecutionStatus.approved if approved else ExecutionStatus.running
     audit.record(
         db,
@@ -222,14 +251,52 @@ def retry(db: Session, execution_id: uuid.UUID, actor: User) -> WorkflowExecutio
         entity="workflow_execution",
         entity_id=execution.id,
         actor_id=actor.id,
-        detail={"steps": [s.step_key for s in failed]},
+        detail={"steps": [s.step_key for s in reopened]},
     )
     db.commit()
     return execution
 
 
+def interrupted_runs(db: Session) -> list[uuid.UUID]:
+    """Runs left mid-flight. Only meaningful at start-up, when no step can be running."""
+    return list(
+        db.scalars(select(WorkflowExecution.id).where(WorkflowExecution.status.in_(ADVANCING)))
+    )
+
+
+def recover_interrupted(
+    factory: sessionmaker[Session], execution_ids: list[uuid.UUID], llm: LLMClient | None
+) -> None:
+    """At start-up: finish the runs the previous process left behind. Never raises."""
+    for execution_id in execution_ids:
+        try:
+            with factory() as db:
+                execution = db.get(WorkflowExecution, execution_id, with_for_update=True)
+                if execution is None or execution.status not in ADVANCING:
+                    continue
+                actor = db.get(User, execution.started_by_id)
+                if actor is None:
+                    continue
+                reopened = _reopen_running_steps(list(steps_of(db, execution).values()))
+                audit.record(
+                    db,
+                    action="workflow.recovered",
+                    entity="workflow_execution",
+                    entity_id=execution.id,
+                    actor_id=None,
+                    detail={"steps": [s.step_key for s in reopened]},
+                )
+                db.commit()
+                advance(db, execution_id, llm, actor)
+        except Exception:
+            logger.exception("workflow_recovery_crashed", extra={"execution_id": str(execution_id)})
+
+
 def advance_in_background(
-    factory: sessionmaker[Session], execution_id: uuid.UUID, llm: LLMClient, actor_id: uuid.UUID
+    factory: sessionmaker[Session],
+    execution_id: uuid.UUID,
+    llm: LLMClient | None,
+    actor_id: uuid.UUID,
 ) -> None:
     """Entry point for FastAPI BackgroundTasks: own session, never raises."""
     try:
