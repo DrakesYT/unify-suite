@@ -29,7 +29,10 @@ from app.services.uploads import read_text
 
 PARSER = ResumeParser()
 SCREENER = ResumeScreener()
-SKILL_WEIGHT = 70  # share of the score from required skills; the rest is years of experience
+SKILL_WEIGHT = 70  # share of the score from required skills; the rest is years of experience:
+MIN_YEARS_WEIGHT = 20  # for reaching the job's minimum years
+EXTRA_YEARS_WEIGHT = 10  # for years beyond the minimum (full marks at twice the minimum)
+FULL_FIT_SCORE = SKILL_WEIGHT + MIN_YEARS_WEIGHT  # every required skill and enough years
 
 
 # --- jobs ----------------------------------------------------------------------------------
@@ -134,7 +137,14 @@ def compute_score(job: Job, candidate: Candidate, evidence: list[EvidenceItem]) 
     skill_share = len(matched) / len(job.required_skills) if job.required_skills else 1.0
     years = candidate.years_experience or 0
     years_share = min(years / job.min_years, 1.0) if job.min_years else 1.0
-    return round(SKILL_WEIGHT * skill_share + (100 - SKILL_WEIGHT) * years_share)
+    # Experience past the minimum still counts, up to twice the minimum: otherwise everyone who
+    # meets the bar scores the same and the ranking cannot order the shortlist.
+    extra_share = min(max(years - job.min_years, 0) / max(job.min_years, 1), 1.0)
+    return round(
+        SKILL_WEIGHT * skill_share
+        + MIN_YEARS_WEIGHT * years_share
+        + EXTRA_YEARS_WEIGHT * extra_share
+    )
 
 
 def _to_out(job: Job, candidate: Candidate, row: CandidateScore) -> ScoreOut:
@@ -210,6 +220,7 @@ def screen_job(
     job_id: uuid.UUID,
     candidate_ids: list[uuid.UUID] | None,
     ctx: TaskContext,
+    limit: int | None = None,
 ) -> list[ScoreOut]:
     """Screen the given candidates, or else every applicant for the job not screened for it yet
     (screening each résumé costs a model call, so nobody is screened twice by accident)."""
@@ -223,7 +234,9 @@ def screen_job(
             )
         )
     else:
-        targets = unscreened(db, job)
+        # Each resume is a model call. A web request screens one batch (`limit`) and the page
+        # asks again until nobody is left, so no single request runs for minutes.
+        targets = unscreened(db, job)[:limit]
     for candidate in targets:
         screen_candidate(db, llm, job, candidate, ctx)
     return ranked_scores(db, job_id)

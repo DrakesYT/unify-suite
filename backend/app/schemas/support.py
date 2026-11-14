@@ -24,6 +24,7 @@ class TicketOut(BaseModel):
     urgency: Urgency | None
     status: TicketStatus
     customer_id: uuid.UUID | None
+    assignee_id: uuid.UUID | None
     investigation: dict[str, Any] | None
     created_at: datetime
     updated_at: datetime
@@ -33,6 +34,16 @@ class TicketUpdate(BaseModel):
     title: Annotated[str, Field(min_length=1, max_length=200)] | None = None
     description: Annotated[str, Field(max_length=5000)] | None = None
     customer_id: uuid.UUID | None = None
+    assignee_id: uuid.UUID | None = None  # null hands the ticket back to the queue
+
+
+class StaffOut(BaseModel):
+    """Someone a ticket can be assigned to."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    full_name: str
 
 
 class TicketNote(BaseModel):

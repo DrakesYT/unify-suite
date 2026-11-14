@@ -94,6 +94,11 @@ def create_vendor(db: Session, data: VendorCreate, actor: User) -> Vendor:
 def update_vendor(db: Session, vendor_id: uuid.UUID, data: VendorUpdate, actor: User) -> Vendor:
     vendor = get_vendor(db, vendor_id)
     changes = data.model_dump(exclude_unset=True)
+    if "on_time_rate" in changes and actor.role not in (Role.manager, Role.admin):
+        # The ranking is built on this figure, and deliveries update it by themselves.
+        raise ApiError(
+            403, "forbidden", "Only a procurement manager can correct a vendor's on-time rate"
+        )
     if "name" in changes:
         _ensure_vendor_name_free(db, changes["name"], except_id=vendor.id)
     detail = _apply(vendor, changes)

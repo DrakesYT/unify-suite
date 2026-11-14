@@ -15,10 +15,11 @@ import {
 } from "../components/ui";
 import { label, money, when } from "../format";
 import { canWrite, useAuth } from "../session";
-import type { Approval, Customer, Order, Ticket } from "../types";
+import type { Approval, Customer, Order, Staff, Ticket } from "../types";
 import { usePoll, usePollAll } from "../usePoll";
 import { WhyButton } from "../components/WhyDrawer";
 import { CallsPanel } from "../components/CallsPanel";
+import { EmailPanel } from "../components/EmailPanel";
 import { toast } from "../toast";
 import { SupportDashboard } from "./support/SupportDashboard";
 
@@ -165,14 +166,17 @@ function InsightsPanel({ ticket, customer }: { ticket: Ticket; customer: Custome
 function TicketDetail({
   ticket,
   customer,
+  staff,
   editable,
   onChange,
 }: {
   ticket: Ticket;
   customer: Customer | undefined;
+  staff: Staff[];
   editable: boolean;
   onChange: () => void;
 }) {
+  const { user } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -202,6 +206,23 @@ function TicketDetail({
       onChange();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const assign = async (assigneeId: string | null) => {
+    setBusy("assign");
+    setError(null);
+    try {
+      await api(`/support/tickets/${ticket.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ assignee_id: assigneeId }),
+      });
+      toast(assigneeId ? "Ticket assigned" : "Ticket back in the queue");
+      onChange();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not assign the ticket");
     } finally {
       setBusy(null);
     }
@@ -255,6 +276,41 @@ function TicketDetail({
           </button>
         </div>
       )}
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-xs text-slate-500">Owner</span>
+        {editable ? (
+          <select
+            className="rounded-md border border-navy-800 bg-navy-950 px-2 py-1 text-xs"
+            aria-label="Ticket owner"
+            value={ticket.assignee_id ?? ""}
+            disabled={!!busy || ticket.status === "closed"}
+            onChange={(e) => void assign(e.target.value || null)}
+          >
+            <option value="">Nobody yet</option>
+            {staff.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.full_name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-slate-300">
+            {staff.find((s) => s.id === ticket.assignee_id)?.full_name ?? "Nobody yet"}
+          </span>
+        )}
+        {editable &&
+          user &&
+          ticket.assignee_id !== user.id &&
+          staff.some((s) => s.id === user.id) && (
+            <button
+              disabled={!!busy || ticket.status === "closed"}
+              onClick={() => void assign(user.id)}
+              className={ghostButton}
+            >
+              Assign to me
+            </button>
+          )}
+      </div>
       {editable && (
         <div className="mt-3 flex flex-wrap gap-2">
           {!closed && (
@@ -377,6 +433,17 @@ function TicketDetail({
           .
         </p>
       )}
+      {ticket.status !== "closed" && (
+        <EmailPanel
+          title="Reply to the customer"
+          intro="Start a reply from the investigation's draft, edit it, and send it for approval. Nothing goes to the customer until a support manager approves it."
+          listPath={`/support/tickets/${ticket.id}/emails`}
+          emailsPath="/support/emails"
+          managerLabel="a support manager"
+          editable={editable}
+          draftLabel="Write a reply"
+        />
+      )}
       <CallsPanel ticketId={ticket.id} editable={editable} />
     </>
   );
@@ -400,6 +467,7 @@ export function Support() {
   const editable = Boolean(user && canWrite(user, "support"));
   const tickets = usePollAll<Ticket>("/support/tickets");
   const customers = usePoll<Customer[]>("/support/customers");
+  const staff = usePoll<Staff[]>("/support/staff");
   // A link to /support#ticket-<id> (search, dashboard) opens that ticket.
   const { hash } = useLocation();
   const linked = hash.startsWith(TICKET_HASH) ? hash.slice(TICKET_HASH.length) : null;
@@ -464,6 +532,7 @@ export function Support() {
             key={ticket.id}
             ticket={ticket}
             customer={ticket.customer_id ? customerById.get(ticket.customer_id) : undefined}
+            staff={staff.data ?? []}
             editable={editable}
             onChange={() => void tickets.reload()}
           />

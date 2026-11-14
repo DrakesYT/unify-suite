@@ -156,6 +156,13 @@ function ApprovalCard({ approval, onDone }: { approval: Approval; onDone: () => 
           </ul>
         </div>
       )}
+      {p.warnings && p.warnings.length > 0 && (
+        <ul className="mt-3 list-disc rounded-lg bg-amber-500/10 p-3 pl-8 text-sm text-amber-100">
+          {p.warnings.map((w) => (
+            <li key={w}>{w}</li>
+          ))}
+        </ul>
+      )}
       <InjectionWarning lines={p.suspicious_text} />
       <p className="mt-3 text-xs text-slate-500">
         Requested {when(approval.created_at)}

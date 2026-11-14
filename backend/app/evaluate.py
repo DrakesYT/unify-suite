@@ -21,6 +21,7 @@ import time
 from collections import Counter, defaultdict
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -28,11 +29,13 @@ from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.import_demo import DATA_DIR, read_rows
+from app.services.hr import FULL_FIT_SCORE
 
 # --- how the answer keys are read (fixed before any run) ---------------------------------------
 
-# Resume fit from the deterministic score (0-100: 70 from verified required skills, 30 from years).
-# "strong" means every required skill evidenced and enough years, which is exactly 100.
+# Resume fit from the deterministic score (0-100: 70 from verified required skills, 20 for
+# reaching the minimum years, 10 for years beyond it). "strong" means every required skill
+# evidenced and enough years, which is 90 or more.
 WEAK_BELOW = 60
 BORDERLINE_OK = {"medium", "strong"}
 _STOPWORDS = """
@@ -98,7 +101,34 @@ def invoice_outcomes(result: Any) -> set[str]:
         out.add("mismatch:amount")
     if fields & {"line_items_total", "line_math"}:
         out.add("mismatch:line_items")
+    if "po_already_invoiced" in fields:
+        out.add("mismatch:already_invoiced")
     return out or {"mismatch:other"}
+
+
+def po_used_up(db: Session, row: dict[str, str]) -> bool:
+    """The answer key judges each invoice on its own ("match"), but a purchase order is paid
+    once: when earlier invoices in this run already bill the row's PO and this one would take it
+    past the order amount, the right outcome is the "already invoiced" mismatch, not a match."""
+    from app.invoice_checks import parse_po_reference
+    from app.models import Invoice, PurchaseOrder
+    from app.models.enums import InvoiceStatus
+    from app.money import to_minor
+
+    number = parse_po_reference(row.get("po")).number  # the key also writes "po-1007"
+    order = db.scalar(select(PurchaseOrder).where(PurchaseOrder.po_number == number))
+    if order is None:
+        return False
+    earlier = db.scalars(
+        select(Invoice.amount_minor).where(
+            Invoice.purchase_order_id == order.id, Invoice.status != InvoiceStatus.rejected
+        )
+    ).all()
+    try:
+        this = to_minor(Decimal(row["total"]), order.currency)
+    except (InvalidOperation, ValueError, KeyError):
+        return False
+    return bool(earlier) and sum(earlier) + this > order.amount_minor
 
 
 def score_resume(row: dict[str, str], got: dict[str, Any]) -> dict[str, Any]:
@@ -119,7 +149,7 @@ def score_resume(row: dict[str, str], got: dict[str, Any]) -> dict[str, Any]:
 
 
 def resume_band(score: int) -> str:
-    if score >= 100:
+    if score >= FULL_FIT_SCORE:
         return "strong"
     return "weak" if score < WEAK_BELOW else "medium"
 
@@ -204,6 +234,8 @@ def evaluate_invoices(
         ctx = TaskContext(actor=_user(db, "finance.clerk"))
         for n, row in enumerate(rows, 1):  # in key order: duplicates depend on what came before
             expected = expected_invoice(row["expected_result"])
+            if expected["payable"] and po_used_up(db, row):
+                expected = expected | {"ok": {"mismatch:already_invoiced"}, "payable": False}
             try:
                 upload = save_upload(
                     db,

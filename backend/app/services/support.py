@@ -8,9 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.agents.runner import AgentFailed, TaskContext, call_tool, run_agent
 from app.agents.ticket_investigator import TicketClassifier, TicketInvestigator
+from app.config import SELLER_COMPANY
 from app.errors import ApiError
 from app.llm import LLMClient
-from app.models import ApprovalRequest, Customer, Order, Ticket, User
+from app.models import ApprovalRequest, Customer, Order, OutboundEmail, Ticket, User
 from app.models.base import utcnow
 from app.models.enums import (
     ApprovalStatus,
@@ -28,7 +29,7 @@ from app.schemas.support import (
     TicketText,
     TicketUpdate,
 )
-from app.services import approvals, audit
+from app.services import approvals, audit, outbound
 from app.services.pagination import paginate
 
 CLASSIFIER = TicketClassifier()
@@ -87,6 +88,78 @@ def customer_orders(db: Session, customer_id: uuid.UUID) -> list[Order]:
             .limit(ORDER_HISTORY_LIMIT)
         )
     )
+
+
+def list_staff(db: Session) -> list[User]:
+    """The people a ticket can be assigned to: active Support users."""
+    return list(
+        db.scalars(
+            select(User)
+            .where(User.department == Department.support, User.is_active)
+            .order_by(User.full_name)
+        )
+    )
+
+
+# --- replies to the customer ---------------------------------------------------------------
+# Same rule as every outbound email: a person writes or edits it, a support manager approves,
+# then it is sent (services/outbound.py). The draft starts from the investigation's draft reply
+# when there is one, so no extra model call is made.
+
+REPLY_KIND = "ticket_reply"
+
+
+def draft_reply(db: Session, ticket_id: uuid.UUID, actor: User) -> OutboundEmail:
+    ticket = get_ticket(db, ticket_id)
+    customer = db.get(Customer, ticket.customer_id) if ticket.customer_id else None
+    if customer is None or not customer.email:
+        raise ApiError(
+            409, "no_customer_email", "Link a customer with an email address to reply to"
+        )
+    drafted = ((ticket.investigation or {}).get("draft_reply") or "").strip()
+    first_name = customer.name.split()[0]
+    opening = drafted or (
+        f'Hi {first_name},\n\nThank you for contacting us about "{ticket.title}". '
+        "[Write your answer here.]"
+    )
+    body = f"{opening}\n\nKind regards,\n{actor.full_name}\nCustomer Support, {SELLER_COMPANY}"
+    email = outbound.new_draft(
+        db,
+        kind=REPLY_KIND,
+        department=Department.support,
+        to_address=customer.email,
+        subject=f"Re: {ticket.title}"[:120],
+        body=body,
+        actor=actor,
+        model=(ticket.investigation or {}).get("model") if drafted else None,
+        ticket_id=ticket.id,
+    )
+    db.commit()
+    return email
+
+
+def list_replies(db: Session, ticket_id: uuid.UUID) -> list[OutboundEmail]:
+    get_ticket(db, ticket_id)
+    stmt = (
+        select(OutboundEmail)
+        .where(OutboundEmail.ticket_id == ticket_id)
+        .order_by(OutboundEmail.created_at.desc())
+    )
+    return list(db.scalars(stmt))
+
+
+def request_reply_approval(db: Session, email_id: uuid.UUID, actor: User) -> OutboundEmail:
+    email = outbound.get_email(db, email_id, Department.support)
+    if "[Write your answer here.]" in email.body:
+        raise ApiError(409, "reply_not_written", "Write the answer before sending it for approval")
+    ticket = db.get(Ticket, email.ticket_id) if email.ticket_id else None
+    customer = db.get(Customer, ticket.customer_id) if ticket and ticket.customer_id else None
+    context = {
+        "ticket_id": str(ticket.id) if ticket else None,
+        "ticket_title": ticket.title if ticket else None,
+        "company": (customer.company or customer.name) if customer else None,
+    }
+    return outbound.request_approval(db, email_id, Department.support, actor, context)
 
 
 # --- tickets -------------------------------------------------------------------------------
@@ -229,6 +302,10 @@ def update_ticket(db: Session, ticket_id: uuid.UUID, data: TicketUpdate, actor: 
     changes = data.model_dump(exclude_unset=True)
     if changes.get("customer_id") and db.get(Customer, changes["customer_id"]) is None:
         raise ApiError(404, "not_found", "Customer not found")
+    if changes.get("assignee_id"):
+        owner = db.get(User, changes["assignee_id"])
+        if owner is None or not owner.is_active or owner.department != Department.support:
+            raise ApiError(422, "not_support_staff", "A ticket is assigned to someone in Support")
     for key, value in changes.items():
         setattr(ticket, key, value)
     audit.record(

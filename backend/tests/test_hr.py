@@ -118,8 +118,8 @@ def test_screening_scores_from_verified_evidence(
 
     assert res.status_code == 200, res.text
     [score] = res.json()
-    # 2 of 3 required skills → 70 * 2/3 = 46.7; 8 years ≥ 5 → 30. Total 77.
-    assert score["score"] == 77
+    # 2 of 3 required skills → 70 * 2/3 = 46.7; 8 years ≥ 5 → 20; 3 years past it → 10 * 3/5.
+    assert score["score"] == 73
     assert score["matched_skills"] == ["Python", "PostgreSQL"]
     assert score["missing_skills"] == ["Docker"]
     resume_text = " ".join(SARA_LINES)
@@ -238,7 +238,7 @@ def test_injection_in_a_resume_cannot_raise_the_score(
     [score] = client.post(f"{API}/jobs/{job['id']}/screen", json={}, headers=headers).json()
 
     # The quote does exist, so one skill is credited, but the score is still computed by code.
-    assert score["score"] == round(70 * 1 / 3 + 30 * 1 / 5)
+    assert score["score"] == round(70 * 1 / 3 + 20 * 1 / 5)
     assert score["score"] < 50
 
 

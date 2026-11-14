@@ -35,14 +35,15 @@ def new_draft(
     subject: str,
     body: str,
     actor: User,
-    model: str,
+    model: str | None,
     lead_id: uuid.UUID | None = None,
     po_id: uuid.UUID | None = None,
     order_id: uuid.UUID | None = None,
     candidate_id: uuid.UUID | None = None,
     job_id: uuid.UUID | None = None,
+    ticket_id: uuid.UUID | None = None,
 ) -> OutboundEmail:
-    """Store an agent's draft (called inside the agent's `save_email_draft` tool)."""
+    """Store a draft: an agent's (inside its `save_email_draft` tool), or one a person starts."""
     email = OutboundEmail(
         kind=kind,
         department=department,
@@ -51,6 +52,7 @@ def new_draft(
         order_id=order_id,
         candidate_id=candidate_id,
         job_id=job_id,
+        ticket_id=ticket_id,
         to_address=to_address,
         subject=subject,
         body=body,

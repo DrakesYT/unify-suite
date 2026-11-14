@@ -63,13 +63,12 @@ function StartForm() {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="text-slate-300">PO number</span>
+          <span className="text-slate-300">PO number (optional)</span>
           <input
             className={inputClass}
-            placeholder="PO-1007"
+            placeholder="Read from the invoice"
             value={poNumber}
             onChange={(e) => setPoNumber(e.target.value)}
-            required
           />
         </label>
         <button type="submit" disabled={busy || !file} className={primaryButton}>
@@ -78,7 +77,7 @@ function StartForm() {
       </form>
       <p className="mt-3 text-xs text-slate-500">
         The AI reads the invoice, code matches it to the PO, and a finance manager approves before
-        any payment.
+        any payment. Leave the PO number empty to use the one printed on the invoice.
       </p>
       <div className="mt-3">
         <ErrorNote message={error} />

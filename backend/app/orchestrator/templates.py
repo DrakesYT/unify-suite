@@ -52,8 +52,9 @@ SUPPLIER_PAYMENT = Template(
     name="supplier-payment",
     description="Workflow B: verify a supplier invoice against its PO, get approval, then pay.",
     steps=(
-        StepSpec("P1", "Load purchase order", Department.procurement),
         StepSpec("F1", "Extract invoice fields", Department.finance),
+        # After F1: when nobody typed a PO number, the one the invoice names is used.
+        StepSpec("P1", "Load purchase order", Department.procurement, after=("F1",)),
         StepSpec("F2", "Match invoice to PO", Department.finance, after=("P1", "F1")),
         StepSpec(
             "F3", "Write discrepancy report", Department.finance, after=("F2",), when=_f2_mismatch

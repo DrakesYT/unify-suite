@@ -12,7 +12,15 @@ from app.mailer import Mailer
 from app.models import Job
 from app.models.enums import Department, JobStatus
 from app.schemas.common import Page
-from app.schemas.hr import CandidateOut, JobCreate, JobOut, JobUpdate, ScoreOut, ScreenRequest
+from app.schemas.hr import (
+    CandidateOut,
+    JobCreate,
+    JobOut,
+    JobUpdate,
+    ScoreOut,
+    ScreenRequest,
+    SlotOut,
+)
 from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
 from app.services import hr, interviews, outbound
 from app.services.uploads import save_upload
@@ -86,7 +94,9 @@ def screen_job(
     job_id: uuid.UUID, body: ScreenRequest, db: DbSession, user: CurrentUser, llm: LLM
 ) -> list[ScoreOut]:
     """Resume Screener: evidence quotes are verified against the resume; the score is computed."""
-    return hr.screen_job(db, llm, job_id, body.candidate_ids, TaskContext(actor=user))
+    return hr.screen_job(
+        db, llm, job_id, body.candidate_ids, TaskContext(actor=user), limit=body.limit
+    )
 
 
 @router.get("/jobs/{job_id}/scores")
@@ -139,3 +149,17 @@ def retry_email(
     return OutboundEmailOut.model_validate(
         outbound.retry(db, email_id, Department.hr, user, mailer)
     )
+
+
+@router.get("/emails/{email_id}/slots")
+def invite_slots(email_id: uuid.UUID, db: DbSession) -> list[SlotOut]:
+    """The interview times an invitation still holds."""
+    return interviews.slots_out(db, email_id)
+
+
+@router.post("/emails/{email_id}/slots/{slot_id}/book")
+def book_interview(
+    email_id: uuid.UUID, slot_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> list[SlotOut]:
+    """The candidate chose this time: keep it and free the other offered times."""
+    return interviews.book_slot(db, email_id, slot_id, user)

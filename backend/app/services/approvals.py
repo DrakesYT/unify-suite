@@ -118,7 +118,9 @@ def decide(
         entity="approval_request",
         entity_id=approval.id,
         actor_id=user.id,
-        detail={"action": approval.action, "comment": approval.comment},
+        detail={"action": approval.action, "comment": approval.comment}
+        # An admin deciding for a department is an override: say so where auditors look.
+        | ({"admin_override": True} if user.role == Role.admin else {}),
     )
     db.commit()
     return approval

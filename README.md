@@ -96,10 +96,10 @@ Approval Center, and on a call they are shown above the analysis.
 | Invoice Processor | Finance | Reads an uploaded invoice PDF: what kind of document it is, vendor, number, date, PO reference as printed, total and every line item | Refuses to treat a credit note, quotation, reminder or negative total as payable; cleans up the PO reference (`po-1007` → `PO-1007`) but never guesses an ambiguous one; checks each line's quantity × price and that the lines add up to the total; matches it to the PO (approved, same vendor, currency, amount); blocks duplicates; saves the invoice |
 | Lead Qualifier | Sales | Rates a lead hot / warm / cold with a 20+ word reason and the fields it relied on | Sends only business fields (no contact name or full email); saves the rating |
 | Outreach Writer | Sales | Drafts a first email to a qualified lead | Rejects drafts with links, placeholders or addresses; adds greeting and signature; a sales manager approves; then it is **really sent** through Resend |
-| Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score, ranks candidates |
+| Resume Parser + Screener | HR | Extracts skills and experience; quotes the resume as evidence for each required skill | Rejects quotes not found in the resume, computes the score (70 skills, 20 for the minimum years, 10 for years beyond it), ranks candidates |
 | Interview Invite Writer | HR | Drafts an interview invitation for a strong candidate | Only candidates screened 50+ qualify; code holds 3 free 45-min office-hour times (never double-booked) and rejects a draft that changes any time; an HR manager approves; then it is sent |
-| Ticket Investigator | Support | Classifies new tickets; investigates against the customer's last 20 orders; drafts a reply | Rejects cited orders that are not the customer's; refund/legal escalations need a manager |
-| Vendor Comparator | Procurement | Explains why the top vendor wins | Ranks vendors: 50% price + 25% lead time + 25% on-time rate |
+| Ticket Investigator | Support | Classifies new tickets; investigates against the customer's last 20 orders; drafts a reply | Rejects cited orders that are not the customer's; refund/legal escalations need a manager; the reply is edited by a person, approved by a support manager, then sent |
+| Vendor Comparator | Procurement | Explains why the top vendor wins | Ranks vendors: 50% price + 25% lead time + 25% on-time rate (the rate follows real deliveries) |
 | Payment Reminder Writer | Finance | Drafts a reminder for an overdue customer order | Due date = order date + payment terms; customers with an open refund/billing/legal ticket are never chased; a finance manager approves; then it is sent |
 | Supplier Follow-up Writer | Procurement | Drafts a chase email to the supplier of a late order | Decides what is late (expected date = order date + vendor lead time); the draft must quote the PO; a procurement manager approves; then it is sent |
 | Aura Router | Any | Picks one route for a plain-English request ("compare vendors for the laptops") | Finds the record, checks the user's rights, runs the department agent |
@@ -109,14 +109,15 @@ Approval Center, and on a call they are shown above the analysis.
 
 **Workflow B, supplier payment verification**, end to end (`backend/app/orchestrator/`):
 
-1. A finance clerk uploads an invoice and names the PO.
-2. **P1** loads the PO; **F1** (Invoice Processor) reads the invoice.
+1. A finance clerk uploads an invoice. Naming the PO is optional: left empty, the PO printed on the
+   invoice is used.
+2. **F1** (Invoice Processor) reads the invoice; **P1** loads the PO.
 3. **F2** matches invoice and PO in code (status, vendor, currency, amount, the PO the invoice itself names,
    whether its line items add up, and whether earlier invoices already used up the order, so a PO is never
    paid twice unnoticed) and checks for duplicates. A mismatch makes **F3** write a discrepancy report in
    plain words ("line items add up to 3,550.00 USD, but the total due says 3,750.00 USD").
 4. **A1** always pauses the run (`waiting_approval`). A finance manager approves or rejects in the Approval Center;
-   nobody can decide their own request.
+   nobody can decide their own request. The approver is told when the goods are not marked delivered yet.
 5. Approved → **F4** creates the payment. Rejected → no payment.
 6. **V1** verifies every link (invoice ↔ PO ↔ approval ↔ payment) and the run ends `completed` or `rejected`.
 
@@ -136,13 +137,16 @@ Latest run (Vultr Serverless Inference, `glm-5.3-flash`, 24 minutes):
 
 | | Result |
 |---|---|
-| **Invoices** | **57 / 57** handled as the key says. **0** would have been paid wrongly; **0** good invoices sent to review. All 7 hidden instructions flagged. |
-| **Resumes** | **200 / 200** read; name, email and years of experience right in **200 / 200**. Fit band (strong / medium / weak, from the score) matches the key for **196 / 200**; average score 100 for strong, 81 for medium, 36 for weak. |
+| **Invoices** | **57 / 57** handled as the key says. **0** would have been paid wrongly; **0** good invoices sent to review. All 7 hidden instructions flagged. The files are checked one after another, so a second invoice for a purchase order that is already billed in full must come out as "already invoiced", not as a match. |
+| **Resumes** | **200 / 200** read; name, email and years of experience right in **200 / 200**. Fit band (strong / medium / weak, from the score) matches the key for **194 / 200**; average score 98 for strong, 76 for medium, 33 for weak. |
 | **Call transcripts** | **35 / 35** analysed; customer sentiment matches the key for **34 / 35**; about **67 / 76** expected follow-ups found (matched by shared words, so approximate). The call with a hidden instruction is flagged. |
 
-What the misses are: the 4 resume misses are junior candidates (about 2 of the required 5 years, most skills) that
-score 64, which the scoring rule calls medium; two of them hide an instruction to the AI, and it did not raise their
-score. The checks were designed with these answer keys in view, so the numbers show that every case in this data
+What the misses are: all 6 resume misses are weak candidates the scoring rule calls medium. Four are juniors
+(about 2 of the required 5 years, most skills) that score 60, exactly on the line between weak and medium; two of
+them hide an instruction to the AI, and it did not raise their score. The other two list every required skill as
+keywords but worked in retail sales: the skills are quoted from the resume, so they score 86. A person reading the
+quotes sees it at once, which is why the ranking shows its evidence. The checks were designed with these answer
+keys in view, so the numbers show that every case in this data
 set is handled; they are a regression check, not an independent benchmark.
 
 ```bash
@@ -180,8 +184,8 @@ The 57 supplier invoices in `backend/demo_data/invoices/` are left for live uplo
 | `sales.manager@demo.example.com` | `demodemo.` | sales manager | Approval Center: approve & send the email (or reject it) |
 | `hr.recruiter@demo.example.com` | `demodemo.` | HR employee | Hiring → pick a job → add a resume (from `backend/demo_data/resumes/`) → Screen new applicants → Invite to interview (top candidate) |
 | `hr.manager@demo.example.com` | `demodemo.` | HR manager | Approval Center: approve & send the interview invite (or reject it, which frees the times) |
-| `support.agent@demo.example.com` | `demodemo.` | support employee | Support tickets → Investigate, Mark resolved, Escalate a refund (pick the order to refund) |
-| `support.manager@demo.example.com` | `demodemo.` | support manager | Approve the refund escalation (the order is marked refunded) |
+| `support.agent@demo.example.com` | `demodemo.` | support employee | Support tickets → Assign to me, Investigate, Write a reply, Mark resolved, Escalate a refund (pick the order to refund); **Ask Aura** (bottom left) on any page |
+| `support.manager@demo.example.com` | `demodemo.` | support manager | Approve the refund escalation (the order is marked refunded) and the reply to the customer |
 | `buyer@demo.example.com` | `demodemo.` | procurement employee | Procurement → Compare vendors, Create purchase order; PO-2001 is late → Follow up with supplier |
 | `procurement.manager@demo.example.com` | `demodemo.` | procurement manager | Approve the request, the purchase order and the supplier follow-up email |
 
@@ -208,8 +212,9 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 
 - App: http://localhost:3000. API description: http://localhost:3000/api/openapi.json
 - Database tables are created/updated automatically when the backend starts (`alembic upgrade head`).
-- Add a user (asks for the password):
-  `docker compose exec backend python -m app.cli create-user EMAIL "Full Name" ROLE DEPARTMENT`
+- Add the first user, an admin (asks for the password):
+  `docker compose exec backend python -m app.cli create-user EMAIL "Full Name" admin finance`
+  That admin adds everyone else on the **Users** page.
   Roles: `admin`, `manager`, `employee`, `executive`. Departments: `sales`, `finance`, `hr`, `support`, `procurement`.
 - Frontend with hot reload: `cd frontend && npm install && npm run dev` (http://localhost:5173, forwards `/api` to the backend on port 8000)
 
@@ -233,6 +238,9 @@ cd frontend && npm run lint && npm run format:check && npm run build
 - **Rate limits.** 5 wrong passwords per email and IP, and 20 per IP, every 15 minutes (there is no lock-out of an
   account on its own, so nobody can lock others out of a shared demo account). Model-backed requests are limited to
   30 per user and 60 per IP every 10 minutes.
+- **Users.** An admin adds people, changes roles, disables accounts and sets new passwords on the Users page;
+  each of these ends that person's sessions. Everyone can change their own password under Account. The audit
+  log can be read and filtered in the Command Center.
 - **Passwords.** bcrypt hashes; new accounts need 12+ characters that are not a common password and do not contain
   the email name or the product name. Wrong email and wrong password get the same answer in the same time.
 - **Input.** Every request body is a Pydantic model with types and lengths. Uploads: PDF, CSV or TXT only, checked by

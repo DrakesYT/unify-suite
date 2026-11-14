@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -41,6 +42,17 @@ def activity(
 ) -> list[ActivityItem]:
     """FR-DASH-02: the latest audit events, newest first."""
     return dashboard.recent_activity(db, limit)
+
+
+@router.get("/audit")
+def audit_log(
+    db: DbSession,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    before: datetime | None = None,
+    q: Annotated[str | None, Query(max_length=80)] = None,
+) -> list[ActivityItem]:
+    """The append-only audit log: who did what, newest first, filterable and pageable."""
+    return dashboard.audit_page(db, limit, before, q)
 
 
 @search_router.get("")

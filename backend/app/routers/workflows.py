@@ -78,14 +78,15 @@ def _get(db: DbSession, execution_id: uuid.UUID) -> WorkflowExecution:
 def start_workflow(
     template: str,
     file: Annotated[UploadFile, File(description="Supplier invoice (PDF or TXT, max 10 MB)")],
-    po_number: Annotated[str, Form(min_length=1, max_length=40)],
     db: DbSession,
     user: CurrentUser,
     llm: LLM,
     factory: SessionFactory,
     background: BackgroundTasks,
+    po_number: Annotated[str, Form(max_length=40)] = "",
 ) -> ExecutionOut:
-    """Workflow B: upload the invoice and name its PO. Steps run in the background; poll GET."""
+    """Workflow B: upload the invoice. Name its PO, or leave that empty to use the PO the invoice
+    itself names. Steps run in the background; poll GET."""
     if template not in TEMPLATES:
         raise ApiError(404, "not_found", f"Unknown workflow '{template}'")
     data = file.file.read(UPLOAD_MAX_BYTES + 1)

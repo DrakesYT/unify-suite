@@ -212,9 +212,10 @@ def candidate(db: Session, user: User, job_id: uuid.UUID, candidate_id: uuid.UUI
         code_decided=[
             "Checked every quote word for word against the resume; a quote that is not in the "
             "resume makes the reply invalid and it is retried.",
-            f"Score = {hr.SKILL_WEIGHT}% x skills with evidence ({len(matched)} of "
-            f"{len(job.required_skills)}) + {100 - hr.SKILL_WEIGHT}% x experience ({years} of "
-            f"{job.min_years} years) = {row.score}.",
+            f"Score = {hr.SKILL_WEIGHT} x skills with evidence ({len(matched)} of "
+            f"{len(job.required_skills)}) + {hr.MIN_YEARS_WEIGHT} x experience up to the minimum "
+            f"({years} of {job.min_years} years) + up to {hr.EXTRA_YEARS_WEIGHT} for years beyond "
+            f"it = {row.score}.",
             f"Missing: {', '.join(missing)}." if missing else "Every required skill has evidence.",
         ],
         people=_people(db, [("candidate", person.id), ("candidate_score", row.id)]),

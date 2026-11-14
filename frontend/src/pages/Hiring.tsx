@@ -12,6 +12,7 @@ import {
   Loading,
 } from "../components/ui";
 import { EmailPanel } from "../components/EmailPanel";
+import { InterviewSlots } from "../components/InterviewSlots";
 import { when } from "../format";
 import { canWrite, useAuth } from "../session";
 import type { Candidate, CandidateScore, Job } from "../types";
@@ -294,9 +295,17 @@ function ScoreCard({
           editable={editable}
         />
       )}
+      {inviting && (
+        <InterviewSlots
+          listPath={`/hr/jobs/${jobId}/candidates/${s.candidate.id}/emails`}
+          editable={editable}
+        />
+      )}
     </li>
   );
 }
+
+const SCREEN_BATCH = 10;
 
 export function Hiring() {
   const { user } = useAuth();
@@ -315,7 +324,14 @@ export function Hiring() {
     setBusy(true);
     setError(null);
     try {
-      await api(`/hr/jobs/${jobId}/screen`, { method: "POST", body: JSON.stringify({}) });
+      // One request screens one batch (each resume is a model call); ask until nobody is left.
+      for (let left = job?.unscreened ?? 0; left > 0; left -= SCREEN_BATCH) {
+        await api(`/hr/jobs/${jobId}/screen`, {
+          method: "POST",
+          body: JSON.stringify({ limit: SCREEN_BATCH }),
+        });
+        await Promise.all([scores.reload(), jobs.reload()]);
+      }
       await Promise.all([scores.reload(), jobs.reload()]);
       toast("Screening done: the ranking is updated");
     } catch (err) {

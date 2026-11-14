@@ -14,6 +14,7 @@ import {
   UsersIcon,
   WalletIcon,
 } from "./icons";
+import { AuraDock } from "./AuraDock";
 import { SearchBox } from "./SearchBox";
 import { ThemeSwitch } from "./ThemeSwitch";
 import { TourButton, TourInvite, TourProvider } from "./Tour";
@@ -29,6 +30,8 @@ const PAGE_TITLES: [string, string][] = [
   ["/procurement", "Procurement"],
   ["/approvals", "Approvals"],
   ["/activity", "Command Center"],
+  ["/users", "Users"],
+  ["/account", "Account"],
 ];
 
 interface NavItem {
@@ -116,6 +119,12 @@ export function Layout() {
     },
     { to: "/approvals", text: "Approvals", show: true, icon: <ShieldIcon size={19} /> },
     { to: "/activity", text: "Command Center", show: true, icon: <BoltIcon size={19} /> },
+    {
+      to: "/users",
+      text: "Users",
+      show: user.role === "admin",
+      icon: <UsersIcon size={19} />,
+    },
   ].filter((l) => l.show);
   // The top row keeps the cross-department pages one click away; the rail holds every page.
   const topTabs = links.filter((l) => ["/dashboard", "/approvals", "/activity"].includes(l.to));
@@ -187,6 +196,7 @@ export function Layout() {
         </div>
         <TourInvite />
       </div>
+      {!leader && <AuraDock />}
     </TourProvider>
   );
 }

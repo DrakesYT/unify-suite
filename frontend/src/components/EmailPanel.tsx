@@ -47,6 +47,7 @@ export function EmailPanel({
   emailsPath,
   managerLabel,
   editable,
+  draftLabel = "Draft email with AI",
 }: {
   title: string;
   intro: string;
@@ -56,6 +57,8 @@ export function EmailPanel({
   emailsPath: string;
   managerLabel: string;
   editable: boolean;
+  /** The button that starts the first draft. */
+  draftLabel?: string;
 }) {
   const { data, reload } = usePoll<OutboundEmail[]>(listPath);
   const [busy, setBusy] = useState<string | null>(null);
@@ -108,7 +111,7 @@ export function EmailPanel({
             onClick={() => act("draft", listPath, { method: "POST" })}
             className={ghostButton}
           >
-            {busy === "draft" ? "Writing…" : email ? "Draft a new email" : "Draft email with AI"}
+            {busy === "draft" ? "Writing…" : email ? "Draft a new email" : draftLabel}
           </button>
         )}
       </div>

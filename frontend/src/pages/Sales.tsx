@@ -190,12 +190,16 @@ function LeadRow({
               className="rounded-md border border-navy-800 bg-navy-950 px-2 py-1 text-xs"
               value={lead.status}
               disabled={busy}
-              onChange={(e) =>
-                run(`/sales/leads/${lead.id}`, {
+              onChange={(e) => {
+                const status = e.target.value;
+                // Won and lost close the deal and move the targets: ask first.
+                const closing = status === "won" || status === "lost";
+                if (closing && !window.confirm(`Mark ${lead.company} as ${status}?`)) return;
+                void run(`/sales/leads/${lead.id}`, {
                   method: "PATCH",
-                  body: JSON.stringify({ status: e.target.value }),
-                })
-              }
+                  body: JSON.stringify({ status }),
+                });
+              }}
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>

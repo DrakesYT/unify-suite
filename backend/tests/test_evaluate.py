@@ -1,9 +1,20 @@
 """The accuracy check's scoring rules (how each answer key is read)."""
 
-import pytest
+from datetime import date
+from decimal import Decimal
 
-from app.evaluate import action_item_recall, expected_invoice, resume_band, score_resume
+import pytest
+from sqlalchemy.orm import Session
+
+from app.evaluate import (
+    action_item_recall,
+    expected_invoice,
+    po_used_up,
+    resume_band,
+    score_resume,
+)
 from app.import_demo import DATA_DIR, read_rows
+from app.models import Invoice, PurchaseOrder, Vendor
 
 
 @pytest.mark.parametrize(
@@ -44,7 +55,8 @@ def test_every_invoice_in_the_real_key_has_a_deliberate_reading() -> None:
 
 
 def test_resume_bands_follow_the_scoring_rule() -> None:
-    assert [resume_band(s) for s in (100, 99, 60, 59, 0)] == [
+    assert [resume_band(s) for s in (100, 90, 89, 60, 59, 0)] == [
+        "strong",
         "strong",
         "medium",
         "medium",
@@ -71,3 +83,31 @@ def test_half_years_in_the_key_are_compared_within_a_year() -> None:
         "score": 30, "band": "weak", "name_ok": True, "email_ok": True, "years_ok": True,
         "fit_ok": True,
     }  # fmt: skip
+
+
+def test_a_match_row_for_a_used_up_po_expects_the_already_invoiced_mismatch(db: Session) -> None:
+    vendor = Vendor(name="ACME", lead_time_days=7, on_time_rate=Decimal("0.9"))
+    db.add(vendor)
+    db.flush()
+    order = PurchaseOrder(
+        po_number="PO-1007", vendor_id=vendor.id, amount_minor=425000, currency="USD"
+    )
+    db.add(order)
+    db.flush()
+    row = {"po": "PO-1007", "total": "4250.00"}
+    assert po_used_up(db, row) is False  # the first invoice for the order
+
+    db.add(
+        Invoice(
+            number="INV-1",
+            vendor_id=vendor.id,
+            purchase_order_id=order.id,
+            invoice_date=date(2026, 10, 1),
+            amount_minor=425000,
+            currency="USD",
+        )
+    )
+    db.flush()
+
+    assert po_used_up(db, row) is True
+    assert po_used_up(db, {"po": "PO-0000", "total": "1.00"}) is False

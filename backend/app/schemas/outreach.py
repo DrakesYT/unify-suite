@@ -56,6 +56,7 @@ class OutboundEmailOut(BaseModel):
     order_id: uuid.UUID | None
     candidate_id: uuid.UUID | None
     job_id: uuid.UUID | None
+    ticket_id: uuid.UUID | None
     to_address: str
     subject: str
     body: str

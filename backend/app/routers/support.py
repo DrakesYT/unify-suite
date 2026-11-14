@@ -8,20 +8,23 @@ from app.config import PAGE_LIMIT_DEFAULT, PAGE_LIMIT_MAX
 from app.db import DbSession
 from app.deps import CurrentUser, require_department
 from app.llm import LLM
+from app.mailer import Mailer
 from app.models.enums import Department, TicketCategory, TicketStatus
 from app.schemas.common import Page
+from app.schemas.outreach import EmailDraftUpdate, OutboundEmailOut
 from app.schemas.support import (
     CustomerOut,
     EscalateIn,
     EscalationOut,
     OrderOut,
+    StaffOut,
     TicketCreate,
     TicketNote,
     TicketOut,
     TicketUpdate,
 )
 from app.schemas.workflows import ApprovalOut
-from app.services import support
+from app.services import outbound, support
 
 router = APIRouter(
     prefix="/api/support",
@@ -123,3 +126,46 @@ def reopen_ticket(
 ) -> TicketOut:
     ticket = support.set_status(db, ticket_id, TicketStatus.open, body.note, user)
     return TicketOut.model_validate(ticket)
+
+
+@router.get("/staff")
+def list_staff(db: DbSession) -> list[StaffOut]:
+    """Who a ticket can be assigned to."""
+    return [StaffOut.model_validate(u) for u in support.list_staff(db)]
+
+
+# --- replies to the customer -------------------------------------------------------------------
+
+
+@router.get("/tickets/{ticket_id}/emails")
+def list_replies(ticket_id: uuid.UUID, db: DbSession) -> list[OutboundEmailOut]:
+    return [OutboundEmailOut.model_validate(e) for e in support.list_replies(db, ticket_id)]
+
+
+@router.post("/tickets/{ticket_id}/emails", status_code=201)
+def draft_reply(ticket_id: uuid.UUID, db: DbSession, user: CurrentUser) -> OutboundEmailOut:
+    """Start a reply from the investigation's draft. Sent only after a support manager approves."""
+    return OutboundEmailOut.model_validate(support.draft_reply(db, ticket_id, user))
+
+
+@router.patch("/emails/{email_id}")
+def edit_email(
+    email_id: uuid.UUID, data: EmailDraftUpdate, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    email = outbound.update_draft(db, email_id, Department.support, data, user)
+    return OutboundEmailOut.model_validate(email)
+
+
+@router.post("/emails/{email_id}/request-approval")
+def request_email_approval(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> OutboundEmailOut:
+    return OutboundEmailOut.model_validate(support.request_reply_approval(db, email_id, user))
+
+
+@router.post("/emails/{email_id}/retry")
+def retry_email(
+    email_id: uuid.UUID, db: DbSession, user: CurrentUser, mailer: Mailer
+) -> OutboundEmailOut:
+    email = outbound.retry(db, email_id, Department.support, user, mailer)
+    return OutboundEmailOut.model_validate(email)

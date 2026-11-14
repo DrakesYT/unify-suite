@@ -6,6 +6,7 @@ drafts the chase email; editing, approval and sending are shared (services/outbo
 
 import uuid
 from datetime import date, timedelta
+from decimal import Decimal
 
 from pydantic import EmailStr, TypeAdapter, ValidationError
 from sqlalchemy import select
@@ -25,6 +26,7 @@ from app.services import audit, outbound
 
 WRITER = SupplierFollowUpWriter()
 KIND = "supplier_followup"
+RECORD_WEIGHT = 20  # deliveries the on-time rate on file stands for
 _EMAIL = TypeAdapter(EmailStr)
 
 
@@ -54,6 +56,14 @@ def _open_order(db: Session, order_id: uuid.UUID) -> PurchaseOrder:
 def mark_delivered(db: Session, order_id: uuid.UUID, actor: User) -> PurchaseOrder:
     order = _open_order(db, order_id)
     order.delivered_on = utcnow().date()
+    on_time = order.expected_delivery is None or order.delivered_on <= order.expected_delivery
+    vendor = db.get(Vendor, order.vendor_id)
+    if vendor is not None:
+        # The vendor ranking uses this figure, so real deliveries move it: the record on file
+        # counts as RECORD_WEIGHT earlier deliveries and each new one is averaged in.
+        vendor.on_time_rate = (
+            (vendor.on_time_rate * RECORD_WEIGHT + (1 if on_time else 0)) / (RECORD_WEIGHT + 1)
+        ).quantize(Decimal("0.0001"))
     audit.record(
         db,
         action="purchase_order.delivered",

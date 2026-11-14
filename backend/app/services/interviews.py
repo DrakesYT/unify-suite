@@ -24,6 +24,7 @@ from app.models import (
 from app.models.base import utcnow
 from app.models.enums import ApprovalStatus, Department, EmailStatus, JobStatus
 from app.scheduling import label, pick_slots
+from app.schemas.hr import SlotOut
 from app.schemas.outreach import EmailDraft, InterviewInviteInput
 from app.services import audit, outbound
 
@@ -196,3 +197,65 @@ def release_if_rejected(db: Session, approval: ApprovalRequest) -> None:
         slot.released = True
     if slots:
         db.commit()
+
+
+# --- the candidate answered: keep the chosen time, free the others -----------------------------
+
+
+def _invite(db: Session, email_id: uuid.UUID) -> OutboundEmail:
+    email = outbound.get_email(db, email_id, Department.hr)
+    if email.kind != KIND:
+        raise ApiError(404, "not_found", "Interview invitation not found")
+    return email
+
+
+def _offered(db: Session, email_id: uuid.UUID) -> list[InterviewSlot]:
+    return list(
+        db.scalars(
+            select(InterviewSlot)
+            .where(InterviewSlot.email_id == email_id)
+            .order_by(InterviewSlot.starts_at)
+        )
+    )
+
+
+def slots_out(db: Session, email_id: uuid.UUID) -> list[SlotOut]:
+    """The times still held for an invitation. Exactly one left means it is booked."""
+    email = _invite(db, email_id)
+    held = [s for s in _offered(db, email.id) if not s.released]
+    return [
+        SlotOut(
+            id=s.id,
+            starts_at=s.starts_at,
+            ends_at=s.ends_at,
+            label=label(s.starts_at),
+            booked=len(held) == 1 and email.status == EmailStatus.sent,
+        )
+        for s in held
+    ]
+
+
+def book_slot(db: Session, email_id: uuid.UUID, slot_id: uuid.UUID, actor: User) -> list[SlotOut]:
+    """The candidate replied with a time: that one stays held, the others are free for other
+    candidates again. Only a sent invitation can be answered."""
+    email = _invite(db, email_id)
+    if email.status != EmailStatus.sent:
+        raise ApiError(409, "not_sent", "The invitation has not been sent yet")
+    held = [s for s in _offered(db, email.id) if not s.released]
+    chosen = next((s for s in held if s.id == slot_id), None)
+    if chosen is None:
+        raise ApiError(404, "not_found", "That time is not one of the times offered")
+    if len(held) == 1:
+        raise ApiError(409, "already_booked", "This interview is already booked")
+    for slot in held:
+        slot.released = slot.id != chosen.id
+    audit.record(
+        db,
+        action="interview.booked",
+        entity="candidate",
+        entity_id=chosen.candidate_id,
+        actor_id=actor.id,
+        detail={"job_id": str(chosen.job_id), "starts_at": chosen.starts_at.isoformat()},
+    )
+    db.commit()
+    return slots_out(db, email_id)

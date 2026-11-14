@@ -6,7 +6,7 @@ import { ago, initials, label } from "../format";
 import { isDemo, useAuth } from "../session";
 import type { Approval, Page, User } from "../types";
 import { usePoll } from "../usePoll";
-import { BellIcon, ChevronDown, LogoutIcon } from "./icons";
+import { BellIcon, ChevronDown, LogoutIcon, ShieldIcon } from "./icons";
 import { useDismiss } from "./useDismiss";
 import { toast } from "../toast";
 
@@ -201,6 +201,13 @@ export function UserMenu() {
             </div>
           </div>
           {isDemo(user) && <DemoSwitcher onDone={close} />}
+          <Link
+            to="/account"
+            onClick={close}
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-white/5 hover:text-white"
+          >
+            <ShieldIcon size={16} /> Account and password
+          </Link>
           <button
             onClick={signOut}
             className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-white/5 hover:text-white"

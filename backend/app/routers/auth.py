@@ -4,7 +4,13 @@ from app.config import JWT_TTL_S, SESSION_COOKIE, SESSION_COOKIE_PATH, get_setti
 from app.db import DbSession
 from app.deps import CurrentUser, client_ip
 from app.models import User
-from app.schemas.auth import DemoSwitchRequest, LoginRequest, SessionOut, UserOut
+from app.schemas.auth import (
+    DemoSwitchRequest,
+    LoginRequest,
+    PasswordChange,
+    SessionOut,
+    UserOut,
+)
 from app.services import users
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -43,6 +49,22 @@ def logout(request: Request, db: DbSession, user: CurrentUser) -> Response:
         samesite="strict",
     )
     return response
+
+
+@router.post("/password", status_code=204)
+def change_password(
+    data: PasswordChange, request: Request, db: DbSession, user: CurrentUser
+) -> Response:
+    """Change your own password. Your other sessions end; this one stays signed in."""
+    users.change_own_password(
+        db,
+        user,
+        data.current_password,
+        data.new_password,
+        request.state.session_id,
+        client_ip(request),
+    )
+    return Response(status_code=204)
 
 
 @router.get("/me")

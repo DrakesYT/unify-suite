@@ -54,7 +54,14 @@ function SystemStatus({ agents }: { agents?: Overview["agents"] }) {
 }
 
 /** Aura: one chat box that hands each request to the right department agent. */
-export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
+export function AuraPanel({
+  agents,
+  chatOnly = false,
+}: {
+  agents?: Overview["agents"];
+  /** Only the chat: no brief, shortcuts or status (those are the dashboard's, for leaders). */
+  chatOnly?: boolean;
+}) {
   const { user } = useAuth();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [message, setMessage] = useState("");
@@ -115,7 +122,13 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
         style={{ maxHeight: 460 }}
         aria-live="polite"
       >
-        {user && <AuraBrief userId={user.id} />}
+        {user && !chatOnly && <AuraBrief userId={user.id} />}
+        {chatOnly && turns.length === 0 && (
+          <p className="text-slate-400">
+            Ask in plain words, for example “investigate the ticket about the late order” or “is the
+            Sultan Tiles lead worth chasing?”. Aura runs the right agent with your permissions.
+          </p>
+        )}
         {turns.map((turn, i) => (
           <div key={i} className="space-y-2">
             <p className="anim-pop ml-8 rounded-2xl rounded-tr-sm bg-accent-purple/25 px-3 py-2 text-slate-100">
@@ -199,8 +212,8 @@ export function AuraPanel({ agents }: { agents?: Overview["agents"] }) {
         </button>
       </form>
       {voice.error && <p className="-mt-1 px-5 pb-2 text-xs text-amber-200">{voice.error}</p>}
-      <QuickActions onAsk={(prompt) => void ask(prompt)} busy={busy} />
-      <SystemStatus agents={agents} />
+      {!chatOnly && <QuickActions onAsk={(prompt) => void ask(prompt)} busy={busy} />}
+      {!chatOnly && <SystemStatus agents={agents} />}
     </aside>
   );
 }

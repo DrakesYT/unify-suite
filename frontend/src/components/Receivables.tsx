@@ -25,6 +25,11 @@ function ReceivableRow({
   const [error, setError] = useState<string | null>(null);
 
   const markPaid = async () => {
+    const amount = money(item.amount_minor, item.currency);
+    if (
+      !window.confirm(`Mark ${item.order_number} (${amount}) as paid? This cannot be undone here.`)
+    )
+      return;
     setBusy(true);
     setError(null);
     try {

@@ -209,7 +209,7 @@ def test_candidate_score_shows_quotes_and_the_formula(
 
     why = _why(client, h, f"candidate/{job['id']}/{candidate['id']}")
 
-    assert why["title"] == "Why does Sara Malik score 77 for Senior Backend Engineer?"
+    assert why["title"] == "Why does Sara Malik score 73 for Senior Backend Engineer?"
     assert why["input_verified"] is True
     assert why["ai_said"][0] == {
         "label": 'evidence for "Python"',

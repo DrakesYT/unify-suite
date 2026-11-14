@@ -229,7 +229,7 @@ def test_failed_step_pauses_and_retry_reuses_finished_steps(
     run = _start(client, people["clerk"])
 
     assert run["status"] == "failed"
-    assert _steps(run)["P1"] == "succeeded" and _steps(run)["F1"] == "failed"
+    assert _steps(run)["F1"] == "failed" and _steps(run)["P1"] == "pending"
     assert "invoice_processor failed" in next(s for s in run["steps"] if s["key"] == "F1")["error"]
     assert db.scalar(select(func.count()).select_from(ApprovalRequest)) == 0
 

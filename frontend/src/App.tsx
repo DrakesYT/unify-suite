@@ -14,6 +14,7 @@ import { Procurement } from "./pages/Procurement";
 import { Payments } from "./pages/Payments";
 import { Sales } from "./pages/Sales";
 import { Support } from "./pages/Support";
+import { Account, Users } from "./pages/Users";
 import type { Department } from "./types";
 
 // The dashboard brings the chart library; load it only when someone opens the dashboard.
@@ -74,6 +75,8 @@ export default function App() {
               <Route path="procurement" element={<Procurement />} />
               <Route path="approvals" element={<Approvals />} />
               <Route path="activity" element={<Activity />} />
+              <Route path="users" element={<Users />} />
+              <Route path="account" element={<Account />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

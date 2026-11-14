@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timedelta
 
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 from sqlalchemy.orm import Session
 
 from app.config import JWT_TTL_S
@@ -37,6 +37,17 @@ def is_open(
         and session.revoked_at is None
         and session.expires_at > (now or utcnow())
     )
+
+
+def revoke_all(db: Session, user_id: uuid.UUID, keep: uuid.UUID | None = None) -> None:
+    """End every open session of a user (password changed, account disabled), except `keep`.
+    The caller commits."""
+    stmt = update(UserSession).where(
+        UserSession.user_id == user_id, UserSession.revoked_at.is_(None)
+    )
+    if keep is not None:
+        stmt = stmt.where(UserSession.id != keep)
+    db.execute(stmt.values(revoked_at=utcnow()))
 
 
 def revoke(db: Session, session_id: uuid.UUID) -> None:

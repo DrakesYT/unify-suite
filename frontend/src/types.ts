@@ -45,6 +45,7 @@ export interface Approval {
     currency?: string;
     match_status?: string;
     discrepancies?: string[];
+    warnings?: string[];
     suspicious_text?: string[];
     title?: string;
     category?: string;
@@ -193,6 +194,7 @@ export interface Ticket {
   urgency: "low" | "normal" | "high" | "critical" | null;
   status: "open" | "investigating" | "escalated" | "resolved" | "closed";
   customer_id: string | null;
+  assignee_id: string | null;
   investigation: {
     likely_causes: { cause: string; order_numbers: string[] }[];
     order_numbers_used: string[];
@@ -571,4 +573,25 @@ export interface Order {
   currency: string;
   status: "placed" | "shipped" | "delivered" | "cancelled" | "refunded";
   ordered_at: string;
+}
+
+/** A user as the admin's Users page sees them. */
+export interface ManagedUser extends User {
+  is_active: boolean;
+  created_at: string;
+}
+
+/** Someone a ticket can be assigned to. */
+export interface Staff {
+  id: string;
+  full_name: string;
+}
+
+/** One interview time offered in an invitation. */
+export interface InterviewSlot {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  label: string;
+  booked: boolean;
 }

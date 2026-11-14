@@ -242,7 +242,7 @@ def _cut_off_run(db: Session, actor: User, minutes_ago: int) -> WorkflowExecutio
     execution.created_at = execution.updated_at = then
     step = db.scalar(
         select(WorkflowStep).where(
-            WorkflowStep.execution_id == execution.id, WorkflowStep.step_key == "P1"
+            WorkflowStep.execution_id == execution.id, WorkflowStep.step_key == "F1"
         )
     )
     assert step is not None
@@ -268,7 +268,7 @@ def test_an_interrupted_run_can_be_resumed_by_hand(
     assert resumed.status_code == 202, resumed.text
     after = client.get(f"/api/workflows/{stale.id}", headers=auth_header(clerk)).json()
     assert after["status"] == "failed"  # it ran again and stopped for a real reason
-    assert {s["key"]: s["status"] for s in after["steps"]}["P1"] == "failed"
+    assert {s["key"]: s["status"] for s in after["steps"]}["F1"] == "failed"
     assert refused.status_code == 409  # a run that is still working is left alone
 
 
@@ -284,8 +284,8 @@ def test_start_up_picks_up_runs_the_last_process_left_behind(
     assert left_behind == [execution.id]
     db.expire_all()
     steps = {s.step_key: s for s in workflow.steps_of(db, execution).values()}
-    assert steps["P1"].status == StepStatus.failed and steps["P1"].attempts == 1
-    assert steps["F1"].status == StepStatus.failed  # a clear reason on the step, not a crash
+    # The step that was cut off ran again and stopped with a clear reason, not a crash.
+    assert steps["F1"].status == StepStatus.failed and steps["F1"].attempts == 1
     assert db.get(WorkflowExecution, execution.id).status == "failed"
     assert workflow.interrupted_runs(db) == []
 
@@ -552,6 +552,21 @@ def test_deciding_on_the_procurement_page_closes_the_approval_too(
 
 
 # --- small rules ---------------------------------------------------------------------------------
+
+
+def test_years_beyond_the_minimum_raise_the_score() -> None:
+    from app.schemas.hr import EvidenceItem
+
+    job = Job(title="Data Analyst", required_skills=["Python", "SQL"], min_years=3)
+    evidence = [
+        EvidenceItem(requirement="Python", quote="Python"),
+        EvidenceItem(requirement="SQL", quote="SQL queries"),
+    ]
+
+    def score(years: int | None) -> int:
+        return hr.compute_score(job, Candidate(name="X", years_experience=years), evidence)
+
+    assert [score(y) for y in (None, 1, 3, 4, 6, 9)] == [70, 77, 90, 93, 100, 100]
 
 
 def test_equal_scores_rank_by_experience_then_name(db: Session) -> None:

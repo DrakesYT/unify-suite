@@ -4,12 +4,12 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import ratelimit
+from app import passwords, ratelimit
 from app.config import DEMO_DOMAIN
 from app.errors import ApiError
 from app.models import User
 from app.models.enums import Role
-from app.schemas.auth import LoginRequest, UserCreate
+from app.schemas.auth import LoginRequest, UserCreate, UserUpdate
 from app.security import burn_password_check, hash_password, verify_password
 from app.services import audit, sessions
 
@@ -127,3 +127,79 @@ def switch_demo(db: Session, user: User, email: str, session_id: uuid.UUID) -> t
     token = sessions.start(db, target)
     db.commit()
     return target, token
+
+
+# --- administration (admins) and a user's own password ----------------------------------------
+
+
+def list_users(db: Session) -> list[User]:
+    return list(db.scalars(select(User).order_by(User.department, User.role, User.full_name)))
+
+
+def _new_password(password: str, user: User) -> None:
+    found = passwords.problems(password, user.email)
+    if found:
+        raise ApiError(422, "weak_password", "Password rejected: " + "; ".join(found))
+    user.password_hash = hash_password(password)
+
+
+def update_user(db: Session, user_id: uuid.UUID, data: UserUpdate, actor: User) -> User:
+    """Change a user's name, role, department or whether they may sign in. An admin cannot
+    demote or disable themself (that could leave nobody able to administer the system)."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise ApiError(404, "not_found", "User not found")
+    changes = data.model_dump(exclude_unset=True, exclude_none=True)
+    if user.id == actor.id and ("role" in changes or changes.get("is_active") is False):
+        raise ApiError(409, "own_account", "You cannot change your own role or disable yourself")
+    for key, value in changes.items():
+        setattr(user, key, value)
+    if changes.get("is_active") is False or "role" in changes or "department" in changes:
+        sessions.revoke_all(db, user.id)  # what they may do changed: they sign in again
+    audit.record(
+        db,
+        action="user.updated",
+        entity="user",
+        entity_id=user.id,
+        actor_id=actor.id,
+        detail={k: str(v) for k, v in changes.items()},
+    )
+    db.commit()
+    return user
+
+
+def set_password(db: Session, user_id: uuid.UUID, password: str, actor: User) -> User:
+    """An admin gives someone a new password. All their sessions end."""
+    user = db.get(User, user_id)
+    if user is None:
+        raise ApiError(404, "not_found", "User not found")
+    _new_password(password, user)
+    sessions.revoke_all(db, user.id, keep=None)
+    audit.record(
+        db, action="user.password_reset", entity="user", entity_id=user.id, actor_id=actor.id
+    )
+    db.commit()
+    return user
+
+
+def change_own_password(
+    db: Session, user: User, current: str, new: str, session_id: uuid.UUID, client_ip: str
+) -> None:
+    """A user changes their own password. Their other sessions end; this one stays."""
+    if is_demo(user):
+        raise ApiError(
+            403, "demo_account", "Demo accounts share one password; it cannot be changed"
+        )
+    key = f"{user.email}|{client_ip}"
+    wait = ratelimit.login_failures_by_account.retry_after(key)
+    if wait:
+        raise ratelimit.too_many("Too many wrong passwords.", wait)
+    if not verify_password(current, user.password_hash):
+        ratelimit.login_failures_by_account.hit(key)
+        raise ApiError(403, "wrong_password", "The current password is not correct")
+    _new_password(new, user)
+    sessions.revoke_all(db, user.id, keep=session_id)
+    audit.record(
+        db, action="user.password_changed", entity="user", entity_id=user.id, actor_id=user.id
+    )
+    db.commit()

@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, time, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -27,6 +27,7 @@ from app.models.enums import (
     TicketStatus,
 )
 from app.schemas.dashboard import ActivityItem, Charts, Count, DayCount, Kpis, Money
+from app.services.search import contains_pattern
 
 FEED_SIZE = 20
 CHART_DAYS = 7
@@ -101,6 +102,38 @@ def recent_activity(db: Session, limit: int = FEED_SIZE) -> list[ActivityItem]:
         .order_by(AuditLog.at.desc(), AuditLog.id.desc())
         .limit(limit)
     ).all()
+    return [
+        ActivityItem(
+            id=log.id,
+            at=log.at,
+            actor_name=name,
+            action=log.action,
+            entity=log.entity,
+            entity_id=log.entity_id,
+            detail=log.detail,
+        )
+        for log, name in rows
+    ]
+
+
+def audit_page(
+    db: Session, limit: int, before: datetime | None = None, q: str | None = None
+) -> list[ActivityItem]:
+    """The audit log, newest first. `before` continues after the last row already shown; `q`
+    keeps rows whose action or record type contains the text (e.g. "approval", "invoice")."""
+    stmt = select(AuditLog, User.full_name).outerjoin(User, User.id == AuditLog.actor_id)
+    if before is not None:
+        stmt = stmt.where(AuditLog.at < before)
+    if q and q.strip():
+        pattern = contains_pattern(q.strip())
+        stmt = stmt.where(
+            or_(
+                AuditLog.action.ilike(pattern, escape="\\"),
+                AuditLog.entity.ilike(pattern, escape="\\"),
+                User.full_name.ilike(pattern, escape="\\"),
+            )
+        )
+    rows = db.execute(stmt.order_by(AuditLog.at.desc(), AuditLog.id.desc()).limit(limit)).all()
     return [
         ActivityItem(
             id=log.id,

@@ -22,3 +22,5 @@ class Ticket(IdMixin, TimestampMixin, Base):
     )
     customer_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("customers.id"), index=True)
     investigation: Mapped[dict[str, Any] | None] = mapped_column(JsonType)
+    # Who in Support owns the ticket (None: nobody has picked it up yet).
+    assignee_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)

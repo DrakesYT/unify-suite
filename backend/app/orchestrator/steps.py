@@ -14,8 +14,17 @@ from sqlalchemy.orm import Session
 
 from app.agents.runner import TaskContext, ToolUser, call_tool
 from app.agents.verification import VerificationAgent
+from app.invoice_checks import parse_po_reference
 from app.llm import LLMClient
-from app.models import ApprovalRequest, Invoice, Payment, Upload, WorkflowExecution, WorkflowStep
+from app.models import (
+    ApprovalRequest,
+    Invoice,
+    Payment,
+    PurchaseOrder,
+    Upload,
+    WorkflowExecution,
+    WorkflowStep,
+)
 from app.models.enums import Department, InvoiceStatus, Role
 from app.money import format_minor
 from app.orchestrator.templates import Finished
@@ -57,7 +66,17 @@ StepResult = dict[str, Any] | WaitForApproval
 
 
 def load_po(run: StepRun) -> StepResult:
-    po_number = run.execution.input["po_number"]
+    po_number = (run.execution.input.get("po_number") or "").strip()
+    if not po_number:
+        # Nobody typed a PO: use the one the invoice itself names, when it names exactly one.
+        reference = parse_po_reference(run.output("F1").get("po_number"))
+        if reference.number is None:
+            raise StepError(
+                "The invoice does not name one clear purchase order. Start the check again and "
+                "type the PO number."
+            )
+        po_number = reference.number
+        run.execution.input = run.execution.input | {"po_number": po_number, "po_from": "invoice"}
     po = call_tool(
         run.db,
         ORCHESTRATOR,
@@ -163,6 +182,14 @@ def discrepancy_report(run: StepRun) -> StepResult:
     )
 
 
+def _payment_warnings(db: Session, po: dict[str, Any]) -> list[str]:
+    """Things the approver should know that are not differences between invoice and PO."""
+    order = db.get(PurchaseOrder, uuid.UUID(po["id"])) if po.get("id") else None
+    if order is not None and order.status == "approved" and order.delivered_on is None:
+        return [f"The goods for {order.po_number} are not marked as delivered yet."]
+    return []
+
+
 def request_approval(run: StepRun) -> StepResult:
     f2, po = run.output("F2"), run.output("P1")
     report = run.output("F3") if "F3" in run.done else None
@@ -175,6 +202,7 @@ def request_approval(run: StepRun) -> StepResult:
         "currency": f2["currency"],
         "match_status": f2["match_status"],
         "discrepancies": report["lines"] if report else [],
+        "warnings": _payment_warnings(run.db, po),
         "suspicious_text": run.output("F1").get("suspicious_text", []),
     }
 

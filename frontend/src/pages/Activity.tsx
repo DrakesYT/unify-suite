@@ -1,3 +1,5 @@
+import { AuditLog } from "../components/AuditLog";
+import { useAuth } from "../session";
 import { useState } from "react";
 import { StatCard } from "../components/charts/StatCard";
 import { BoltIcon, ClockIcon, FlowIcon, InfoIcon, ListIcon } from "../components/icons";
@@ -45,6 +47,7 @@ function LiveFeed({ items }: { items: AgentTask[] | undefined }) {
 
 /** Command Center: every agent and tool call, with Retry for failed workflow steps. */
 export function Activity() {
+  const { user } = useAuth();
   const [onlyFailed, setOnlyFailed] = useState(false);
   const { data, error, reload } = usePoll<Page<AgentTask>>(
     `/agents/activity?limit=200${onlyFailed ? "&status=failed" : ""}`,
@@ -200,6 +203,11 @@ export function Activity() {
           </div>
         )}
       </Card>
+      {user && user.role !== "employee" && (
+        <div className="mt-6">
+          <AuditLog />
+        </div>
+      )}
     </>
   );
 }

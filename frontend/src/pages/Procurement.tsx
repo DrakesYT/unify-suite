@@ -431,6 +431,12 @@ function OrderRow({
   const late = order.delivery_status === "late";
 
   const markDelivered = async () => {
+    if (
+      !window.confirm(
+        `Mark ${order.po_number} as delivered today? This updates the vendor's on-time record.`,
+      )
+    )
+      return;
     setBusy(true);
     setError(null);
     try {

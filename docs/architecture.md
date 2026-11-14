@@ -58,12 +58,18 @@ flowchart LR
   terms (`net_30`). Code computes `days_overdue` and puts a customer with an open refund, billing or legal
   ticket on hold (never chased). For an overdue order the Payment Reminder Writer drafts a reminder that
   must quote the order number; it goes through the shared approve-then-send path (finance manager).
+- Users: an admin adds people, changes role or department, disables accounts and sets a new password on
+  the Users page (`/api/users`); everyone changes their own password under Account. A changed role, a
+  disabled account or a new password ends that person's sessions. The audit log is readable in the
+  Command Center (`/api/dashboard/audit`: filter and older pages) for managers, executives and admins;
+  an admin deciding an approval is marked `admin_override` there.
 - Workflow B (Supplier Payment Verification) is a plain state machine (`backend/app/orchestrator/`):
 
   ```mermaid
   flowchart LR
-      P1[P1 load PO] --> F2[F2 match invoice to PO]
-      F1[F1 extract invoice - LLM] --> F2
+      F1[F1 extract invoice - LLM] --> P1[P1 load PO]
+      P1 --> F2[F2 match invoice to PO]
+      F1 --> F2
       F2 -- mismatch --> F3[F3 discrepancy report]
       F2 -- matched --> A1
       F3 --> A1{{A1 manager approval}}
@@ -91,17 +97,23 @@ flowchart LR
   sends every email to one demo inbox.
 - HR: the Resume parser extracts skills, years and education at upload. The Resume Screener only returns
   evidence (requirement + exact quote); code rejects any quote not found in the resume and computes the
-  score: 70 × (skills with evidence ÷ required skills) + 30 × min(years ÷ minimum years, 1).
+  score: 70 × (skills with evidence ÷ required skills) + 20 × min(years ÷ minimum years, 1) + 10 × the
+  share of years beyond the minimum (full marks at twice the minimum). Every skill and enough years is 90
+  or more; equal scores rank by years, then name. One request screens a batch of 10 resumes and the page
+  asks again until nobody is left, so no web request waits on dozens of model calls.
 - Interviews: a candidate screened 50+ for an open job can be invited. `app/scheduling.py` (code) picks the
   first free 45-minute start (10, 11, 14, 15 or 16:00 PKT) on each of the next three working days, skipping
   times already held. The slots are held with the draft (`interview_slots`); the Interview Invite Writer must
   copy every time verbatim or the draft is retried. An HR manager approves; a rejected invite frees its times.
+  When the candidate answers, the recruiter books the chosen time and the other two are freed.
 - Support: new tickets are saved, then classified (category + urgency). Investigation sends the customer's
   last 20 orders; code rejects any cited order number that is not theirs. Escalating a refund or legal ticket
   creates an approval for a support manager; approved → resolved, rejected → reopened. A refund escalation can
   name one of the customer's orders, and approval marks that order `refunded`. Support staff resolve, close
   and reopen tickets themselves (not while an escalation waits for a manager); a resolved dispute lifts the
-  hold on that customer's payment reminders. Replies are drafts only.
+  hold on that customer's payment reminders. A ticket has an owner (anyone active in Support). A reply to
+  the customer starts from the investigation's draft, is edited by a person, and goes through the shared
+  approve-then-send path (support manager); no extra model call is made.
 - Procurement: vendors quote a unit price per request. Code ranks them: 50% price + 25% lead time + 25%
   on-time rate, each relative to the best offer (ties: cheaper, then name). The Vendor Comparator only
   explains the result and must name the winner. A procurement manager approves the request, in the Approval
@@ -109,7 +121,8 @@ flowchart LR
   (from a request or created directly) waits in the Approval Center as `pending_approval`.
   Approval starts delivery tracking: `ordered_on` = today, `expected_delivery` = today + the vendor's
   lead time. Code computes `delivery_status` (on_track / late / delivered) and `days_late`; the buyer
-  marks delivery or records a new date the supplier confirmed. For a late order the Supplier Follow-up
+  marks delivery or records a new date the supplier confirmed. Each delivery moves the vendor's on-time
+  rate (the rate on file counts as 20 earlier deliveries); only a procurement manager may type a new rate. For a late order the Supplier Follow-up
   Writer drafts a chase (it must quote the PO number); it goes through the same approve-then-send path
   as sales emails (`services/outbound.py`), approved by a procurement manager.
 - Dashboard (managers, executives, admins): KPIs and charts are SQL aggregates; the feed is the latest 20

@@ -26,6 +26,7 @@ from app.routers import (
     sales,
     settings,
     support,
+    users,
     workflows,
 )
 
@@ -80,6 +81,7 @@ def create_app() -> FastAPI:
     app.include_router(explain.router)
     app.include_router(calls.router)
     app.include_router(settings.router)
+    app.include_router(users.router)
     return app
 
 

@@ -87,7 +87,10 @@ class ScoreOut(BaseModel):
 
 class ScreenRequest(BaseModel):
     candidate_ids: list[uuid.UUID] | None = Field(
-        default=None, description="Leave empty to screen every candidate"
+        default=None, description="Leave empty to screen applicants not screened yet"
+    )
+    limit: Annotated[int, Field(ge=1, le=25)] = Field(
+        default=10, description="How many unscreened applicants one request screens"
     )
 
 
@@ -128,3 +131,13 @@ class ScreeningAssessment(BaseModel):
     summary: Annotated[str, Field(min_length=1, max_length=800)] = Field(
         description="Two or three sentences on fit, including what is missing"
     )
+
+
+class SlotOut(BaseModel):
+    """One interview time offered in an invitation."""
+
+    id: uuid.UUID
+    starts_at: datetime
+    ends_at: datetime
+    label: str  # as printed in the invitation, e.g. "Mon 9 Nov 2026, 10:00-10:45 PKT"
+    booked: bool  # the time the candidate chose (the other offered times were freed)
